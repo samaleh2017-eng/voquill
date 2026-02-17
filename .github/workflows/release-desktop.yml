@@ -23,11 +23,7 @@ on:
           - prod
           - dev
       version:
-        description: "Semver version to promote (prod only, defaults to latest dev tag)"
-        required: false
-        type: string
-      release_context:
-        description: "Optional extra context to include in the release notes prompt"
+        description: "Semver version to promote (prod only)"
         required: false
         type: string
 
@@ -37,21 +33,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      models: read
     outputs:
       version: ${{ steps.meta.outputs.version }}
       tag_name: ${{ steps.meta.outputs.tag_name }}
       commit_sha: ${{ steps.meta.outputs.commit_sha }}
       release_env: ${{ steps.meta.outputs.release_env }}
       release_suffix: ${{ steps.meta.outputs.release_suffix }}
-      release_flavor: ${{ steps.meta.outputs.release_flavor }}
       channel_release_tag: ${{ steps.meta.outputs.channel_release_tag }}
-      version_path: ${{ steps.meta.outputs.version_path }}
-      dev_tag_name: ${{ steps.meta.outputs.dev_tag_name }}
-      release_notes: ${{ steps.release_notes.outputs.release-notes }}
-      release_body: ${{ steps.release_body.outputs.release_body }}
       gpu_tag_name: ${{ steps.meta.outputs.gpu_tag_name }}
       gpu_channel_release_tag: ${{ steps.meta.outputs.gpu_channel_release_tag }}
+      release_body: ${{ steps.release_body.outputs.release_body }}
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -71,19 +63,10 @@ jobs:
           if [[ "${EVENT_NAME}" == "push" ]]; then
             RELEASE_ENV="dev"
           else
-            case "${INPUT_ENVIRONMENT:-prod}" in
-              dev|prod)
-                RELEASE_ENV="${INPUT_ENVIRONMENT:-prod}"
-                ;;
-              *)
-                echo "Unsupported environment '${INPUT_ENVIRONMENT}'" >&2
-                exit 1
-                ;;
-            esac
+            RELEASE_ENV="${INPUT_ENVIRONMENT:-prod}"
           fi
 
           SEMVER_REGEX='^[0-9]+\.[0-9]+\.[0-9]+$'
-          INPUT_VERSION="${INPUT_VERSION:-}"
 
           mapfile -t DEV_TAGS < <(git tag --list 'desktop-dev-v*' --sort=-v:refname)
           mapfile -t PROD_TAGS < <(git tag --list 'desktop-v*' --sort=-v:refname)
@@ -91,175 +74,66 @@ jobs:
           LAST_PROD_TAG="${PROD_TAGS[0]:-}"
 
           if [[ "${RELEASE_ENV}" == "dev" ]]; then
-            if [[ -n "${INPUT_VERSION}" ]]; then
-              echo "Ignoring manual version '${INPUT_VERSION}' for dev release (automatic patch bump used)." >&2
-            fi
-
             if [[ -z "${LAST_DEV_TAG}" ]]; then
-              VERSION_BASE="0.0.0"
+              VERSION="0.0.1"
             else
               VERSION_BASE="${LAST_DEV_TAG#desktop-dev-v}"
+              IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION_BASE}"
+              PATCH=$((PATCH + 1))
+              VERSION="${MAJOR}.${MINOR}.${PATCH}"
             fi
-
-            if [[ ! "${VERSION_BASE}" =~ ${SEMVER_REGEX} ]]; then
-              echo "Last dev tag (${LAST_DEV_TAG:-none}) is not in x.y.z format." >&2
-              exit 1
-            fi
-
-            IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION_BASE}"
-            PATCH=$((PATCH + 1))
-            VERSION="${MAJOR}.${MINOR}.${PATCH}"
             TAG_NAME="desktop-dev-v${VERSION}"
             COMMIT_SHA="${GITHUB_SHA}"
-            DEV_TAG_NAME="${TAG_NAME}"
           else
             if [[ -n "${INPUT_VERSION}" ]]; then
-              TARGET_VERSION="${INPUT_VERSION}"
-              if [[ ! "${TARGET_VERSION}" =~ ${SEMVER_REGEX} ]]; then
-                echo "Provided version '${TARGET_VERSION}' is not in x.y.z format." >&2
-                exit 1
-              fi
-              TARGET_DEV_TAG="desktop-dev-v${TARGET_VERSION}"
-              if ! git rev-parse -q --verify "refs/tags/${TARGET_DEV_TAG}" >/dev/null; then
-                echo "Dev tag ${TARGET_DEV_TAG} not found for promotion." >&2
-                exit 1
-              fi
+              VERSION="${INPUT_VERSION}"
             else
               if [[ -z "${LAST_DEV_TAG}" ]]; then
-                echo "No dev tag found to promote to prod." >&2
+                echo "No dev tag to promote." >&2
                 exit 1
               fi
-              TARGET_DEV_TAG="${LAST_DEV_TAG}"
-              TARGET_VERSION="${TARGET_DEV_TAG#desktop-dev-v}"
-              if [[ ! "${TARGET_VERSION}" =~ ${SEMVER_REGEX} ]]; then
-                echo "Dev tag ${TARGET_DEV_TAG} is not in x.y.z format." >&2
-                exit 1
-              fi
+              VERSION="${LAST_DEV_TAG#desktop-dev-v}"
             fi
-
-            VERSION="${TARGET_VERSION}"
             TAG_NAME="desktop-v${VERSION}"
-            COMMIT_SHA="$(git rev-parse "${TARGET_DEV_TAG}^{commit}")"
-            DEV_TAG_NAME="${TARGET_DEV_TAG}"
+            COMMIT_SHA="$(git rev-parse "desktop-dev-v${VERSION}^{commit}")"
           fi
 
           if git rev-parse -q --verify "refs/tags/${TAG_NAME}" >/dev/null; then
-            echo "Tag ${TAG_NAME} already exists. Aborting." >&2
+            echo "Tag ${TAG_NAME} already exists." >&2
             exit 1
           fi
 
-          VERSION_PATH="desktop/${RELEASE_ENV}/${VERSION}"
           if [[ "${RELEASE_ENV}" == "dev" ]]; then
-            PREVIOUS_TAG="${LAST_DEV_TAG}"
-          else
-            PREVIOUS_TAG="${LAST_PROD_TAG}"
-          fi
-          RELEASE_NOTES_FROM_REF=""
-          if [[ -n "${PREVIOUS_TAG}" ]]; then
-            RELEASE_NOTES_FROM_REF="${PREVIOUS_TAG}"
-            mapfile -t COMMITS_AFTER_PREVIOUS < <(git rev-list --ancestry-path --reverse "${PREVIOUS_TAG}..${COMMIT_SHA}")
-            FIRST_AFTER_PREVIOUS="${COMMITS_AFTER_PREVIOUS[0]:-}"
-            if [[ -n "${FIRST_AFTER_PREVIOUS}" ]]; then
-              RELEASE_NOTES_FROM="${FIRST_AFTER_PREVIOUS}"
-            else
-              RELEASE_NOTES_FROM="${COMMIT_SHA}"
-            fi
-          else
-            mapfile -t ROOT_COMMITS < <(git rev-list --max-parents=0 "${COMMIT_SHA}")
-            ROOT_COUNT=${#ROOT_COMMITS[@]}
-            if (( ROOT_COUNT > 0 )); then
-              ROOT_INDEX=$((ROOT_COUNT - 1))
-              RELEASE_NOTES_FROM="${ROOT_COMMITS[ROOT_INDEX]}"
-            else
-              RELEASE_NOTES_FROM="${COMMIT_SHA}"
-            fi
-          fi
-          RELEASE_NOTES_TO="${COMMIT_SHA}"
-
-          if [[ "${RELEASE_ENV}" == "dev" ]]; then
-            CHANNEL_RELEASE_TAG="desktop-dev"
-            RELEASE_FLAVOR="prod"
             RELEASE_SUFFIX="-dev"
+            CHANNEL_RELEASE_TAG="desktop-dev"
             GPU_TAG_NAME="desktop-gpu-dev-v${VERSION}"
             GPU_CHANNEL_RELEASE_TAG="desktop-gpu-dev"
           else
-            CHANNEL_RELEASE_TAG="desktop-prod"
-            RELEASE_FLAVOR="prod"
             RELEASE_SUFFIX=""
+            CHANNEL_RELEASE_TAG="desktop-prod"
             GPU_TAG_NAME="desktop-gpu-v${VERSION}"
             GPU_CHANNEL_RELEASE_TAG="desktop-gpu-prod"
           fi
 
           {
-            echo "release_env=${RELEASE_ENV}"
-            echo "release_suffix=${RELEASE_SUFFIX}"
             echo "version=${VERSION}"
             echo "tag_name=${TAG_NAME}"
             echo "commit_sha=${COMMIT_SHA}"
-            echo "dev_tag_name=${DEV_TAG_NAME}"
-            echo "version_path=${VERSION_PATH}"
+            echo "release_env=${RELEASE_ENV}"
+            echo "release_suffix=${RELEASE_SUFFIX}"
             echo "channel_release_tag=${CHANNEL_RELEASE_TAG}"
-            echo "release_flavor=${RELEASE_FLAVOR}"
-            echo "release_notes_from=${RELEASE_NOTES_FROM}"
-            echo "release_notes_to=${RELEASE_NOTES_TO}"
-            echo "release_notes_from_ref=${RELEASE_NOTES_FROM_REF}"
             echo "gpu_tag_name=${GPU_TAG_NAME}"
             echo "gpu_channel_release_tag=${GPU_CHANNEL_RELEASE_TAG}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Generate release notes
-        id: release_notes
-        uses: josiahsrc/ai-release-notes-builder@v3
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          RELEASE_CONTEXT: ${{ github.event.inputs.release_context || '' }}
-        with:
-          content_scope: commit_messages
-          prompt: |
-            Generate high-level, user-facing release notes based on the diff below.
-            This is for an AI dictation desktop software application
-            Follow these rules:
-            • Focus strictly on user-visible improvements and overall product value.
-            • Never mention file names, code components, technologies, or internal systems.
-            • Never describe what changed in the code; describe only the outcome or benefit.
-            • Use broad, non-technical language.
-            • Combine related changes into a small number of themes.
-            • Output no more than 1-4 bullet points.
-            • Each bullet should be one sentence and written from the user's perspective.
-            • Avoid technical terms, implementation details, or references to specific subsystems.
-            • If a change has no user-visible effect, omit it.
-            • If you're not sure what changed, just say "Various improvements and bug fixes." as a single bullet point.
-            • Never repeat yourself.
-            • Your release notes should sound authentic and natural.
-            • Use direct, factual language. Never be sycophantic or overly enthusiastic.
-            • Do not start bullets with phrases like "Enjoy", "Experience", "Discover", or similar marketing language.
-            • State improvements plainly without embellishment (e.g., "Improved performance" not "Enjoy blazing-fast performance").
-            ${{ github.event.inputs.release_context && format('
-
-            Additional notes from the release author, PAY SPECIAL ATTENTION TO THESE NOTES. 
-            ONLY MENTION RELEASE NOTES THAT ARE DIRECTLY REFERENCED IN THE FOLLOWING CONTEXT:
-            {0}', github.event.inputs.release_context) || 'None' }}
-          from: ${{ steps.meta.outputs.release_notes_from }}
-          to: ${{ steps.meta.outputs.release_notes_to }}
-          paths: |
-            apps/desktop/**
-            packages/**
-
       - name: Compose release body
         id: release_body
         env:
-          RELEASE_NOTES: ${{ steps.release_notes.outputs['release-notes'] }}
           RELEASE_ENV: ${{ steps.meta.outputs.release_env }}
           VERSION: ${{ steps.meta.outputs.version }}
         run: |
           set -euo pipefail
-          default_body="Automated ${RELEASE_ENV} channel build for version ${VERSION}."
-          notes="${RELEASE_NOTES}"
-          if [[ -n "${notes}" ]]; then
-            body="${notes}"
-          else
-            body="${default_body}"
-          fi
+          body="Desktop ${RELEASE_ENV} release v${VERSION}"
           printf 'release_body<<EOF\n%s\nEOF\n' "$body" >> "$GITHUB_OUTPUT"
 
       - name: Create release tag
@@ -269,18 +143,11 @@ jobs:
           TARGET_SHA: ${{ steps.meta.outputs.commit_sha }}
         with:
           script: |
-            const tagName = process.env.TAG_NAME;
-            const targetSha = process.env.TARGET_SHA;
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-
-            core.info(`Creating tag ${tagName} at ${targetSha}`);
-
             await github.rest.git.createRef({
-              owner,
-              repo,
-              ref: `refs/tags/${tagName}`,
-              sha: targetSha,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${process.env.TAG_NAME}`,
+              sha: process.env.TARGET_SHA,
             });
 
       - name: Create GPU release tag
@@ -290,567 +157,9 @@ jobs:
           TARGET_SHA: ${{ steps.meta.outputs.commit_sha }}
         with:
           script: |
-            const tagName = process.env.TAG_NAME;
-            const targetSha = process.env.TARGET_SHA;
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-
-            core.info(`Creating GPU tag ${tagName} at ${targetSha}`);
-
             await github.rest.git.createRef({
-              owner,
-              repo,
-              ref: `refs/tags/${tagName}`,
-              sha: targetSha,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${process.env.TAG_NAME}`,
+              sha: process.env.TARGET_SHA,
             });
-
-  build:
-    name: Build ${{ matrix.label }}
-    needs: metadata
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
-    permissions:
-      contents: write
-      id-token: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - label: macOS (universal)
-            os: macos-14
-            args: "--target universal-apple-darwin"
-            rust_targets: "aarch64-apple-darwin,x86_64-apple-darwin"
-            tauri_platform: macos
-            node_platform: darwin
-            artifact_name: desktop-macos
-            gpu_variant: false
-
-          - label: Windows (CPU)
-            os: windows-latest
-            args: ""
-            rust_targets: ""
-            tauri_platform: windows
-            node_platform: win32
-            artifact_name: desktop-windows
-            gpu_variant: false
-
-          - label: Windows (GPU)
-            os: windows-latest
-            args: "--features windows-gpu"
-            rust_targets: ""
-            tauri_platform: windows
-            node_platform: win32
-            artifact_name: desktop-windows-gpu
-            gpu_variant: true
-
-          - label: Linux (CPU)
-            os: ubuntu-22.04
-            args: ""
-            rust_targets: ""
-            tauri_platform: linux
-            node_platform: linux
-            artifact_name: desktop-linux
-            gpu_variant: false
-
-          - label: Linux (GPU)
-            os: ubuntu-22.04
-            args: "--features linux-gpu"
-            rust_targets: ""
-            tauri_platform: linux
-            node_platform: linux
-            artifact_name: desktop-linux-gpu
-            gpu_variant: true
-    env:
-      RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
-      RELEASE_ENV: ${{ needs.metadata.outputs.release_env }}
-      RELEASE_SUFFIX: ${{ needs.metadata.outputs.release_suffix }}
-      RELEASE_FLAVOR: ${{ needs.metadata.outputs.release_flavor }}
-      FLAVOR: ${{ needs.metadata.outputs.release_flavor }}
-      VITE_FLAVOR: ${{ needs.metadata.outputs.release_flavor }}
-      VITE_GPU_BUILD: ${{ matrix.gpu_variant }}
-      VOQUILL_BUILD_FLAVOR: ${{ needs.metadata.outputs.release_flavor }}
-      VOQUILL_DESKTOP_FLAVOR: ${{ needs.metadata.outputs.release_flavor }}
-      TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-      TAURI_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_PRIVATE_KEY_PASSWORD }}
-      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_PRIVATE_KEY_PASSWORD }}
-      TAURI_UPDATER_PUBLIC_KEY: ${{ secrets.TAURI_UPDATER_PUBLIC_KEY }}
-      APPLE_API_KEY_BASE64: ${{ secrets.APPLE_API_KEY_BASE64 }}
-      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.metadata.outputs.commit_sha }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: package-lock.json
-
-      - name: Sync Tauri release configuration
-        run: node scripts/ci/set-tauri-release-config.mjs
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.rust_targets }}
-
-      - name: Set Windows-only build environment
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          echo "CARGO_TARGET_DIR=D:\cargo" >> $env:GITHUB_ENV
-
-      - name: Cache cargo
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            apps/desktop/src-tauri -> ${{ matrix.os == 'windows-latest' && 'D:\cargo' || 'target' }}
-          key: ${{ matrix.os }}-${{ matrix.gpu_variant && 'gpu' || 'cpu' }}-native-off
-
-      - name: Set Windows GPU build environment
-        if: matrix.os == 'windows-latest' && matrix.gpu_variant == true
-        shell: pwsh
-        run: |
-          echo "WHISPER_CMAKE_ARGS=-DGGML_VULKAN=ON -DCMAKE_INSTALL_PREFIX=C:/w" >> $env:GITHUB_ENV
-
-      - name: Install system dependencies (Linux)
-        if: matrix.os == 'ubuntu-22.04'
-        shell: bash
-        run: |
-          set -euo pipefail
-          sudo apt-get update
-
-          # Choose the right WebKitGTK dev package for the runner.
-          if apt-cache show libwebkit2gtk-4.1-dev >/dev/null 2>&1; then
-            WEBKIT_PKG=libwebkit2gtk-4.1-dev
-          else
-            WEBKIT_PKG=libwebkit2gtk-4.0-dev
-          fi
-
-          sudo apt-get install -y \
-            build-essential pkg-config cmake \
-            libgtk-3-dev "$WEBKIT_PKG" \
-            libayatana-appindicator3-dev librsvg2-dev libasound2-dev libxdo-dev patchelf
-
-      - name: Set Linux CPU build environment
-        if: matrix.os == 'ubuntu-22.04' && matrix.gpu_variant == false
-        shell: bash
-        run: |
-          # Disable -march=native to ensure compatibility with older CPUs (no AVX2 requirement)
-          echo "WHISPER_CMAKE_ARGS=-DGGML_NATIVE=OFF" >> "$GITHUB_ENV"
-
-      - name: Install Vulkan SDK (Linux)
-        if: matrix.os == 'ubuntu-22.04' && matrix.gpu_variant == true
-        shell: bash
-        run: |
-          set -euo pipefail
-          sudo apt-get install -y libvulkan1 libvulkan-dev vulkan-tools
-
-          # Install glslc from LunarG Vulkan SDK
-          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list https://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list
-          sudo apt-get update
-          sudo apt-get install -y vulkan-sdk
-
-      - name: Set Linux GPU build environment
-        if: matrix.os == 'ubuntu-22.04' && matrix.gpu_variant == true
-        shell: bash
-        run: |
-          # Disable -march=native for broader compatibility, enable Vulkan
-          echo "WHISPER_CMAKE_ARGS=-DGGML_NATIVE=OFF -DGGML_VULKAN=ON" >> "$GITHUB_ENV"
-
-      - name: Install dependencies
-        run: npm ci --include=optional
-
-      - name: Install Vulkan SDK (Windows)
-        if: matrix.os == 'windows-latest' && matrix.gpu_variant == true
-        uses: jakoch/install-vulkan-sdk-action@v1
-        with:
-          version: "1.3.290.0"
-          cache: true
-          runtime: true
-
-      - name: Install GPU build deps (Windows)
-        if: matrix.os == 'windows-latest' && matrix.gpu_variant == true
-        shell: pwsh
-        run: |
-          # 1) LLVM / Clang (for bindgen / whisper-rs-sys)
-          choco install -y llvm
-          choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System' --no-progress
-
-          # 2) Wire up clang
-          "LIBCLANG_PATH=C:\Program Files\LLVM\bin"         >> $env:GITHUB_ENV
-          "CLANG_PATH=C:\Program Files\LLVM\bin\clang.exe"  >> $env:GITHUB_ENV
-          "C:\Program Files\LLVM\bin"                       >> $env:GITHUB_PATH
-
-      - name: Bundle VC++ Runtime DLLs (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          # Copy VC++ 2015-2022 Runtime DLLs to src-tauri for bundling
-          $srcTauri = Join-Path $env:GITHUB_WORKSPACE "apps/desktop/src-tauri"
-
-          Copy-Item "C:\Windows\System32\msvcp140.dll" $srcTauri
-          Copy-Item "C:\Windows\System32\vcruntime140.dll" $srcTauri
-          Copy-Item "C:\Windows\System32\vcruntime140_1.dll" $srcTauri
-
-          Write-Host "Copied VC++ Runtime DLLs to src-tauri:"
-          Get-ChildItem $srcTauri -Filter "*.dll" | ForEach-Object { Write-Host "  $($_.Name)" }
-
-          # Add DLLs to bundle.resources in tauri.conf.json
-          $configPath = Join-Path $srcTauri "tauri.conf.json"
-          $config = Get-Content $configPath -Raw | ConvertFrom-Json -Depth 20
-          $config.bundle.resources = @("msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll")
-          $config | ConvertTo-Json -Depth 20 | Set-Content $configPath -Encoding UTF8
-
-          Write-Host "Updated tauri.conf.json with bundle.resources"
-
-      - name: Import Apple signing certificate
-        if: matrix.os == 'macos-14'
-        id: import-macos-cert
-        uses: apple-actions/import-codesign-certs@v2
-        with:
-          create-keychain: true
-          keychain: build
-          keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
-          keychain-timeout: 3600
-          set-default-keychain: true
-          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
-          p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-
-      - name: Allow codesign access to private keys (CI keychain)
-        if: matrix.os == 'macos-14'
-        run: |
-          security set-key-partition-list -S apple-tool:,apple: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain-db
-
-      - name: Assert Developer ID Application identity is present
-        if: matrix.os == 'macos-14'
-        run: |
-          set -euo pipefail
-          out="$(security find-identity -v -p codesigning)"
-          echo "$out"
-          echo "$out" | grep -q "Developer ID Application" || {
-            echo "No 'Developer ID Application' identity found. Import a .p12 exported with its private key." >&2
-            exit 1
-          }
-
-      - name: Prepare Apple notary API key
-        if: matrix.os == 'macos-14'
-        run: |
-          set -euo pipefail
-          echo "$APPLE_API_KEY_BASE64" | base64 -d > AuthKey.p8
-          ls -l AuthKey.p8
-        shell: bash
-
-      - name: Verify Apple signing identity
-        if: matrix.os == 'macos-14'
-        run: |
-          set -euo pipefail
-          keychain_path="${{ steps.import-macos-cert.outputs['keychain-path'] }}"
-          if [[ -z "${keychain_path}" ]]; then
-            keychain_path="${HOME}/Library/Keychains/build.keychain-db"
-            echo "apple-actions/import-codesign-certs did not report a keychain path; falling back to ${keychain_path}." >&2
-          fi
-          output="$(security find-identity -v -p codesigning "${keychain_path}" || true)"
-          printf '%s\n' "$output"
-          summary_count="$(printf '%s\n' "$output" | awk '/valid identities found$/ { print $1; exit }')"
-          if [[ -z "${summary_count}" || ! "${summary_count}" =~ ^[0-9]+$ ]]; then
-            summary_count="$(printf '%s\n' "$output" | awk '/^[[:space:]]*[0-9]+\)/ { count++ } END { print count+0 }')"
-          fi
-          if [[ "${summary_count:-0}" -eq 0 ]]; then
-            echo "No valid code signing identities were imported into ${keychain_path}." >&2
-            echo "Ensure APPLE_CERTIFICATE contains a base64-encoded .p12 export that includes the private key." >&2
-            exit 1
-          fi
-
-      - name: Notary connectivity probe
-        if: matrix.os == 'macos-14'
-        run: |
-          xcrun notarytool history \
-            --key "${GITHUB_WORKSPACE}/AuthKey.p8" \
-            --key-id "${APPLE_API_KEY_ID}" \
-            --issuer "${APPLE_API_ISSUER}"
-
-      - name: Set Google OAuth credentials
-        id: google-oauth
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "client_id=777461284594-dhgao2eek53ppl4o188ik2i9cigdcmnp.apps.googleusercontent.com" >> "$GITHUB_OUTPUT"
-          echo "client_secret=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" >> "$GITHUB_OUTPUT"
-
-      - name: Compute Tauri CLI args
-        id: tauri-cli-args
-        shell: bash
-        env:
-          MATRIX_ARGS: ${{ matrix.args }}
-          RELEASE_ENV: ${{ needs.metadata.outputs.release_env }}
-          GPU_VARIANT: ${{ matrix.gpu_variant }}
-        run: |
-          set -euo pipefail
-          if [[ "${GPU_VARIANT}" == "true" ]]; then
-            if [[ "${RELEASE_ENV}" == "prod" ]]; then
-              config_file="src-tauri/tauri.gpu.prod.conf.json"
-            else
-              config_file="src-tauri/tauri.gpu.dev.conf.json"
-            fi
-          else
-            if [[ "${RELEASE_ENV}" == "prod" ]]; then
-              config_file="src-tauri/tauri.prod.conf.json"
-            else
-              config_file="src-tauri/tauri.dev.conf.json"
-            fi
-          fi
-          config_flag="--config ${config_file}"
-          matrix_args="${MATRIX_ARGS}"
-          if [[ -z "${matrix_args}" ]]; then
-            combined_args="${config_flag}"
-          elif [[ "${matrix_args}" == *" -- "* ]]; then
-            before="${matrix_args%% -- *}"
-            after="${matrix_args#* -- }"
-            if [[ -n "${before}" ]]; then
-              combined_args="${before} ${config_flag} -- ${after}"
-            else
-              combined_args="${config_flag} -- ${after}"
-            fi
-          else
-            combined_args="${matrix_args} ${config_flag}"
-          fi
-          printf 'Using %s for %s release.\n' "${config_file}" "${RELEASE_ENV}"
-          echo "args=${combined_args}" >> "$GITHUB_OUTPUT"
-          echo "config=${config_file}" >> "$GITHUB_OUTPUT"
-
-      - name: Turbo build desktop workspace
-        env:
-          MACOSX_DEPLOYMENT_TARGET: "13.3"
-          CMAKE_OSX_DEPLOYMENT_TARGET: "13.3"
-          TAURI_PLATFORM: ${{ matrix.tauri_platform }}
-          VOQUILL_DESKTOP_PLATFORM: ${{ matrix.node_platform }}
-        run: npm run build -- --filter=desktop...
-
-      - name: Build and publish
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_PLATFORM: ${{ matrix.tauri_platform }}
-          VOQUILL_DESKTOP_PLATFORM: ${{ matrix.node_platform }}
-          MACOSX_DEPLOYMENT_TARGET: "13.3"
-          CMAKE_OSX_DEPLOYMENT_TARGET: "13.3"
-          APPLE_TEAM_ID: ${{ env.APPLE_TEAM_ID }}
-          APPLE_SIGNING_IDENTITY: ${{ env.APPLE_SIGNING_IDENTITY }}
-          APPLE_API_KEY: ${{ env.APPLE_API_KEY_ID }}
-          APPLE_API_KEY_PATH: ${{ github.workspace }}/AuthKey.p8
-          APPLE_API_ISSUER: ${{ env.APPLE_API_ISSUER }}
-          TAURI_LOG_LEVEL: ${{ env.TAURI_LOG_LEVEL }}
-          RUST_LOG: ${{ env.RUST_LOG }}
-          VOQUILL_GOOGLE_CLIENT_ID: ${{ steps.google-oauth.outputs.client_id }}
-          VOQUILL_GOOGLE_CLIENT_SECRET: ${{ steps.google-oauth.outputs.client_secret }}
-        with:
-          projectPath: apps/desktop
-          tauriScript: npm run --workspace desktop tauri
-          args: ${{ steps.tauri-cli-args.outputs.args }}
-          tagName: ${{ matrix.gpu_variant == true && needs.metadata.outputs.gpu_tag_name || needs.metadata.outputs.tag_name }}
-          releaseName: ${{ matrix.gpu_variant == true && format('desktop-gpu{0} v{1}', needs.metadata.outputs.release_suffix, needs.metadata.outputs.version) || format('desktop{0} v{1}', needs.metadata.outputs.release_suffix, needs.metadata.outputs.version) }}
-          releaseBody: ${{ needs.metadata.outputs.release_body }}
-          releaseDraft: false
-          prerelease: ${{ needs.metadata.outputs.release_env != 'prod' }}
-          includeUpdaterJson: true
-
-      - name: Azure login for code signing
-        if: matrix.os == 'windows-latest'
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Sign Windows NSIS installer
-        if: matrix.os == 'windows-latest'
-        uses: azure/trusted-signing-action@v0
-        with:
-          endpoint: https://eus.codesigning.azure.net/
-          trusted-signing-account-name: ${{ vars.AZURE_CODE_SIGNING_NAME }}
-          certificate-profile-name: ${{ vars.AZURE_CERT_PROFILE_NAME }}
-          files-folder: D:\cargo\release\bundle\nsis
-          files-folder-filter: exe
-
-      - name: Verify NSIS installer signature
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          $nsisDir = "D:\cargo\release\bundle\nsis"
-          $installers = Get-ChildItem -Path $nsisDir -Filter "*.exe"
-
-          foreach ($installer in $installers) {
-            Write-Host "Verifying signature for: $($installer.Name)"
-            $sig = Get-AuthenticodeSignature -FilePath $installer.FullName
-
-            if ($sig.Status -ne "Valid") {
-              Write-Error "Signature verification failed for $($installer.Name): $($sig.Status)"
-              Write-Error "Status Message: $($sig.StatusMessage)"
-              exit 1
-            }
-
-            Write-Host "  Status: $($sig.Status)"
-            Write-Host "  Signer: $($sig.SignerCertificate.Subject)"
-            Write-Host "  Timestamp: $($sig.TimeStamperCertificate.Subject)"
-          }
-
-          Write-Host "All NSIS installers signed successfully"
-
-      - name: Re-upload signed NSIS installer
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ needs.metadata.outputs.tag_name }}
-        run: |
-          $nsisDir = "D:\cargo\release\bundle\nsis"
-          $installers = Get-ChildItem -Path $nsisDir -Filter "*.exe"
-
-          foreach ($installer in $installers) {
-            Write-Host "Uploading signed installer: $($installer.Name)"
-            gh release upload $env:RELEASE_TAG $installer.FullName --clobber
-          }
-
-      - name: Build Windows portable installer
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          $nsisDir = "D:\cargo\release\bundle\nsis"
-          $nsisInstaller = Get-ChildItem -Path $nsisDir -Filter "*-setup.exe" | Select-Object -First 1
-
-          if (-not $nsisInstaller) {
-            Write-Error "Could not find NSIS installer in $nsisDir"
-            exit 1
-          }
-
-          Write-Host "Found NSIS installer: $($nsisInstaller.FullName)"
-
-          $destDir = "apps/windows-installer/src-tauri/installer"
-          New-Item -ItemType Directory -Force -Path $destDir | Out-Null
-          Copy-Item $nsisInstaller.FullName "$destDir/Voquill_Setup.exe"
-
-          Write-Host "Building portable Windows installer..."
-          Set-Location apps/windows-installer
-          npm install
-          npm run tauri:build
-
-      - name: Sign Windows portable installer
-        if: matrix.os == 'windows-latest'
-        uses: azure/trusted-signing-action@v0
-        with:
-          endpoint: https://eus.codesigning.azure.net/
-          trusted-signing-account-name: ${{ vars.AZURE_CODE_SIGNING_NAME }}
-          certificate-profile-name: ${{ vars.AZURE_CERT_PROFILE_NAME }}
-          files-folder: D:\cargo\release
-          files-folder-filter: exe
-          file-digest: SHA256
-
-      - name: Verify portable installer signature
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          $installerExe = "D:\cargo\release\voquill-installer.exe"
-
-          Write-Host "Verifying signature for portable installer..."
-          $sig = Get-AuthenticodeSignature -FilePath $installerExe
-
-          if ($sig.Status -ne "Valid") {
-            Write-Error "Signature verification failed: $($sig.Status)"
-            Write-Error "Status Message: $($sig.StatusMessage)"
-            exit 1
-          }
-
-          Write-Host "  Status: $($sig.Status)"
-          Write-Host "  Signer: $($sig.SignerCertificate.Subject)"
-          Write-Host "  Timestamp: $($sig.TimeStamperCertificate.Subject)"
-          Write-Host "Portable installer signed successfully"
-
-      - name: Upload Windows portable installer
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ matrix.gpu_variant == true && needs.metadata.outputs.gpu_tag_name || needs.metadata.outputs.tag_name }}
-        run: |
-          $installerExe = "D:\cargo\release\voquill-installer.exe"
-
-          if (-not (Test-Path $installerExe)) {
-            Write-Error "Could not find portable installer executable at $installerExe"
-            exit 1
-          }
-
-          $destName = "Voquill_Portable_Installer.exe"
-          Copy-Item $installerExe $destName
-
-          Write-Host "Uploading $destName to release $env:RELEASE_TAG"
-          gh release upload $env:RELEASE_TAG $destName --clobber
-
-  retry-failed-builds:
-    name: Retry failed builds
-    needs: [metadata, build]
-    if: failure() && fromJSON(github.run_attempt) < 3
-    runs-on: ubuntu-latest
-    permissions:
-      actions: write
-    steps:
-      - name: Re-run failed jobs
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh run rerun ${{ github.run_id }} --failed
-
-  update-channel:
-    name: Update channel release (${{ matrix.variant }})
-    needs: [metadata, build]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    strategy:
-      matrix:
-        include:
-          - variant: cpu
-            release_tag: ${{ needs.metadata.outputs.tag_name }}
-            channel_tag: ${{ needs.metadata.outputs.channel_release_tag }}
-          - variant: gpu
-            release_tag: ${{ needs.metadata.outputs.gpu_tag_name }}
-            channel_tag: ${{ needs.metadata.outputs.gpu_channel_release_tag }}
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GH_REPO: ${{ github.repository }}
-      CHANNEL_TAG: ${{ matrix.channel_tag }}
-      RELEASE_TAG: ${{ matrix.release_tag }}
-    steps:
-      - name: Download latest.json from release
-        run: |
-          set -euo pipefail
-          mkdir -p dist
-          gh release download "$RELEASE_TAG" --pattern "latest.json" --dir dist --clobber
-          if [[ ! -s dist/latest.json ]]; then
-            echo "latest.json was not downloaded from release ${RELEASE_TAG}" >&2
-            ls -la dist
-            exit 1
-          fi
-      - name: Validate downloaded latest.json
-        run: |
-          set -euo pipefail
-          version="$(jq -r '.version // empty' dist/latest.json)"
-          expected="${{ needs.metadata.outputs.version }}"
-          if [[ -z "${version}" ]]; then
-            echo "latest.json is missing a 'version' field." >&2
-            exit 1
-          fi
-          if [[ "${version}" != "${expected}" ]]; then
-            echo "latest.json version '${version}' does not match expected '${expected}'." >&2
-            exit 1
-          fi
-      - name: Upload to channel
-        run: |
-          set -euo pipefail
-          gh release upload "$CHANNEL_TAG" dist/latest.json --clobber
