@@ -17,7 +17,10 @@ import { AudioSamples } from "../types/audio.types";
 import { StopRecordingResponse } from "../types/transcription-session.types";
 import { unwrapNestedLlmResponse } from "../utils/ai.utils";
 import { createId } from "../utils/id.utils";
-import { mapDictationLanguageToWhisperLanguage } from "../utils/language.utils";
+import {
+  coerceToDictationLanguage,
+  mapDictationLanguageToWhisperLanguage,
+} from "../utils/language.utils";
 import { getLogger } from "../utils/log.utils";
 import {
   buildLocalizedTranscriptionPrompt,
@@ -40,6 +43,7 @@ import { addWordsToCurrentUser } from "./user.actions";
 export type TranscribeAudioInput = {
   samples: AudioSamples;
   sampleRate: number;
+  dictationLanguage?: string;
 };
 
 export type TranscribeAudioMetadata = {
@@ -60,6 +64,7 @@ export type TranscribeAudioResult = {
 export type PostProcessInput = {
   rawTranscript: string;
   toneId: Nullable<string>;
+  dictationLanguage?: string;
 };
 
 export type PostProcessMetadata = {
@@ -89,6 +94,7 @@ export type TranscriptionMetadata = TranscribeAudioMetadata &
 export const transcribeAudio = async ({
   samples,
   sampleRate,
+  dictationLanguage: dictationLanguageOverride,
 }: TranscribeAudioInput): Promise<TranscribeAudioResult> => {
   const state = getAppState();
 
@@ -102,7 +108,9 @@ export const transcribeAudio = async ({
   } = getTranscribeAudioRepo();
   warnings.push(...transcribeWarnings);
 
-  const dictationLanguage = await loadMyEffectiveDictationLanguage(state);
+  const dictationLanguage = dictationLanguageOverride
+    ? coerceToDictationLanguage(dictationLanguageOverride)
+    : await loadMyEffectiveDictationLanguage(state);
   const whisperLanguage =
     mapDictationLanguageToWhisperLanguage(dictationLanguage);
 
@@ -111,25 +119,11 @@ export const transcribeAudio = async ({
   );
 
   const dictionaryEntries = collectDictionaryEntries(state);
-  const baseTranscriptionPrompt = buildLocalizedTranscriptionPrompt({
+  const transcriptionPrompt = buildLocalizedTranscriptionPrompt({
     entries: dictionaryEntries,
+    dictationLanguage,
     state,
   });
-
-  const transcriptionPrompt = (() => {
-    // Adding a patch to generate text precisely when dealing with different
-    //   variants of Chinese.
-    // See reference: https://github.com/openai/whisper/discussions/277
-    if (dictationLanguage === "zh-CN") {
-      return `以下是普通话的句子。\n\n${baseTranscriptionPrompt}`.trim();
-    }
-
-    if (dictationLanguage === "zh-TW" || dictationLanguage === "zh-HK") {
-      return `以下是普通話的句子。\n\n${baseTranscriptionPrompt}`.trim();
-    }
-
-    return baseTranscriptionPrompt;
-  })();
 
   getLogger().verbose(
     `Transcription prompt: ${transcriptionPrompt.length} chars, apiKeyId=${transcriptionApiKeyId ?? "none"}`,
@@ -175,6 +169,7 @@ export const transcribeAudio = async ({
 export const postProcessTranscript = async ({
   rawTranscript,
   toneId,
+  dictationLanguage: dictationLanguageOverride,
 }: PostProcessInput): Promise<PostProcessResult> => {
   const state = getAppState();
 
@@ -201,7 +196,9 @@ export const postProcessTranscript = async ({
     getLogger().verbose(
       `Post-processing with tone=${toneId ?? "default"}, apiKeyId=${genApiKeyId ?? "none"}`,
     );
-    const dictationLanguage = await loadMyEffectiveDictationLanguage(state);
+    const dictationLanguage = dictationLanguageOverride
+      ? coerceToDictationLanguage(dictationLanguageOverride)
+      : await loadMyEffectiveDictationLanguage(state);
     const toneConfig = getToneConfig(state, toneId);
     getLogger().verbose(
       "Post-process language:",
@@ -285,9 +282,6 @@ export const postProcessTranscript = async ({
     getLogger().info("No post-processing repo configured, skipping");
     metadata.postProcessMode = "none";
   }
-
-  // Add a space to the end so you can continue dictating seamlessly.
-  processedTranscript = processedTranscript.trim() + " ";
 
   return {
     transcript: processedTranscript,

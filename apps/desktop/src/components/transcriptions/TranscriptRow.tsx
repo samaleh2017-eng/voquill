@@ -1,5 +1,6 @@
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import PauseRoundedIcon from "@mui/icons-material/PauseRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
@@ -13,18 +14,18 @@ import {
   Typography,
 } from "@mui/material";
 import { getRec } from "@repo/utilities";
+import { invoke } from "@tauri-apps/api/core";
 import dayjs from "dayjs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useIntl } from "react-intl";
 import { showErrorSnackbar, showSnackbar } from "../../actions/app.actions";
 import {
+  openRetranscribeDialog,
   openTranscriptionDetailsDialog,
-  retranscribeTranscription,
 } from "../../actions/transcriptions.actions";
 import { getTranscriptionRepo } from "../../repos";
 import { produceAppState, useAppStore } from "../../store";
 import { TypographyWithMore } from "../common/TypographyWithMore";
-import { TranscriptionToneMenu } from "./TranscriptionToneMenu";
 
 export type TranscriptionRowProps = {
   id: string;
@@ -210,9 +211,12 @@ export const TranscriptionRow = ({ id }: TranscriptionRowProps) => {
     return Boolean(model || device);
   }, [transcription?.inferenceDevice, transcription?.modelSize]);
 
+  const isRetranscribing = useAppStore((state) =>
+    state.transcriptions.retranscribingIds.includes(id),
+  );
+
   const audioSnapshot = transcription?.audio;
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isRetranscribing, setIsRetranscribing] = useState(false);
   const [durationLabel, setDurationLabel] = useState<string | null>(null);
   const [playbackProgress, setPlaybackProgress] = useState(0);
   const [waveformWidth, setWaveformWidth] = useState(0);
@@ -422,42 +426,19 @@ export const TranscriptionRow = ({ id }: TranscriptionRowProps) => {
     }
   }, [audioSnapshot, id, intl]);
 
-  const handleRetranscribe = useCallback(
-    async (toneId: string | null) => {
-      if (!audioSnapshot) {
-        showErrorSnackbar(
-          intl.formatMessage({
-            defaultMessage:
-              "Audio snapshot unavailable for this transcription.",
-          }),
+  const handleExport = useCallback(async () => {
+    try {
+      const saved = await invoke<boolean>("export_transcription", { id });
+      if (saved) {
+        showSnackbar(
+          intl.formatMessage({ defaultMessage: "Export saved successfully" }),
+          { mode: "success" },
         );
-        return;
       }
-
-      try {
-        if (activePlayback?.transcriptionId === id) {
-          stopActivePlayback("stopped");
-          setIsPlaying(false);
-        }
-        setPlaybackProgress(0);
-
-        setIsRetranscribing(true);
-
-        await retranscribeTranscription({ transcriptionId: id, toneId });
-      } catch (error) {
-        console.error("Failed to retranscribe audio", error);
-        const fallbackMessage = intl.formatMessage({
-          defaultMessage: "Unable to retranscribe audio snippet.",
-        });
-        const message =
-          error instanceof Error ? error.message : fallbackMessage;
-        showErrorSnackbar(message || fallbackMessage);
-      } finally {
-        setIsRetranscribing(false);
-      }
-    },
-    [audioSnapshot, id, intl],
-  );
+    } catch (error) {
+      showErrorSnackbar(error);
+    }
+  }, [id, intl]);
 
   return (
     <>
@@ -620,30 +601,41 @@ export const TranscriptionRow = ({ id }: TranscriptionRowProps) => {
                 />
               ))}
             </Box>
-            <TranscriptionToneMenu onToneSelect={handleRetranscribe}>
-              {({ ref, open }) => (
-                <Tooltip
-                  title={intl.formatMessage({
-                    defaultMessage: "Retranscribe audio clip",
-                  })}
-                  placement="top"
-                >
-                  <span ref={ref} style={{ display: "inline-flex" }}>
-                    <IconButton
-                      aria-label={intl.formatMessage({
-                        defaultMessage: "Retranscribe audio",
-                      })}
-                      size="small"
-                      onClick={open}
-                      disabled={isRetranscribing}
-                      sx={{ p: 0.5 }}
-                    >
-                      <ReplayRoundedIcon fontSize="small" />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              )}
-            </TranscriptionToneMenu>
+            <Tooltip
+              title={intl.formatMessage({
+                defaultMessage: "Retranscribe audio clip",
+              })}
+              placement="top"
+            >
+              <IconButton
+                aria-label={intl.formatMessage({
+                  defaultMessage: "Retranscribe audio",
+                })}
+                size="small"
+                onClick={() => openRetranscribeDialog(id)}
+                disabled={isRetranscribing}
+                sx={{ p: 0.5 }}
+              >
+                <ReplayRoundedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip
+              title={intl.formatMessage({
+                defaultMessage: "Export transcription",
+              })}
+              placement="top"
+            >
+              <IconButton
+                aria-label={intl.formatMessage({
+                  defaultMessage: "Export transcription",
+                })}
+                size="small"
+                onClick={handleExport}
+                sx={{ p: 0.5 }}
+              >
+                <FileDownloadOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Box>
         </>
       )}

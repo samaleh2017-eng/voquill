@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::env;
 use std::io::{BufRead, BufReader, BufWriter, ErrorKind, Write};
 use std::net::{TcpListener, TcpStream};
-use std::process::{Child, Command, Stdio};
+use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::thread::{self, JoinHandle};
@@ -13,6 +13,13 @@ use tauri::{AppHandle, Emitter, EventTarget};
 
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
+
+#[cfg(target_os = "macos")]
+pub use super::macos::keyboard::run_listener_process;
+#[cfg(target_os = "windows")]
+pub use super::windows::keyboard::run_listener_process;
+#[cfg(target_os = "linux")]
+pub use super::linux::keyboard::run_listener_process;
 
 type PressedKeys = Arc<Mutex<HashSet<String>>>;
 
@@ -97,6 +104,36 @@ fn keys_payload(keys: Vec<String>) -> KeysHeldPayload {
     KeysHeldPayload { keys }
 }
 
+fn combo_store() -> &'static Mutex<Vec<Vec<String>>> {
+    static STORE: OnceLock<Mutex<Vec<Vec<String>>>> = OnceLock::new();
+    STORE.get_or_init(|| Mutex::new(Vec::new()))
+}
+
+fn child_stdin_store() -> &'static Mutex<Option<ChildStdin>> {
+    static STORE: OnceLock<Mutex<Option<ChildStdin>>> = OnceLock::new();
+    STORE.get_or_init(|| Mutex::new(None))
+}
+
+pub fn sync_combos(combos: Vec<Vec<String>>) {
+    {
+        let mut guard = combo_store()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        *guard = combos.clone();
+    }
+
+    if let Ok(mut guard) = child_stdin_store().lock() {
+        if let Some(stdin) = guard.as_mut() {
+            if let Ok(json) = serde_json::to_string(&combos) {
+                if let Err(err) = writeln!(stdin, "{json}") {
+                    eprintln!("Failed to write combos to child stdin: {err}");
+                }
+                let _ = stdin.flush();
+            }
+        }
+    }
+}
+
 pub fn start_key_listener(app: &AppHandle) -> Result<(), String> {
     stop_key_listener()?;
 
@@ -137,21 +174,21 @@ pub fn stop_key_listener() -> Result<(), String> {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-enum WireEventKind {
+pub(crate) enum WireEventKind {
     Press,
     Release,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct KeyboardEventPayload {
-    kind: WireEventKind,
-    key_label: String,
-    raw_code: Option<u32>,
+pub(crate) struct KeyboardEventPayload {
+    pub kind: WireEventKind,
+    pub key_label: String,
+    pub raw_code: Option<u32>,
     #[serde(default)]
-    scan_code: u32,
+    pub scan_code: u32,
 }
 
-fn debug_keys_enabled() -> bool {
+pub(crate) fn debug_keys_enabled() -> bool {
     static DEBUG: OnceLock<bool> = OnceLock::new();
     *DEBUG.get_or_init(|| matches!(env::var("VOQUILL_DEBUG_KEYS"), Ok(value) if value == "1"))
 }
@@ -200,7 +237,9 @@ fn run_listener_thread(
 
         match listener.accept() {
             Ok((stream, _addr)) => {
-                if let Err(err) = pump_stream(stream, emitter.clone()) {
+                let result = pump_stream(stream, emitter.clone());
+                emitter.reset();
+                if let Err(err) = result {
                     eprintln!("Keyboard listener stream error: {err}");
                 }
             }
@@ -216,6 +255,7 @@ fn run_listener_thread(
 
     stop_listener_child();
 }
+
 fn spawn_listener_child(port: u16) -> Result<Child, String> {
     let exe = std::env::current_exe()
         .map_err(|err| format!("failed to resolve current executable: {err}"))?;
@@ -224,7 +264,7 @@ fn spawn_listener_child(port: u16) -> Result<Child, String> {
     command
         .env("VOQUILL_KEYBOARD_LISTENER", "1")
         .env("VOQUILL_KEYBOARD_PORT", port.to_string())
-        .stdin(Stdio::null())
+        .stdin(Stdio::piped())
         .stdout(Stdio::null())
         .stderr(Stdio::inherit());
 
@@ -270,7 +310,35 @@ fn ensure_listener_child(port: u16) -> Result<(), String> {
         return Ok(());
     }
 
-    let child = spawn_listener_child(port)?;
+    let mut child = spawn_listener_child(port)?;
+
+    let stdin = child.stdin.take();
+    {
+        let mut stdin_guard = child_stdin_store()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        *stdin_guard = stdin;
+    }
+
+    {
+        let combos = combo_store()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone();
+        if !combos.is_empty() {
+            if let Ok(mut guard) = child_stdin_store().lock() {
+                if let Some(stdin) = guard.as_mut() {
+                    if let Ok(json) = serde_json::to_string(&combos) {
+                        if let Err(err) = writeln!(stdin, "{json}") {
+                            eprintln!("Failed to send initial combos to child: {err}");
+                        }
+                        let _ = stdin.flush();
+                    }
+                }
+            }
+        }
+    }
+
     let mut guard = child_store()
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
@@ -279,6 +347,13 @@ fn ensure_listener_child(port: u16) -> Result<(), String> {
 }
 
 fn stop_listener_child() {
+    {
+        let mut stdin_guard = child_stdin_store()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        *stdin_guard = None;
+    }
+
     let mut guard = child_store()
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
@@ -378,21 +453,59 @@ fn parse_unknown_label(label: &str) -> Option<u32> {
     trimmed.parse().ok()
 }
 
-fn key_to_label(key: RdevKey) -> String {
+pub(crate) fn key_to_label(key: RdevKey) -> String {
     match key {
         RdevKey::Unknown(code) => format!("Unknown({code})"),
         _ => format!("{key:?}"),
     }
 }
 
-fn key_raw_code(key: RdevKey) -> Option<u32> {
+pub(crate) fn key_raw_code(key: RdevKey) -> Option<u32> {
     match key {
         RdevKey::Unknown(code) => Some(code),
         _ => None,
     }
 }
 
-pub fn run_listener_process() -> Result<(), String> {
+pub(crate) fn send_event_to_tcp(
+    writer: &Mutex<BufWriter<TcpStream>>,
+    payload: &KeyboardEventPayload,
+) {
+    if let Ok(json) = serde_json::to_string(payload) {
+        if let Ok(mut guard) = writer.lock() {
+            if let Err(err) = writeln!(guard, "{json}") {
+                eprintln!("Keyboard listener write error: {err}");
+                std::process::exit(1);
+            }
+            if let Err(err) = guard.flush() {
+                eprintln!("Keyboard listener flush error: {err}");
+                std::process::exit(1);
+            }
+        }
+    }
+}
+
+pub(crate) fn matches_any_combo(pressed: &HashSet<String>, combos: &[Vec<String>]) -> bool {
+    for combo in combos {
+        if combo.is_empty() {
+            continue;
+        }
+        let all_match = combo
+            .iter()
+            .all(|k| pressed.iter().any(|p| p.eq_ignore_ascii_case(k)));
+        if all_match {
+            return true;
+        }
+    }
+    false
+}
+
+pub(crate) struct ListenerContext {
+    pub writer: Arc<Mutex<BufWriter<TcpStream>>>,
+    pub combos: Arc<Mutex<Vec<Vec<String>>>>,
+}
+
+pub(crate) fn setup_listener_process() -> Result<ListenerContext, String> {
     let port = env::var("VOQUILL_KEYBOARD_PORT")
         .map_err(|_| "VOQUILL_KEYBOARD_PORT env var missing".to_string())?
         .parse::<u16>()
@@ -405,42 +518,60 @@ pub fn run_listener_process() -> Result<(), String> {
         .map_err(|err| format!("failed to configure listener socket: {err}"))?;
 
     let writer = Arc::new(Mutex::new(BufWriter::new(stream)));
+    let combos: Arc<Mutex<Vec<Vec<String>>>> = Arc::new(Mutex::new(Vec::new()));
 
-    let result = rdev::listen({
-        let writer = writer.clone();
-        move |event| {
-            let payload = match event.event_type {
-                EventType::KeyPress(key) => Some(KeyboardEventPayload {
-                    kind: WireEventKind::Press,
-                    key_label: key_to_label(key),
-                    raw_code: key_raw_code(key),
-                    scan_code: event.position_code,
-                }),
-                EventType::KeyRelease(key) => Some(KeyboardEventPayload {
-                    kind: WireEventKind::Release,
-                    key_label: key_to_label(key),
-                    raw_code: key_raw_code(key),
-                    scan_code: event.position_code,
-                }),
-                _ => None,
+    let combos_for_stdin = combos.clone();
+    thread::spawn(move || {
+        let stdin = std::io::stdin();
+        let reader = BufReader::new(stdin.lock());
+        for line in reader.lines() {
+            let line = match line {
+                Ok(l) => l,
+                Err(_) => break,
             };
-
-            if let Some(payload) = payload {
-                if let Ok(json) = serde_json::to_string(&payload) {
-                    if let Ok(mut guard) = writer.lock() {
-                        if let Err(err) = writeln!(guard, "{json}") {
-                            eprintln!("Keyboard listener write error: {err}");
-                            std::process::exit(1);
-                        }
-                        if let Err(err) = guard.flush() {
-                            eprintln!("Keyboard listener flush error: {err}");
-                            std::process::exit(1);
-                        }
+            if line.trim().is_empty() {
+                continue;
+            }
+            match serde_json::from_str::<Vec<Vec<String>>>(&line) {
+                Ok(new_combos) => {
+                    if let Ok(mut guard) = combos_for_stdin.lock() {
+                        *guard = new_combos;
                     }
+                }
+                Err(err) => {
+                    eprintln!("Keyboard child: malformed combo update: {err}");
                 }
             }
         }
     });
 
-    result.map_err(|err| format!("keyboard listener error: {err:?}"))
+    Ok(ListenerContext { writer, combos })
+}
+
+pub(crate) fn run_listen_loop(
+    writer: Arc<Mutex<BufWriter<TcpStream>>>,
+    scan_code_fn: fn(&Event) -> u32,
+) -> Result<(), String> {
+    rdev::listen(move |event| {
+        let payload = match event.event_type {
+            EventType::KeyPress(key) => Some(KeyboardEventPayload {
+                kind: WireEventKind::Press,
+                key_label: key_to_label(key),
+                raw_code: key_raw_code(key),
+                scan_code: scan_code_fn(&event),
+            }),
+            EventType::KeyRelease(key) => Some(KeyboardEventPayload {
+                kind: WireEventKind::Release,
+                key_label: key_to_label(key),
+                raw_code: key_raw_code(key),
+                scan_code: scan_code_fn(&event),
+            }),
+            _ => None,
+        };
+
+        if let Some(payload) = payload {
+            send_event_to_tcp(&writer, &payload);
+        }
+    })
+    .map_err(|err| format!("keyboard listener error: {err:?}"))
 }

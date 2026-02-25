@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:app/actions/language_actions.dart';
+import 'package:app/actions/permission_actions.dart';
+import 'package:app/actions/revenue_cat_actions.dart';
 import 'package:app/actions/styles_actions.dart';
 import 'package:app/actions/transcription_actions.dart';
+import 'package:app/api/config_api.dart';
 import 'package:app/api/member_api.dart';
 import 'package:app/api/user_api.dart';
 import 'package:app/model/auth_user_model.dart';
@@ -18,6 +21,8 @@ Future<void> refreshMainData() async {
   await Future.wait([
     loadTranscriptions(),
     loadCurrentUser(),
+    loadCurrentMember(),
+    loadConfig(),
     loadStyles(),
     loadDictationLanguages(),
   ]);
@@ -36,20 +41,24 @@ StreamSubscription<User?> listenToAuthChanges() {
             email: firebaseUser.email,
           );
         });
+        await loginRevenueCat(firebaseUser.uid);
         await refreshMainData();
       }
       syncKeyboardAuth();
     } else {
       if (currentAuth != null) {
+        await logoutRevenueCat();
         produceAppState((draft) {
           draft.auth = null;
           draft.user = null;
+          draft.member = null;
         });
       }
       clearKeyboardAuth();
     }
 
     if (isInitial) {
+      await checkPermissions();
       produceAppState((draft) {
         draft.status = ActionStatus.success;
       });
@@ -65,6 +74,28 @@ Future<void> loadCurrentUser() async {
     });
   } catch (e) {
     _logger.w('Failed to load user (may not exist yet)', e);
+  }
+}
+
+Future<void> loadCurrentMember() async {
+  try {
+    final output = await GetMyMemberApi().call(null);
+    produceAppState((draft) {
+      draft.member = output.member;
+    });
+  } catch (e) {
+    _logger.w('Failed to load member', e);
+  }
+}
+
+Future<void> loadConfig() async {
+  try {
+    final output = await GetFullConfigApi().call(null);
+    produceAppState((draft) {
+      draft.config = output.config;
+    });
+  } catch (e) {
+    _logger.w('Failed to load config', e);
   }
 }
 

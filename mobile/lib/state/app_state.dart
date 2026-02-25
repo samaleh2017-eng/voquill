@@ -1,5 +1,7 @@
 import 'package:app/model/auth_user_model.dart';
 import 'package:app/model/common_model.dart';
+import 'package:app/model/config_model.dart';
+import 'package:app/model/member_model.dart';
 import 'package:app/model/term_model.dart';
 import 'package:app/model/tone_model.dart';
 import 'package:app/model/transcription_model.dart';
@@ -21,6 +23,8 @@ class AppState with EquatableMixin {
 
   final AuthUser? auth;
   final User? user;
+  final Member? member;
+  final FullConfig? config;
 
   final Map<String, Term> termById;
   final Map<String, Tone> toneById;
@@ -34,11 +38,16 @@ class AppState with EquatableMixin {
   final List<String> dictationLanguages;
   final String? activeDictationLanguage;
 
+  final bool hasMicrophonePermission;
+  final bool hasKeyboardPermission;
+
   const AppState({
     this.status = ActionStatus.loading,
     this.error,
     this.auth,
     this.user,
+    this.member,
+    this.config,
     this.termById = const {},
     this.toneById = const {},
     this.transcriptionById = const {},
@@ -49,10 +58,13 @@ class AppState with EquatableMixin {
     this.styles = const StylesState(),
     this.dictationLanguages = const ['en'],
     this.activeDictationLanguage,
+    this.hasMicrophonePermission = false,
+    this.hasKeyboardPermission = false,
   });
 
   bool get isLoggedIn => auth != null;
   bool get isOnboarded => user?.onboarded ?? false;
+  bool get hasPermissions => hasMicrophonePermission && hasKeyboardPermission;
 
   @override
   List<Object?> get props => [
@@ -60,6 +72,8 @@ class AppState with EquatableMixin {
     error,
     auth,
     user,
+    member,
+    config,
     termById,
     toneById,
     transcriptionById,
@@ -70,5 +84,7 @@ class AppState with EquatableMixin {
     styles,
     dictationLanguages,
     activeDictationLanguage,
+    hasMicrophonePermission,
+    hasKeyboardPermission,
   ];
 }
