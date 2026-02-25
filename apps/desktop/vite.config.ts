@@ -1,10 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
+import tailwindcss from "@tailwindcss/vite";
+import path from "node:path";
 
 const host = process.env.TAURI_DEV_HOST;
 
-// https://vite.dev/config/
 export default defineConfig(async () => {
   const { formatjsOverrideIdFn } = await import("./scripts/formatjs-id.mjs");
 
@@ -35,7 +36,13 @@ export default defineConfig(async () => {
         },
       }),
       svgr(),
+      tailwindcss(),
     ],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+    },
     clearScreen: false,
     server: {
       port: 1420,

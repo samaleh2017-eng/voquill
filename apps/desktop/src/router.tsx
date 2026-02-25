@@ -15,12 +15,21 @@ import StylingPage from "./components/styling/StylingPage.tsx";
 import AppsPage from "./components/apps/AppsPage.tsx";
 import WelcomePage from "./components/welcome/WelcomePage.tsx";
 import LoginPage from "./components/login/LoginPage.tsx";
+import { AppLayout } from "./components/layout/AppLayout";
 
 const AppWrapper = () => {
   return (
     <PageLayout header={<AppHeader />}>
       <Outlet />
     </PageLayout>
+  );
+};
+
+const DashboardWrapper = () => {
+  return (
+    <AppLayout>
+      <Outlet />
+    </AppLayout>
   );
 };
 
@@ -76,7 +85,7 @@ const router = createBrowserRouter([
       {
         element: (
           <Guard node="dashboard">
-            <AppWrapper />
+            <DashboardWrapper />
           </Guard>
         ),
         children: [

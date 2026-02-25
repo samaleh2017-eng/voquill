@@ -51,7 +51,7 @@ export const theme = createTheme({
   shadows: Array(25).fill("none") as unknown[] as Shadows,
 
   typography: {
-    fontFamily: '"Roboto","Helvetica","Arial",sans-serif',
+    fontFamily: '"Inter Variable","Inter",ui-sans-serif,system-ui,sans-serif',
     pxToRem: (px: number) => `${px / 16}rem`,
 
     displayLarge: { fontSize: 57, lineHeight: 1, fontWeight: 400 },
