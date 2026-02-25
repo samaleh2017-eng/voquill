@@ -1,17 +1,22 @@
 import type { Tone } from "@repo/types";
 import { getRec } from "@repo/utilities";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useAppStore } from "../../store";
 import { getSortedToneIds } from "../../utils/tone.utils";
-import { getMyUserPreferences } from "../../utils/user.utils";
-import type {
-  MenuPopoverBuilderArgs,
-  MenuPopoverItem,
-} from "../common/MenuPopover";
-import { MenuPopoverBuilder } from "../common/MenuPopover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type TranscriptionToneMenuProps = {
-  children: (args: MenuPopoverBuilderArgs) => React.ReactNode;
+  children: (args: {
+    ref: React.RefCallback<HTMLElement | null>;
+    isOpen: boolean;
+    open: () => void;
+    close: () => void;
+  }) => React.ReactNode;
   onToneSelect: (toneId: string | null) => void;
 };
 
@@ -19,10 +24,6 @@ export const TranscriptionToneMenu = ({
   children,
   onToneSelect,
 }: TranscriptionToneMenuProps) => {
-  const defaultTone = useAppStore((state) =>
-    getRec(state.toneById, getMyUserPreferences(state)?.activeToneId),
-  );
-
   const tones = useAppStore((state) => {
     const toneIds = getSortedToneIds(state);
     return toneIds
@@ -37,25 +38,26 @@ export const TranscriptionToneMenu = ({
     [onToneSelect],
   );
 
-  const items = useMemo<MenuPopoverItem[]>(() => {
-    const menuItems: MenuPopoverItem[] = tones.map<MenuPopoverItem>((tone) => ({
-      kind: "listItem",
-      title: tone.name,
-      onClick: ({ close }) => {
-        handleToneSelect(tone.id);
-        close();
-      },
-    }));
-
-    return menuItems;
-  }, [defaultTone?.name, handleToneSelect, tones]);
-
   return (
-    <MenuPopoverBuilder
-      items={items}
-      sx={{ maxHeight: 300, overflowY: "auto" }}
-    >
-      {(args) => children(args)}
-    </MenuPopoverBuilder>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        {children({
+          ref: () => {},
+          isOpen: false,
+          open: () => {},
+          close: () => {},
+        })}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="max-h-[300px] overflow-y-auto">
+        {tones.map((tone) => (
+          <DropdownMenuItem
+            key={tone.id}
+            onClick={() => handleToneSelect(tone.id)}
+          >
+            {tone.name}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };

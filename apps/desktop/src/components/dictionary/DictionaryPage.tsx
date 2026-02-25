@@ -1,6 +1,4 @@
-import { FindReplaceOutlined, SpellcheckOutlined } from "@mui/icons-material";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { Button } from "@mui/material";
+import { RiAddLine, RiText, RiFindReplaceLine } from "@remixicon/react";
 import { Term } from "@repo/types";
 import dayjs from "dayjs";
 import { useCallback } from "react";
@@ -12,9 +10,15 @@ import { useAsyncEffect } from "../../hooks/async.hooks";
 import { getTermRepo } from "../../repos";
 import { produceAppState, useAppStore } from "../../store";
 import { createId } from "../../utils/id.utils";
-import { MenuPopoverBuilder } from "../common/MenuPopover";
-import { VirtualizedListPage } from "../common/VirtualizedListPage";
+import { VirtualizedListPage } from "../ui/virtualized-list-page";
 import { DictionaryRow } from "./DictionaryRow";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function DictionaryPage() {
   const termIds = useAppStore((state) => state.dictionary.termIds);
@@ -55,41 +59,24 @@ export default function DictionaryPage() {
   }, []);
 
   const addButton = (
-    <MenuPopoverBuilder
-      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      transformOrigin={{ vertical: "top", horizontal: "right" }}
-      items={[
-        {
-          kind: "listItem",
-          title: <FormattedMessage defaultMessage="Glossary term" />,
-          onClick: ({ close }) => {
-            handleAddTerm(false);
-            close();
-          },
-          leading: <SpellcheckOutlined />,
-        },
-        {
-          kind: "listItem",
-          title: <FormattedMessage defaultMessage="Replacement rule" />,
-          onClick: ({ close }) => {
-            handleAddTerm(true);
-            close();
-          },
-          leading: <FindReplaceOutlined />,
-        },
-      ]}
-    >
-      {(args) => (
-        <Button
-          variant="text"
-          startIcon={<AddRoundedIcon />}
-          onClick={args.open}
-          ref={args.ref}
-        >
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="gap-1.5">
+          <RiAddLine className="size-4" />
           <FormattedMessage defaultMessage="Add" />
         </Button>
-      )}
-    </MenuPopoverBuilder>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => handleAddTerm(false)}>
+          <RiText className="mr-2 size-4" />
+          <FormattedMessage defaultMessage="Glossary term" />
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleAddTerm(true)}>
+          <RiFindReplaceLine className="mr-2 size-4" />
+          <FormattedMessage defaultMessage="Replacement rule" />
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 
   return (

@@ -1,15 +1,4 @@
-import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { RiLoopLeftLine } from "@remixicon/react";
 import { getRec } from "@repo/utilities";
 import { useCallback, useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -20,6 +9,15 @@ import {
 } from "../../actions/transcriptions.actions";
 import { AppState } from "../../state/app.state";
 import { useAppStore } from "../../store";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { TranscriptionToneMenu } from "./TranscriptionToneMenu";
 
 const formatModelSizeLabel = (
@@ -27,58 +25,57 @@ const formatModelSizeLabel = (
   unknownLabel: React.ReactNode = "Unknown",
 ): React.ReactNode => {
   const value = modelSize?.trim();
-  if (!value) {
-    return unknownLabel;
-  }
-
+  if (!value) return unknownLabel;
   return value.charAt(0).toUpperCase() + value.slice(1);
 };
 
-const renderTextBlock = (
-  label: React.ReactNode,
-  value: string | null | undefined,
-  options?: { placeholder?: React.ReactNode; monospace?: boolean },
-) => {
+function TextBlock({
+  label,
+  value,
+  placeholder,
+  monospace,
+}: {
+  label: React.ReactNode;
+  value: string | null | undefined;
+  placeholder?: React.ReactNode;
+  monospace?: boolean;
+}) {
   const normalized = value?.trim();
 
   return (
-    <Box>
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
+    <div>
+      <span className="text-xs text-muted-foreground">{label}</span>
       {normalized ? (
-        <Box
-          sx={(theme) => ({
-            mt: 0.5,
-            p: 1,
-            borderRadius: 1,
-            bgcolor:
-              theme.vars?.palette.level1 ?? theme.palette.background.default,
-          })}
-        >
-          <Typography
-            variant="body2"
-            sx={{
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              fontFamily: options?.monospace
-                ? '"Roboto Mono", monospace'
-                : undefined,
-            }}
+        <div className="mt-1 rounded-md bg-muted p-2">
+          <p
+            className={`whitespace-pre-wrap break-words text-sm text-foreground ${monospace ? "font-mono" : ""}`}
           >
             {normalized}
-          </Typography>
-        </Box>
+          </p>
+        </div>
       ) : (
-        <Typography variant="body2" color="text.secondary">
-          {options?.placeholder ?? (
-            <FormattedMessage defaultMessage="Not provided." />
-          )}
-        </Typography>
+        <p className="text-sm text-muted-foreground">
+          {placeholder ?? <FormattedMessage defaultMessage="Not provided." />}
+        </p>
       )}
-    </Box>
+    </div>
   );
-};
+}
+
+function MetaField({
+  label,
+  value,
+}: {
+  label: React.ReactNode;
+  value: React.ReactNode;
+}) {
+  return (
+    <div>
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <p className="text-sm font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
 
 const resolveApiKeyLabel = (
   records: AppState["apiKeyById"],
@@ -86,20 +83,11 @@ const resolveApiKeyLabel = (
   noneLabel: string,
   unknownLabel: string,
 ): string => {
-  if (!apiKeyId) {
-    return noneLabel;
-  }
-
+  if (!apiKeyId) return noneLabel;
   const record = records[apiKeyId];
-  if (!record) {
-    return unknownLabel;
-  }
-
+  if (!record) return unknownLabel;
   const suffix = record.keySuffix?.trim();
-  if (suffix && suffix.length > 0) {
-    return `${record.name} (••••${suffix})`;
-  }
-
+  if (suffix && suffix.length > 0) return `${record.name} (••••${suffix})`;
   return record.name;
 };
 
@@ -107,9 +95,7 @@ export const TranscriptionDetailsDialog = () => {
   const open = useAppStore((state) => state.transcriptions.detailsDialogOpen);
   const transcription = useAppStore((state) => {
     const transcriptionId = state.transcriptions.detailsDialogTranscriptionId;
-    if (!transcriptionId) {
-      return null;
-    }
+    if (!transcriptionId) return null;
     return getRec(state.transcriptionById, transcriptionId);
   });
   const apiKeysById = useAppStore((state) => state.apiKeyById);
@@ -130,7 +116,6 @@ export const TranscriptionDetailsDialog = () => {
         );
         return;
       }
-
       try {
         setIsRetranscribing(true);
         await retranscribeTranscription({
@@ -152,15 +137,12 @@ export const TranscriptionDetailsDialog = () => {
   );
 
   const transcriptionModeLabel = useMemo(() => {
-    if (transcription?.transcriptionMode === "api") {
+    if (transcription?.transcriptionMode === "api")
       return <FormattedMessage defaultMessage="API" />;
-    }
-    if (transcription?.transcriptionMode === "cloud") {
+    if (transcription?.transcriptionMode === "cloud")
       return <FormattedMessage defaultMessage="Voquill Cloud" />;
-    }
-    if (transcription?.transcriptionMode === "local") {
+    if (transcription?.transcriptionMode === "local")
       return <FormattedMessage defaultMessage="Local" />;
-    }
     return <FormattedMessage defaultMessage="Unknown" />;
   }, [transcription?.transcriptionMode]);
 
@@ -176,14 +158,12 @@ export const TranscriptionDetailsDialog = () => {
   );
 
   const postProcessModeLabel = useMemo(() => {
-    if (transcription?.postProcessMode === "api") {
+    if (transcription?.postProcessMode === "api")
       return <FormattedMessage defaultMessage="API" />;
-    }
-    if (transcription?.postProcessMode === "cloud") {
+    if (transcription?.postProcessMode === "cloud")
       return <FormattedMessage defaultMessage="Voquill Cloud" />;
-    }
     return <FormattedMessage defaultMessage="Disabled" />;
-  }, [transcription?.postProcessDevice, transcription?.postProcessMode]);
+  }, [transcription?.postProcessMode]);
 
   const postProcessApiKeyLabel = useMemo(
     () =>
@@ -236,10 +216,8 @@ export const TranscriptionDetailsDialog = () => {
 
   const postProcessPrompt = useMemo(() => {
     let prompt = transcription?.postProcessPrompt?.trim() ?? "";
-    if (rawTranscriptText) {
+    if (rawTranscriptText)
       prompt = prompt.replace(rawTranscriptText.trim(), "<transcript>");
-    }
-
     return prompt && prompt.length > 0 ? prompt : null;
   }, [transcription?.postProcessPrompt, rawTranscriptText]);
 
@@ -248,264 +226,215 @@ export const TranscriptionDetailsDialog = () => {
   const transcriptionDurationLabel = useMemo(() => {
     const ms = transcription?.transcriptionDurationMs;
     if (ms == null) return null;
-    if (ms >= 1000) {
-      return `${(ms / 1000).toFixed(2)}s`;
-    }
-    return `${ms}ms`;
+    return ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${ms}ms`;
   }, [transcription?.transcriptionDurationMs]);
 
   const postprocessDurationLabel = useMemo(() => {
     const ms = transcription?.postprocessDurationMs;
     if (ms == null) return null;
-    if (ms >= 1000) {
-      return `${(ms / 1000).toFixed(2)}s`;
-    }
-    return `${ms}ms`;
+    return ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${ms}ms`;
   }, [transcription?.postprocessDurationMs]);
 
   const warnings = useMemo(() => {
-    if (!transcription?.warnings) {
-      return [];
-    }
+    if (!transcription?.warnings) return [];
     return transcription.warnings
-      .map((warning) => warning.trim())
-      .filter((warning) => warning.length > 0);
+      .map((w) => w.trim())
+      .filter((w) => w.length > 0);
   }, [transcription?.warnings]);
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-      <DialogTitle>
-        <FormattedMessage defaultMessage="Transcription Details" />
-      </DialogTitle>
-      <DialogContent dividers>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) handleClose();
+      }}
+    >
+      <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            <FormattedMessage defaultMessage="Transcription Details" />
+          </DialogTitle>
+        </DialogHeader>
+
         {transcription ? (
-          <Stack spacing={3}>
-            <Box>
-              <Typography variant="overline" color="text.secondary">
+          <div className="flex flex-col gap-6">
+            <div>
+              <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
                 <FormattedMessage defaultMessage="Outputs" />
-              </Typography>
-              <Stack spacing={1.25} sx={{ mt: 1 }}>
-                {renderTextBlock(
-                  <FormattedMessage defaultMessage="Raw transcription" />,
-                  rawTranscriptText,
-                  {
-                    placeholder: (
-                      <FormattedMessage defaultMessage="Raw transcript unavailable." />
-                    ),
-                    monospace: true,
-                  },
+              </span>
+              <div className="mt-2 flex flex-col gap-3">
+                <TextBlock
+                  label={
+                    <FormattedMessage defaultMessage="Raw transcription" />
+                  }
+                  value={rawTranscriptText}
+                  placeholder={
+                    <FormattedMessage defaultMessage="Raw transcript unavailable." />
+                  }
+                  monospace
+                />
+                {sanitizedTranscriptText && (
+                  <TextBlock
+                    label={
+                      <FormattedMessage defaultMessage="After replacements" />
+                    }
+                    value={sanitizedTranscriptText}
+                    monospace
+                  />
                 )}
-                {sanitizedTranscriptText &&
-                  renderTextBlock(
-                    <FormattedMessage defaultMessage="After replacements" />,
-                    sanitizedTranscriptText,
-                    {
-                      monospace: true,
-                    },
-                  )}
-                {renderTextBlock(
-                  <FormattedMessage defaultMessage="Final transcription" />,
-                  finalTranscriptText,
-                  {
-                    placeholder: (
-                      <FormattedMessage defaultMessage="Final transcript unavailable." />
-                    ),
-                    monospace: true,
-                  },
-                )}
-              </Stack>
-            </Box>
+                <TextBlock
+                  label={
+                    <FormattedMessage defaultMessage="Final transcription" />
+                  }
+                  value={finalTranscriptText}
+                  placeholder={
+                    <FormattedMessage defaultMessage="Final transcript unavailable." />
+                  }
+                  monospace
+                />
+              </div>
+            </div>
 
             {warnings.length > 0 && (
               <>
-                <Divider />
-
-                <Box>
-                  <Typography variant="overline" color="text.secondary">
+                <Separator />
+                <div>
+                  <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
                     <FormattedMessage defaultMessage="Warnings" />
-                  </Typography>
-                  <Stack spacing={1} sx={{ mt: 1 }}>
+                  </span>
+                  <div className="mt-2 flex flex-col gap-2">
                     {warnings.map((warning, index) => (
-                      <Box
+                      <div
                         key={`warning-${index}`}
-                        sx={(theme) => ({
-                          p: 1,
-                          borderRadius: 1,
-                          bgcolor:
-                            theme.vars?.palette.level1 ??
-                            theme.palette.background.default,
-                        })}
+                        className="rounded-md bg-muted p-2"
                       >
-                        <Typography
-                          variant="body2"
-                          sx={(theme) => ({
-                            color:
-                              theme.vars?.palette.warning?.main ??
-                              theme.palette.warning.main,
-                          })}
-                        >
-                          {warning}
-                        </Typography>
-                      </Box>
+                        <p className="text-sm text-amber-500">{warning}</p>
+                      </div>
                     ))}
-                  </Stack>
-                </Box>
+                  </div>
+                </div>
               </>
             )}
 
             {(transcriptionDurationLabel || postprocessDurationLabel) && (
               <>
-                <Divider />
-
-                <Box>
-                  <Typography variant="overline" color="text.secondary">
+                <Separator />
+                <div>
+                  <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
                     <FormattedMessage defaultMessage="Performance" />
-                  </Typography>
-                  <Stack spacing={1.25} sx={{ mt: 1 }}>
+                  </span>
+                  <div className="mt-2 flex flex-col gap-3">
                     {transcriptionDurationLabel && (
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
+                      <MetaField
+                        label={
                           <FormattedMessage defaultMessage="Transcription Duration" />
-                        </Typography>
-                        <Typography variant="body2" fontWeight={600}>
-                          {transcriptionDurationLabel}
-                        </Typography>
-                      </Box>
+                        }
+                        value={transcriptionDurationLabel}
+                      />
                     )}
                     {postprocessDurationLabel && (
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
+                      <MetaField
+                        label={
                           <FormattedMessage defaultMessage="Post-processing Duration" />
-                        </Typography>
-                        <Typography variant="body2" fontWeight={600}>
-                          {postprocessDurationLabel}
-                        </Typography>
-                      </Box>
+                        }
+                        value={postprocessDurationLabel}
+                      />
                     )}
-                  </Stack>
-                </Box>
+                  </div>
+                </div>
               </>
             )}
 
-            <Divider />
+            <Separator />
 
-            <Box>
-              <Typography variant="overline" color="text.secondary">
+            <div>
+              <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
                 <FormattedMessage defaultMessage="Transcription Step" />
-              </Typography>
-              <Stack spacing={1.25} sx={{ mt: 1 }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    <FormattedMessage defaultMessage="Mode" />
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {transcriptionModeLabel}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    <FormattedMessage defaultMessage="Device" />
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {deviceLabel}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    <FormattedMessage defaultMessage="Model Size" />
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {modelSizeLabel}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    <FormattedMessage defaultMessage="API Key" />
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {transcriptionApiKeyLabel}
-                  </Typography>
-                </Box>
-                {renderTextBlock(
-                  <FormattedMessage defaultMessage="Prompt" />,
-                  transcriptionPrompt,
-                  {
-                    placeholder: (
-                      <FormattedMessage defaultMessage="No custom prompt applied." />
-                    ),
-                    monospace: true,
-                  },
-                )}
-              </Stack>
-            </Box>
+              </span>
+              <div className="mt-2 flex flex-col gap-3">
+                <MetaField
+                  label={<FormattedMessage defaultMessage="Mode" />}
+                  value={transcriptionModeLabel}
+                />
+                <MetaField
+                  label={<FormattedMessage defaultMessage="Device" />}
+                  value={deviceLabel}
+                />
+                <MetaField
+                  label={<FormattedMessage defaultMessage="Model Size" />}
+                  value={modelSizeLabel}
+                />
+                <MetaField
+                  label={<FormattedMessage defaultMessage="API Key" />}
+                  value={transcriptionApiKeyLabel}
+                />
+                <TextBlock
+                  label={<FormattedMessage defaultMessage="Prompt" />}
+                  value={transcriptionPrompt}
+                  placeholder={
+                    <FormattedMessage defaultMessage="No custom prompt applied." />
+                  }
+                  monospace
+                />
+              </div>
+            </div>
 
-            <Divider />
+            <Separator />
 
-            <Box>
-              <Typography variant="overline" color="text.secondary">
+            <div>
+              <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
                 <FormattedMessage defaultMessage="Post-processing Step" />
-              </Typography>
-              <Stack spacing={1.25} sx={{ mt: 1 }}>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    <FormattedMessage defaultMessage="Mode" />
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {postProcessModeLabel}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    <FormattedMessage defaultMessage="Processor" />
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {postProcessDeviceLabel}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="caption" color="text.secondary">
-                    <FormattedMessage defaultMessage="API Key" />
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {postProcessApiKeyLabel}
-                  </Typography>
-                </Box>
-                {renderTextBlock(
-                  <FormattedMessage defaultMessage="Prompt" />,
-                  postProcessPrompt,
-                  {
-                    placeholder: (
-                      <FormattedMessage defaultMessage="No LLM post-processing was applied." />
-                    ),
-                    monospace: true,
-                  },
-                )}
-              </Stack>
-            </Box>
-          </Stack>
+              </span>
+              <div className="mt-2 flex flex-col gap-3">
+                <MetaField
+                  label={<FormattedMessage defaultMessage="Mode" />}
+                  value={postProcessModeLabel}
+                />
+                <MetaField
+                  label={<FormattedMessage defaultMessage="Processor" />}
+                  value={postProcessDeviceLabel}
+                />
+                <MetaField
+                  label={<FormattedMessage defaultMessage="API Key" />}
+                  value={postProcessApiKeyLabel}
+                />
+                <TextBlock
+                  label={<FormattedMessage defaultMessage="Prompt" />}
+                  value={postProcessPrompt}
+                  placeholder={
+                    <FormattedMessage defaultMessage="No LLM post-processing was applied." />
+                  }
+                  monospace
+                />
+              </div>
+            </div>
+          </div>
         ) : (
-          <Typography variant="body2" color="text.secondary">
+          <p className="text-sm text-muted-foreground">
             <FormattedMessage defaultMessage="Metadata unavailable for this transcription." />
-          </Typography>
+          </p>
         )}
+
+        <DialogFooter>
+          <TranscriptionToneMenu onToneSelect={handleRetranscribe}>
+            {({ ref, open }) => (
+              <Button
+                ref={ref as React.Ref<HTMLButtonElement>}
+                variant="ghost"
+                onClick={open}
+                disabled={isRetranscribing || !transcription}
+                className="gap-1.5"
+              >
+                <RiLoopLeftLine className="size-4" />
+                <FormattedMessage defaultMessage="Retranscribe" />
+              </Button>
+            )}
+          </TranscriptionToneMenu>
+          <Button variant="outline" onClick={handleClose}>
+            <FormattedMessage defaultMessage="Close" />
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions>
-        <TranscriptionToneMenu onToneSelect={handleRetranscribe}>
-          {({ ref, open }) => (
-            <Button
-              ref={ref}
-              startIcon={<ReplayRoundedIcon />}
-              onClick={open}
-              disabled={isRetranscribing || !transcription}
-            >
-              <FormattedMessage defaultMessage="Retranscribe" />
-            </Button>
-          )}
-        </TranscriptionToneMenu>
-        <Button onClick={handleClose}>
-          <FormattedMessage defaultMessage="Close" />
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };

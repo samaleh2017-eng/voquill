@@ -1,6 +1,6 @@
 import { FormattedMessage } from "react-intl";
 import { useAppStore } from "../../store";
-import { VirtualizedListPage } from "../common/VirtualizedListPage";
+import { VirtualizedListPage } from "../ui/virtualized-list-page";
 import { TranscriptionsSideEffects } from "./TranscriptionsSideEffects";
 import { TranscriptionRow } from "./TranscriptRow";
 

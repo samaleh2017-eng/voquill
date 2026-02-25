@@ -1,5 +1,5 @@
 import { FormattedMessage } from "react-intl";
-import { VirtualizedListPage } from "../common/VirtualizedListPage";
+import { VirtualizedListPage } from "../ui/virtualized-list-page";
 
 export default function AppsPage() {
   return (

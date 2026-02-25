@@ -1,8 +1,10 @@
-import { Edit, PublicOutlined } from "@mui/icons-material";
-import Add from "@mui/icons-material/Add";
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
-import { Button, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import {
+  RiAddLine,
+  RiPencilLine,
+  RiGlobalLine,
+  RiCheckboxFill,
+  RiCheckboxBlankLine,
+} from "@remixicon/react";
 import type { Tone } from "@repo/types";
 import { useCallback, useMemo } from "react";
 import { FormattedMessage } from "react-intl";
@@ -13,10 +15,20 @@ import {
   getActiveManualToneIds,
   getSortedToneIds,
 } from "../../utils/tone.utils";
+import { Button } from "@/components/ui/button";
 import {
-  MenuPopoverBuilder,
-  type MenuPopoverItem,
-} from "../common/MenuPopover";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function ManualAddStyle() {
   const toneById = useAppStore((state) => state.toneById);
@@ -49,103 +61,91 @@ export function ManualAddStyle() {
     [activeSet, allTones],
   );
 
-  const menuItems = useMemo((): MenuPopoverItem[] => {
-    const items: MenuPopoverItem[] = [];
-
-    items.push({
-      kind: "listItem",
-      leading: <Add fontSize="small" />,
-      title: <FormattedMessage defaultMessage="New style" />,
-      onClick: ({ close }) => {
-        close();
-        openToneEditorDialog({ mode: "create" });
-      },
-    });
-    items.push({ kind: "divider" });
-
-    items.push(
-      ...allTones.map((tone): MenuPopoverItem => {
-        const isActive = activeSet.has(tone.id);
-        const isGlobal = tone.isGlobal === true;
-        const isSystem = tone.isSystem === true;
-        const canEdit = !isGlobal && !isSystem;
-        const canDeselect = isActive && activeSet.size > 1;
-        const isLastActive = isActive && !canDeselect;
-
-        return {
-          kind: "listItem",
-          leading: isLastActive ? (
-            <Tooltip
-              disableInteractive
-              title={
-                <FormattedMessage defaultMessage="At least one style must be selected." />
-              }
-            >
-              <CheckBoxIcon fontSize="small" sx={{ color: "text.disabled" }} />
-            </Tooltip>
-          ) : isActive ? (
-            <CheckBoxIcon fontSize="small" color="primary" />
-          ) : (
-            <CheckBoxOutlineBlankIcon fontSize="small" />
-          ),
-          title: (
-            <Typography variant="body2" noWrap>
-              {tone.name}
-            </Typography>
-          ),
-          trailing: (
-            <Stack direction="row" spacing={0.5} alignItems="center" mr={-1}>
-              {isGlobal && (
-                <Tooltip
-                  disableInteractive
-                  title={
-                    <FormattedMessage defaultMessage="This style is managed by your organization." />
-                  }
-                >
-                  <span>
-                    <IconButton size="small" disabled>
-                      <PublicOutlined fontSize="small" />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              )}
-              {canEdit && (
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openToneEditorDialog({ mode: "edit", toneId: tone.id });
-                  }}
-                >
-                  <Edit fontSize="small" />
-                </IconButton>
-              )}
-            </Stack>
-          ),
-          onClick: () => {
-            if (!isActive || canDeselect) {
-              handleToggle(tone.id);
-            }
-          },
-        };
-      }),
-    );
-
-    return items;
-  }, [allTones, activeSet, handleToggle]);
-
   return (
-    <MenuPopoverBuilder items={menuItems}>
-      {({ ref, open }) => (
-        <Button
-          ref={ref}
-          onClick={open}
-          variant="contained"
-          startIcon={<Add />}
-        >
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button className="gap-1.5">
+          <RiAddLine className="size-4" />
           <FormattedMessage defaultMessage="Add Style" />
         </Button>
-      )}
-    </MenuPopoverBuilder>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuItem
+          onClick={() => openToneEditorDialog({ mode: "create" })}
+        >
+          <RiAddLine className="mr-2 size-4" />
+          <FormattedMessage defaultMessage="New style" />
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {allTones.map((tone) => {
+          const isActive = activeSet.has(tone.id);
+          const isGlobal = tone.isGlobal === true;
+          const isSystem = tone.isSystem === true;
+          const canEdit = !isGlobal && !isSystem;
+          const canDeselect = isActive && activeSet.size > 1;
+          const isLastActive = isActive && !canDeselect;
+
+          return (
+            <DropdownMenuItem
+              key={tone.id}
+              onClick={(e) => {
+                e.preventDefault();
+                if (!isActive || canDeselect) handleToggle(tone.id);
+              }}
+              className="flex items-center gap-2"
+            >
+              {isLastActive ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <RiCheckboxFill className="size-4 text-muted-foreground/50" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <FormattedMessage defaultMessage="At least one style must be selected." />
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : isActive ? (
+                <RiCheckboxFill className="size-4 text-primary" />
+              ) : (
+                <RiCheckboxBlankLine className="size-4" />
+              )}
+              <span className="min-w-0 flex-1 truncate text-sm">
+                {tone.name}
+              </span>
+              <div className="flex items-center gap-0.5">
+                {isGlobal && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <RiGlobalLine className="size-3.5 text-muted-foreground" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <FormattedMessage defaultMessage="This style is managed by your organization." />
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {canEdit && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openToneEditorDialog({ mode: "edit", toneId: tone.id });
+                    }}
+                    className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  >
+                    <RiPencilLine className="size-3.5" />
+                  </button>
+                )}
+              </div>
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

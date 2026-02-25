@@ -1,4 +1,3 @@
-import { Link, Stack, Typography } from "@mui/material";
 import { FormattedMessage } from "react-intl";
 import { loadTones } from "../../actions/tone.actions";
 import { useAsyncEffect } from "../../hooks/async.hooks";
@@ -8,8 +7,8 @@ import {
   SWITCH_WRITING_STYLE_HOTKEY,
 } from "../../utils/keyboard.utils";
 import { getActiveManualToneIds } from "../../utils/tone.utils";
-import { HotkeyBadge } from "../common/HotkeyBadge";
-import { VirtualizedListPage } from "../common/VirtualizedListPage";
+import { HotkeyBadgeInline } from "@/components/ui/hotkey-badge";
+import { VirtualizedListPage } from "../ui/virtualized-list-page";
 import { ManualAddStyle } from "./ManualAddStyle";
 import { ManualStylingRow } from "./ManualStylingRow";
 
@@ -29,13 +28,12 @@ function StylingSubtitle() {
         defaultMessage="Choose different writing styles to change how you sound. You can also <link>set up a hotkey</link> to switch between them faster."
         values={{
           link: (chunks: React.ReactNode) => (
-            <Link
-              component="button"
-              sx={{ verticalAlign: "baseline", fontSize: "inherit" }}
+            <button
+              className="text-sm text-primary underline-offset-2 hover:underline"
               onClick={openShortcuts}
             >
               {chunks}
-            </Link>
+            </button>
           ),
         }}
       />
@@ -43,7 +41,11 @@ function StylingSubtitle() {
   }
 
   const hotkey = (
-    <HotkeyBadge keys={combos[0]} onClick={openShortcuts} sx={{ mx: 0.25 }} />
+    <HotkeyBadgeInline
+      keys={combos[0]}
+      onClick={openShortcuts}
+      className="mx-0.5"
+    />
   );
 
   return (
@@ -71,20 +73,14 @@ export function ManualStylingLayout() {
       computeItemKey={(id) => id}
       renderItem={(id) => <ManualStylingRow key={id} id={id} />}
       emptyState={
-        <Stack
-          spacing={1}
-          alignItems="flex-start"
-          width={300}
-          alignSelf="center"
-          mx="auto"
-        >
-          <Typography variant="h6">
+        <div className="mx-auto flex w-[300px] flex-col items-start gap-2 self-center">
+          <h3 className="text-base font-semibold text-foreground">
             <FormattedMessage defaultMessage="No styles yet" />
-          </Typography>
-          <Typography variant="body2">
+          </h3>
+          <p className="text-sm text-muted-foreground">
             <FormattedMessage defaultMessage="Create a style to customize how your voice transcriptions are formatted and refined." />
-          </Typography>
-        </Stack>
+          </p>
+        </div>
       }
     />
   );
