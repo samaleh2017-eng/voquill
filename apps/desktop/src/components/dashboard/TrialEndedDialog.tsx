@@ -1,14 +1,4 @@
-import { ArrowForward, Close } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  IconButton,
-  LinearProgress,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { RiArrowRightLine, RiCloseLine } from "@remixicon/react";
 import { delayed } from "@repo/utilities";
 import { useEffect, useRef } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -20,6 +10,13 @@ import { trackButtonClick, trackPageView } from "../../utils/analytics.utils";
 import { getMyMember } from "../../utils/member.utils";
 import { getMyUser } from "../../utils/user.utils";
 import { TrialEndedBackground } from "./TrialEndedBackground";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 
 const MIN_WORDS_THRESHOLD = 100;
 
@@ -91,156 +88,93 @@ export const TrialEndedDialog = () => {
   };
 
   return (
-    <Dialog
-      open={shouldShow}
-      fullScreen
-      slotProps={{
-        paper: {
-          sx: {
-            backgroundColor: "level0",
-            backgroundImage: "none",
-          },
-        },
-      }}
-    >
-      {shouldShow && <TrialEndedBackground />}
+    <Dialog open={shouldShow}>
+      <DialogContent className="max-w-full h-full sm:max-w-full sm:h-full flex flex-col rounded-none border-none p-0 bg-background [&>button]:hidden">
+        {shouldShow && <TrialEndedBackground />}
 
-      <Box
-        sx={{
-          position: "absolute",
-          top: 16,
-          right: 16,
-          zIndex: 1,
-        }}
-      >
-        <IconButton onClick={handleDismiss} size="large">
-          <Close />
-        </IconButton>
-      </Box>
+        <button
+          onClick={handleDismiss}
+          className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-accent transition-colors"
+        >
+          <RiCloseLine className="h-6 w-6" />
+        </button>
 
-      <Box
-        sx={{
-          position: "relative",
-          zIndex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "100%",
-          px: 4,
-          py: 4,
-          overflow: "auto",
-        }}
-      >
-        <Stack spacing={4} alignItems="center" maxWidth={480}>
-          <Stack spacing={2} alignItems="center" textAlign="center">
-            <Typography variant="h4" fontWeight={700}>
-              <FormattedMessage defaultMessage="Thanks for trying Voquill" />
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              <FormattedMessage
-                defaultMessage="Your pro trial has ended. You're on the free plan now with {total} words per day. Upgrade whenever you're ready."
-                values={{ total: freeWordsPerDay.toLocaleString() }}
-              />
-            </Typography>
-            {totalTimeSaved > 4 && (
-              <Stack direction="row" spacing={1}>
-                <Chip
-                  label={
+        <div className="relative z-[1] flex flex-col items-center justify-center min-h-full px-8 py-8 overflow-auto">
+          <div className="flex flex-col items-center gap-8 max-w-[480px]">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <h1 className="text-3xl font-bold">
+                <FormattedMessage defaultMessage="Thanks for trying Voquill" />
+              </h1>
+              <p className="text-muted-foreground">
+                <FormattedMessage
+                  defaultMessage="Your pro trial has ended. You're on the free plan now with {total} words per day. Upgrade whenever you're ready."
+                  values={{ total: freeWordsPerDay.toLocaleString() }}
+                />
+              </p>
+              {totalTimeSaved > 4 && (
+                <div className="flex gap-2">
+                  <Badge variant="secondary">
                     <FormattedMessage
                       defaultMessage="{words} words dictated"
                       values={{ words: wordsTotal.toLocaleString() }}
                     />
-                  }
-                  size="small"
-                />
-                <Chip
-                  label={
+                  </Badge>
+                  <Badge variant="secondary">
                     <FormattedMessage
                       defaultMessage="{hours} hours saved"
                       values={{
                         hours: Math.round(totalTimeSaved / 60).toLocaleString(),
                       }}
                     />
-                  }
-                  size="small"
+                  </Badge>
+                </div>
+              )}
+            </div>
+
+            <div className="w-full p-5 rounded-xl bg-card border border-border">
+              <div className="flex flex-col gap-3">
+                <div className="flex justify-between items-baseline">
+                  <p className="text-sm text-muted-foreground">
+                    <FormattedMessage defaultMessage="Free plan daily limit" />
+                  </p>
+                  <p className="font-semibold">
+                    <FormattedMessage
+                      defaultMessage="{remaining} / {total} words"
+                      values={{
+                        remaining: wordsRemaining.toLocaleString(),
+                        total: freeWordsPerDay.toLocaleString(),
+                      }}
+                    />
+                  </p>
+                </div>
+                <Progress
+                  value={usagePercent}
+                  className="h-2"
                 />
-              </Stack>
-            )}
-          </Stack>
+              </div>
+            </div>
 
-          <Box
-            sx={{
-              width: "100%",
-              p: 2.5,
-              borderRadius: 2,
-              backgroundColor: "level1",
-              border: "1px solid",
-              borderColor: "divider",
-            }}
-          >
-            <Stack spacing={1.5}>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="baseline"
-              >
-                <Typography variant="body2" color="text.secondary">
-                  <FormattedMessage defaultMessage="Free plan daily limit" />
-                </Typography>
-                <Typography variant="body1" fontWeight={600}>
-                  <FormattedMessage
-                    defaultMessage="{remaining} / {total} words"
-                    values={{
-                      remaining: wordsRemaining.toLocaleString(),
-                      total: freeWordsPerDay.toLocaleString(),
-                    }}
-                  />
-                </Typography>
-              </Stack>
-              <LinearProgress
-                variant="determinate"
-                value={usagePercent}
-                sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: "level2",
-                  "& .MuiLinearProgress-bar": {
-                    borderRadius: 4,
-                    backgroundColor:
-                      usagePercent >= 80
-                        ? "#ef4444"
-                        : usagePercent >= 50
-                          ? "#f59e0b"
-                          : "primary.main",
-                  },
-                }}
-              />
-            </Stack>
-          </Box>
-
-          <Stack spacing={1.5} width="100%">
-            <Stack spacing={0.5}>
+            <div className="flex flex-col gap-3 w-full">
               <Button
                 variant="blue"
-                size="large"
-                fullWidth
+                size="lg"
+                className="w-full"
                 onClick={handleUpgrade}
-                endIcon={<ArrowForward />}
               >
                 <FormattedMessage defaultMessage="Reclaim my super powers" />
+                <RiArrowRightLine className="ml-2 h-4 w-4" />
               </Button>
-            </Stack>
-            <Button
-              onClick={handleDismiss}
-              fullWidth
-              sx={{ color: "text.secondary" }}
-            >
-              <FormattedMessage defaultMessage="Continue with free" />
-            </Button>
-          </Stack>
-        </Stack>
-      </Box>
+              <Button
+                variant="ghost"
+                className="w-full text-muted-foreground"
+                onClick={handleDismiss}
+              >
+                <FormattedMessage defaultMessage="Continue with free" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
     </Dialog>
   );
 };

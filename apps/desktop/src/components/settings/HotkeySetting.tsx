@@ -1,5 +1,9 @@
-import { Add, CancelOutlined, Close, RestartAlt } from "@mui/icons-material";
-import { Button, IconButton, Stack, Switch, Typography } from "@mui/material";
+import {
+  RiAddLine,
+  RiCloseLine,
+  RiCloseCircleLine,
+  RiRestartLine,
+} from "@remixicon/react";
 import type { Hotkey } from "@repo/types";
 import type { ReactNode } from "react";
 import { FormattedMessage } from "react-intl";
@@ -14,6 +18,8 @@ import {
   syncHotkeyCombosToNative,
 } from "../../utils/keyboard.utils";
 import { HotKey } from "../common/HotKey";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 
 export type HotkeySettingProps = {
   title: ReactNode;
@@ -37,7 +43,6 @@ export const HotkeySetting = ({
   title,
   description,
   actionName,
-  buttonSize = "small",
   enabled,
   onEnabledChange,
 }: HotkeySettingProps) => {
@@ -135,9 +140,7 @@ export const HotkeySetting = ({
   };
 
   const handleRevertPrimary = () => {
-    if (!primaryHotkey || defaultCombos.length === 0) {
-      return;
-    }
+    if (!primaryHotkey || defaultCombos.length === 0) return;
     void saveKey(primaryHotkey.id, defaultCombos[0]);
   };
 
@@ -148,12 +151,9 @@ export const HotkeySetting = ({
       <FormattedMessage defaultMessage="Add another" />
     );
 
-  const handleToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newEnabled = event.target.checked;
-    onEnabledChange?.(newEnabled);
-
-    // When enabling, set up a default hotkey if none exists
-    if (newEnabled && !primaryHotkey && defaultCombos.length > 0) {
+  const handleToggle = (checked: boolean) => {
+    onEnabledChange?.(checked);
+    if (checked && !primaryHotkey && defaultCombos.length > 0) {
       void saveKey(undefined, defaultCombos[0]);
     }
   };
@@ -163,106 +163,91 @@ export const HotkeySetting = ({
   };
 
   return (
-    <Stack direction="row" spacing={2} alignItems="flex-start">
-      <Stack spacing={1} flex={1}>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="body1" fontWeight="bold">
-            {title}
-          </Typography>
+    <div className="flex gap-4">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold">{title}</span>
           {hasEnabledToggle && (
             <Switch
-              size="small"
+              size="sm"
               checked={isEnabled}
-              onChange={handleToggle}
-              inputProps={{
-                "aria-label": "Enable hotkey",
-              }}
+              onCheckedChange={handleToggle}
+              aria-label="Enable hotkey"
             />
           )}
-        </Stack>
-        <Typography variant="body2">{description}</Typography>
-      </Stack>
+        </div>
+        <span className="text-sm text-muted-foreground">{description}</span>
+      </div>
       {isEnabled && (
-        <Stack spacing={1} alignItems="flex-end">
-          <Stack direction="row" spacing={1} alignItems="center">
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <div className="flex items-center gap-1.5">
             <HotKey value={primaryValue} onChange={handlePrimaryChange} />
             {hasEnabledToggle ? (
-              <IconButton
-                size="small"
+              <button
                 onClick={handleDisable}
+                className="rounded-md p-1 text-muted-foreground hover:bg-accent"
                 aria-label="Disable hotkey"
               >
-                <CancelOutlined color="disabled" />
-              </IconButton>
+                <RiCloseCircleLine className="size-4" />
+              </button>
             ) : (
               <>
                 {primaryHotkey && defaultCombos.length === 0 && (
-                  <IconButton
-                    size="small"
+                  <button
                     onClick={() => handleDeleteHotkey(primaryHotkey.id)}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-accent"
                   >
-                    <Close color="disabled" />
-                  </IconButton>
+                    <RiCloseLine className="size-4" />
+                  </button>
                 )}
                 {primaryHotkey &&
                   defaultCombos.length > 0 &&
                   !isPrimaryUsingDefault && (
-                    <IconButton
-                      size="small"
-                      aria-label="Revert to default hotkey"
+                    <button
                       onClick={handleRevertPrimary}
+                      className="rounded-md p-1 text-muted-foreground hover:bg-accent"
+                      aria-label="Revert to default hotkey"
                     >
-                      <RestartAlt color="disabled" />
-                    </IconButton>
+                      <RiRestartLine className="size-4" />
+                    </button>
                   )}
               </>
             )}
-          </Stack>
+          </div>
           {!hasEnabledToggle &&
             additionalHotkeys.map((hotkey) => (
-              <Stack
-                key={hotkey.id}
-                direction="row"
-                spacing={1}
-                alignItems="center"
-              >
+              <div key={hotkey.id} className="flex items-center gap-1.5">
                 <HotKey
                   value={hotkey.keys}
                   onChange={(keys) => saveKey(hotkey.id, keys)}
                 />
-                <IconButton
-                  size="small"
+                <button
                   onClick={() => handleDeleteHotkey(hotkey.id)}
+                  className="rounded-md p-1 text-muted-foreground hover:bg-accent"
                 >
-                  <Close color="disabled" />
-                </IconButton>
-              </Stack>
+                  <RiCloseLine className="size-4" />
+                </button>
+              </div>
             ))}
           {hasConflict && (
-            <Typography
-              variant="caption"
-              color="warning.main"
-              sx={{ maxWidth: 220, textAlign: "right" }}
-            >
+            <span className="max-w-[220px] text-right text-xs text-yellow-500">
               <FormattedMessage defaultMessage="This shortcut overlaps with another. One may trigger both actions." />
-            </Typography>
+            </span>
           )}
           {!hasEnabledToggle &&
             (hotkeys.length > 0 || defaultCombos.length > 0) && (
               <Button
-                variant="text"
-                startIcon={<Add />}
-                size={buttonSize}
-                sx={{ py: 0.5 }}
+                variant="ghost"
+                size="sm"
+                className="py-1"
                 onClick={() => saveKey()}
               >
-                <Typography variant="body2" fontWeight={500}>
-                  {buttonLabel}
-                </Typography>
+                <RiAddLine className="mr-1 size-3.5" />
+                <span className="text-sm font-medium">{buttonLabel}</span>
               </Button>
             )}
-        </Stack>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 };

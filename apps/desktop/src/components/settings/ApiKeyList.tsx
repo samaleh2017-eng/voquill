@@ -1,24 +1,4 @@
-import AddIcon from "@mui/icons-material/Add";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { RiAddLine, RiDeleteBinLine, RiLoader4Line } from "@remixicon/react";
 import {
   aldeaTestIntegration,
   assemblyaiTestIntegration,
@@ -67,6 +47,29 @@ import { GroqModelPicker } from "./GroqModelPicker";
 import { OllamaModelPicker } from "./OllamaModelPicker";
 import { OpenRouterModelPicker } from "./OpenRouterModelPicker";
 import { OpenRouterProviderRouting } from "./OpenRouterProviderRouting";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export type ApiKeyListContext = "transcription" | "post-processing";
 
@@ -170,233 +173,194 @@ const AddApiKeyCard = ({ onSave, onCancel, context }: AddApiKeyCardProps) => {
   ]);
 
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 2,
-        display: "flex",
-        flexDirection: "column",
-        gap: 1.5,
-      }}
-    >
-      <TextField
-        label={<FormattedMessage defaultMessage="Key name" />}
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        placeholder="e.g., My API Key"
-        size="small"
-        fullWidth
-        disabled={saving}
-      />
-      <TextField
-        select
-        label={<FormattedMessage defaultMessage="Provider" />}
-        value={provider}
-        onChange={(event) =>
-          setProvider(event.target.value as SettingsApiKeyProvider)
-        }
-        size="small"
-        fullWidth
-        disabled={saving}
-      >
-        <MenuItem value="groq">Groq</MenuItem>
-        <MenuItem value="openai">OpenAI</MenuItem>
-        <MenuItem value="gemini">Gemini</MenuItem>
-        {/* OpenRouter, Ollama, DeepSeek, and Azure OpenAI only support LLM, not transcription */}
-        {context === "post-processing" && (
-          <MenuItem value="openrouter">OpenRouter</MenuItem>
-        )}
-        {context === "post-processing" && (
-          <MenuItem value="ollama">Ollama</MenuItem>
-        )}
-        <MenuItem value="openai-compatible">OpenAI Compatible</MenuItem>
-        {context === "post-processing" && (
-          <MenuItem value="deepseek">DeepSeek</MenuItem>
-        )}
-        {context === "post-processing" && (
-          <MenuItem value="claude">Claude</MenuItem>
-        )}
-        {context === "post-processing" && (
-          <MenuItem value="azure">Azure OpenAI</MenuItem>
-        )}
-        {/* Aldea, AssemblyAI, Deepgram, ElevenLabs, and Azure STT only support transcription, not post-processing */}
-        {context === "transcription" && (
-          <MenuItem value="aldea">Aldea</MenuItem>
-        )}
-        {context === "transcription" && (
-          <MenuItem value="assemblyai">AssemblyAI</MenuItem>
-        )}
-        {context === "transcription" && (
-          <MenuItem value="deepgram">Deepgram</MenuItem>
-        )}
-        {context === "transcription" && (
-          <MenuItem value="elevenlabs">ElevenLabs</MenuItem>
-        )}
-        {context === "transcription" && (
-          <MenuItem value="azure">Azure</MenuItem>
-        )}
-        {context === "transcription" && (
-          <MenuItem value="speaches">Speaches</MenuItem>
-        )}
-      </TextField>
+    <div className="rounded-lg border border-border p-4 flex flex-col gap-3">
+      <div className="space-y-1.5">
+        <Label><FormattedMessage defaultMessage="Key name" /></Label>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g., My API Key"
+          disabled={saving}
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label><FormattedMessage defaultMessage="Provider" /></Label>
+        <Select
+          value={provider}
+          onValueChange={(val) => setProvider(val as SettingsApiKeyProvider)}
+          disabled={saving}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="groq">Groq</SelectItem>
+            <SelectItem value="openai">OpenAI</SelectItem>
+            <SelectItem value="gemini">Gemini</SelectItem>
+            {context === "post-processing" && <SelectItem value="openrouter">OpenRouter</SelectItem>}
+            {context === "post-processing" && <SelectItem value="ollama">Ollama</SelectItem>}
+            <SelectItem value="openai-compatible">OpenAI Compatible</SelectItem>
+            {context === "post-processing" && <SelectItem value="deepseek">DeepSeek</SelectItem>}
+            {context === "post-processing" && <SelectItem value="claude">Claude</SelectItem>}
+            {context === "post-processing" && <SelectItem value="azure">Azure OpenAI</SelectItem>}
+            {context === "transcription" && <SelectItem value="aldea">Aldea</SelectItem>}
+            {context === "transcription" && <SelectItem value="assemblyai">AssemblyAI</SelectItem>}
+            {context === "transcription" && <SelectItem value="deepgram">Deepgram</SelectItem>}
+            {context === "transcription" && <SelectItem value="elevenlabs">ElevenLabs</SelectItem>}
+            {context === "transcription" && <SelectItem value="azure">Azure</SelectItem>}
+            {context === "transcription" && <SelectItem value="speaches">Speaches</SelectItem>}
+          </SelectContent>
+        </Select>
+      </div>
+
       {isAzure ? (
         context === "transcription" ? (
           <>
-            <TextField
-              label={<FormattedMessage defaultMessage="Azure Region" />}
-              value={azureRegion}
-              onChange={(event) => setAzureRegion(event.target.value)}
-              placeholder="e.g., eastus, westus, northeurope"
-              size="small"
-              fullWidth
-              disabled={saving}
-              helperText={
+            <div className="space-y-1.5">
+              <Label><FormattedMessage defaultMessage="Azure Region" /></Label>
+              <Input
+                value={azureRegion}
+                onChange={(e) => setAzureRegion(e.target.value)}
+                placeholder="e.g., eastus, westus, northeurope"
+                disabled={saving}
+              />
+              <p className="text-xs text-muted-foreground">
                 <FormattedMessage defaultMessage="Azure service region for Speech-to-Text" />
-              }
-            />
-            <TextField
-              label={<FormattedMessage defaultMessage="Subscription Key" />}
-              value={key}
-              onChange={(event) => setKey(event.target.value)}
-              placeholder="Paste your Azure subscription key"
-              size="small"
-              fullWidth
-              type="password"
-              disabled={saving}
-            />
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label><FormattedMessage defaultMessage="Subscription Key" /></Label>
+              <Input
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+                placeholder="Paste your Azure subscription key"
+                type="password"
+                disabled={saving}
+              />
+            </div>
           </>
         ) : (
           <>
-            <TextField
-              label={
-                <FormattedMessage defaultMessage="Azure OpenAI Endpoint" />
-              }
-              value={azureOpenAIEndpoint}
-              onChange={(event) => setAzureOpenAIEndpoint(event.target.value)}
-              placeholder="https://my-resource.openai.azure.com"
-              size="small"
-              fullWidth
-              disabled={saving}
-              helperText={
+            <div className="space-y-1.5">
+              <Label><FormattedMessage defaultMessage="Azure OpenAI Endpoint" /></Label>
+              <Input
+                value={azureOpenAIEndpoint}
+                onChange={(e) => setAzureOpenAIEndpoint(e.target.value)}
+                placeholder="https://my-resource.openai.azure.com"
+                disabled={saving}
+              />
+              <p className="text-xs text-muted-foreground">
                 <FormattedMessage defaultMessage="Your Azure OpenAI resource endpoint URL" />
-              }
-            />
-            <TextField
-              label={<FormattedMessage defaultMessage="API Key" />}
-              value={key}
-              onChange={(event) => setKey(event.target.value)}
-              placeholder="Paste your Azure OpenAI API key"
-              size="small"
-              fullWidth
-              type="password"
-              disabled={saving}
-            />
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label><FormattedMessage defaultMessage="API Key" /></Label>
+              <Input
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+                placeholder="Paste your Azure OpenAI API key"
+                type="password"
+                disabled={saving}
+              />
+            </div>
           </>
         )
       ) : isOllamaLike ? (
         <>
-          <TextField
-            label={<FormattedMessage defaultMessage="Base URL" />}
-            value={ollamaUrl}
-            onChange={(event) => setOllamaUrl(event.target.value)}
-            placeholder={OLLAMA_DEFAULT_URL}
-            size="small"
-            fullWidth
-            disabled={saving}
-            helperText={
-              <FormattedMessage defaultMessage="Leave empty to use the default URL" />
-            }
-          />
-          <TextField
-            label={<FormattedMessage defaultMessage="API key (optional)" />}
-            value={key}
-            onChange={(event) => setKey(event.target.value)}
-            placeholder="Leave empty if not required"
-            size="small"
-            fullWidth
-            type="password"
-            disabled={saving}
-            helperText={
-              <FormattedMessage defaultMessage="Only needed if your instance requires authentication" />
-            }
-          />
-          {isOpenAICompatible && context === "transcription" && (
-            <TextField
-              label={<FormattedMessage defaultMessage="Model" />}
-              value={speachesModel}
-              onChange={(event) => setSpeachesModel(event.target.value)}
-              placeholder="whisper-1"
-              size="small"
-              fullWidth
+          <div className="space-y-1.5">
+            <Label><FormattedMessage defaultMessage="Base URL" /></Label>
+            <Input
+              value={ollamaUrl}
+              onChange={(e) => setOllamaUrl(e.target.value)}
+              placeholder={OLLAMA_DEFAULT_URL}
               disabled={saving}
-              helperText={
-                <FormattedMessage defaultMessage="Transcription model name (e.g. whisper-1)" />
-              }
             />
+            <p className="text-xs text-muted-foreground">
+              <FormattedMessage defaultMessage="Leave empty to use the default URL" />
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label><FormattedMessage defaultMessage="API key (optional)" /></Label>
+            <Input
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="Leave empty if not required"
+              type="password"
+              disabled={saving}
+            />
+            <p className="text-xs text-muted-foreground">
+              <FormattedMessage defaultMessage="Only needed if your instance requires authentication" />
+            </p>
+          </div>
+          {isOpenAICompatible && context === "transcription" && (
+            <div className="space-y-1.5">
+              <Label><FormattedMessage defaultMessage="Model" /></Label>
+              <Input
+                value={speachesModel}
+                onChange={(e) => setSpeachesModel(e.target.value)}
+                placeholder="whisper-1"
+                disabled={saving}
+              />
+              <p className="text-xs text-muted-foreground">
+                <FormattedMessage defaultMessage="Transcription model name (e.g. whisper-1)" />
+              </p>
+            </div>
           )}
         </>
       ) : isSpeaches ? (
         <>
-          <TextField
-            label={<FormattedMessage defaultMessage="Speaches URL" />}
-            value={speachesUrl}
-            onChange={(event) => setSpeachesUrl(event.target.value)}
-            placeholder="http://localhost:8000"
-            size="small"
-            fullWidth
-            disabled={saving}
-            helperText={
+          <div className="space-y-1.5">
+            <Label><FormattedMessage defaultMessage="Speaches URL" /></Label>
+            <Input
+              value={speachesUrl}
+              onChange={(e) => setSpeachesUrl(e.target.value)}
+              placeholder="http://localhost:8000"
+              disabled={saving}
+            />
+            <p className="text-xs text-muted-foreground">
               <FormattedMessage defaultMessage="URL of your local Speaches Docker instance" />
-            }
-          />
-          <TextField
-            label={<FormattedMessage defaultMessage="Model" />}
-            value={speachesModel}
-            onChange={(event) => setSpeachesModel(event.target.value)}
-            placeholder="Systran/faster-whisper-large-v3"
-            size="small"
-            fullWidth
-            disabled={saving}
-            helperText={
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label><FormattedMessage defaultMessage="Model" /></Label>
+            <Input
+              value={speachesModel}
+              onChange={(e) => setSpeachesModel(e.target.value)}
+              placeholder="Systran/faster-whisper-large-v3"
+              disabled={saving}
+            />
+            <p className="text-xs text-muted-foreground">
               <FormattedMessage defaultMessage="Whisper model ID available in your Speaches instance" />
-            }
-          />
+            </p>
+          </div>
         </>
       ) : (
-        <TextField
-          label={<FormattedMessage defaultMessage="API key" />}
-          value={key}
-          onChange={(event) => setKey(event.target.value)}
-          placeholder="Paste your API key"
-          size="small"
-          fullWidth
-          type="password"
-          disabled={saving}
-        />
+        <div className="space-y-1.5">
+          <Label><FormattedMessage defaultMessage="API key" /></Label>
+          <Input
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            placeholder="Paste your API key"
+            type="password"
+            disabled={saving}
+          />
+        </div>
       )}
-      <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-        <Button
-          variant="outlined"
-          onClick={onCancel}
-          size="small"
-          disabled={saving}
-        >
+
+      <div className="flex gap-2 justify-end">
+        <Button variant="outline" size="sm" onClick={onCancel} disabled={saving}>
           <FormattedMessage defaultMessage="Cancel" />
         </Button>
-        <Button
-          variant="contained"
-          size="small"
-          onClick={handleSave}
-          disabled={!canSave || saving}
-        >
+        <Button size="sm" onClick={handleSave} disabled={!canSave || saving}>
           {saving ? (
             <FormattedMessage defaultMessage="Saving..." />
           ) : (
             <FormattedMessage defaultMessage="Save" />
           )}
         </Button>
-      </Box>
-    </Paper>
+      </div>
+    </div>
   );
 };
 
@@ -550,56 +514,35 @@ const ApiKeyCard = ({
   const currentModel = getModelForContext(apiKey, context) ?? models[0] ?? null;
 
   return (
-    <Paper
-      variant="outlined"
+    <div
       onClick={onSelect}
-      sx={{
-        p: 2,
-        borderColor: selected ? "primary.main" : "divider",
-        borderWidth: 1,
-        cursor: "pointer",
-        transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-        boxShadow: selected
-          ? (theme) => `0 0 0 1px ${theme.palette.primary.main}`
-          : "none",
-        ":hover": {
-          borderColor: selected ? "primary.main" : "action.active",
-        },
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-        width: "100%",
-      }}
+      className={`rounded-lg border p-4 cursor-pointer transition-all flex flex-col gap-4 w-full ${
+        selected
+          ? "border-primary ring-1 ring-primary"
+          : "border-border hover:border-muted-foreground/40"
+      }`}
     >
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        gap={2}
-        sx={{ width: "100%" }}
-      >
-        <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" fontWeight={600}>
-            {apiKey.name}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+      <div className="flex items-center justify-between gap-4 w-full">
+        <div className="flex-1 min-w-0 space-y-0.5">
+          <p className="text-sm font-semibold">{apiKey.name}</p>
+          <p className="text-xs text-muted-foreground">
             {apiKey.provider.toUpperCase()}
-          </Typography>
+          </p>
           {apiKey.keySuffix ? (
-            <Typography variant="caption" color="text.secondary">
+            <p className="text-xs text-muted-foreground">
               <FormattedMessage
                 defaultMessage="Ends with {suffix}"
                 values={{ suffix: apiKey.keySuffix }}
               />
-            </Typography>
+            </p>
           ) : null}
-        </Stack>
-        <Stack direction="row" spacing={1} alignItems="center">
+        </div>
+        <div className="flex items-center gap-2">
           <Button
-            variant="outlined"
-            size="small"
-            onClick={(event) => {
-              event.stopPropagation();
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
               onTest();
             }}
             disabled={testing || deleting}
@@ -610,26 +553,30 @@ const ApiKeyCard = ({
               <FormattedMessage defaultMessage="Test" />
             )}
           </Button>
-          <Tooltip title={<FormattedMessage defaultMessage="Delete key" />}>
-            <span>
-              <IconButton
-                size="small"
-                color="error"
-                onClick={(event) => {
-                  event.stopPropagation();
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
                   onDelete();
                 }}
                 disabled={deleting || testing}
               >
-                <DeleteOutlineIcon fontSize="small" />
-              </IconButton>
-            </span>
+                <RiDeleteBinLine className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <FormattedMessage defaultMessage="Delete key" />
+            </TooltipContent>
           </Tooltip>
-        </Stack>
-      </Stack>
-      {/* OpenRouter gets special model picker and routing UI */}
+        </div>
+      </div>
+
       {apiKey.provider === "openrouter" && context === "post-processing" ? (
-        <Box onClick={(e) => e.stopPropagation()}>
+        <div onClick={(e) => e.stopPropagation()}>
           <OpenRouterModelPicker
             apiKeyId={apiKey.id}
             selectedModel={currentModel}
@@ -640,11 +587,11 @@ const ApiKeyCard = ({
             apiKeyId={apiKey.id}
             disabled={testing || deleting}
           />
-        </Box>
+        </div>
       ) : (apiKey.provider === "ollama" ||
           apiKey.provider === "openai-compatible") &&
         context === "post-processing" ? (
-        <Box onClick={(e) => e.stopPropagation()}>
+        <div onClick={(e) => e.stopPropagation()}>
           <OllamaModelPicker
             baseUrl={apiKey.baseUrl ?? null}
             apiKey={apiKey.keyFull}
@@ -653,70 +600,65 @@ const ApiKeyCard = ({
             disabled={testing || deleting}
             provider={apiKey.provider}
           />
-        </Box>
+        </div>
       ) : apiKey.provider === "openai-compatible" &&
         context === "transcription" ? (
-        <TextField
-          label={<FormattedMessage defaultMessage="Model" />}
-          value={currentModel ?? ""}
-          onChange={(event) => onModelChange(event.target.value || null)}
-          onClick={(e) => e.stopPropagation()}
-          placeholder="whisper-1"
-          size="small"
-          fullWidth
-          disabled={testing || deleting}
-          helperText={
+        <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
+          <Label><FormattedMessage defaultMessage="Model" /></Label>
+          <Input
+            value={currentModel ?? ""}
+            onChange={(e) => onModelChange(e.target.value || null)}
+            placeholder="whisper-1"
+            disabled={testing || deleting}
+          />
+          <p className="text-xs text-muted-foreground">
             <FormattedMessage defaultMessage="Transcription model name (e.g. whisper-1)" />
-          }
-        />
+          </p>
+        </div>
       ) : apiKey.provider === "speaches" ? (
-        <TextField
-          label={<FormattedMessage defaultMessage="Model" />}
-          value={currentModel ?? ""}
-          onChange={(event) => onModelChange(event.target.value || null)}
-          onClick={(e) => e.stopPropagation()}
-          placeholder="Systran/faster-whisper-large-v3"
-          size="small"
-          fullWidth
-          disabled={testing || deleting}
-          helperText={
+        <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
+          <Label><FormattedMessage defaultMessage="Model" /></Label>
+          <Input
+            value={currentModel ?? ""}
+            onChange={(e) => onModelChange(e.target.value || null)}
+            placeholder="Systran/faster-whisper-large-v3"
+            disabled={testing || deleting}
+          />
+          <p className="text-xs text-muted-foreground">
             <FormattedMessage defaultMessage="Whisper model ID available in your Speaches instance" />
-          }
-        />
+          </p>
+        </div>
       ) : apiKey.provider === "groq" ? (
-        <Box onClick={(e) => e.stopPropagation()}>
+        <div onClick={(e) => e.stopPropagation()}>
           <GroqModelPicker
             apiKey={apiKey.keyFull ?? null}
             selectedModel={currentModel}
             onModelSelect={onModelChange}
             disabled={testing || deleting}
           />
-        </Box>
+        </div>
       ) : models.length > 0 ? (
-        <FormControl fullWidth size="small">
-          <InputLabel id={`model-select-label-${apiKey.id}`}>
-            <FormattedMessage defaultMessage="Model" />
-          </InputLabel>
+        <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
+          <Label><FormattedMessage defaultMessage="Model" /></Label>
           <Select
-            labelId={`model-select-label-${apiKey.id}`}
             value={currentModel ?? ""}
-            label={<FormattedMessage defaultMessage="Model" />}
-            onClick={(event) => event.stopPropagation()}
-            onChange={(event) => {
-              const value = event.target.value || null;
-              onModelChange(value);
-            }}
+            onValueChange={(val) => onModelChange(val || null)}
             disabled={testing || deleting}
           >
-            {models.map((model) => (
-              <MenuItem key={model} value={model}>
-                {model}
-              </MenuItem>
-            ))}
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {models.map((model) => (
+                <SelectItem key={model} value={model}>
+                  {model}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
-        </FormControl>
+        </div>
       ) : null}
-    </Paper>
+    </div>
   );
 };
 
@@ -730,9 +672,7 @@ export const ApiKeyList = ({
 }: ApiKeyListProps) => {
   const allApiKeys = useAppStore((state) => state.settings.apiKeys);
 
-  // Filter API keys based on context
   const apiKeys = allApiKeys.filter((key) => {
-    // OpenRouter, Ollama, DeepSeek, and Claude only support post-processing
     if (
       context === "transcription" &&
       (key.provider === "openrouter" ||
@@ -742,7 +682,6 @@ export const ApiKeyList = ({
     ) {
       return false;
     }
-    // Aldea, AssemblyAI, Deepgram, ElevenLabs, and Speaches only support transcription
     if (
       context === "post-processing" &&
       (key.provider === "aldea" ||
@@ -753,13 +692,10 @@ export const ApiKeyList = ({
     ) {
       return false;
     }
-    // Azure can be either STT or OpenAI - filter based on stored config
     if (key.provider === "azure") {
       if (context === "transcription") {
-        // Show only Azure STT keys (those with azureRegion)
         return !!key.azureRegion;
       } else {
-        // Show only Azure OpenAI keys (those with baseUrl/endpoint)
         return !!key.baseUrl;
       }
     }
@@ -886,44 +822,41 @@ export const ApiKeyList = ({
   );
 
   const loadingState = (
-    <Stack spacing={1} alignItems="center">
-      <CircularProgress size={24} />
-      <Typography variant="body2" color="text.secondary">
+    <div className="flex flex-col items-center gap-2">
+      <RiLoader4Line className="h-5 w-5 animate-spin text-muted-foreground" />
+      <p className="text-sm text-muted-foreground">
         <FormattedMessage defaultMessage="Loading API keys…" />
-      </Typography>
-    </Stack>
+      </p>
+    </div>
   );
 
   const errorState = (
-    <Stack spacing={1.5} alignItems="flex-start">
-      <Typography variant="subtitle1" fontWeight={600}>
+    <div className="flex flex-col items-start gap-3">
+      <p className="text-sm font-semibold">
         <FormattedMessage defaultMessage="Failed to load API keys" />
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
+      </p>
+      <p className="text-sm text-muted-foreground">
         <FormattedMessage defaultMessage="We couldn't load your saved API keys. Please try again." />
-      </Typography>
-      <Button variant="outlined" onClick={handleRetryLoad}>
+      </p>
+      <Button variant="outline" onClick={handleRetryLoad}>
         <FormattedMessage defaultMessage="Retry" />
       </Button>
-    </Stack>
+    </div>
   );
 
   const emptyState = (
-    <Stack spacing={1.5} alignItems="flex-start">
-      <Typography variant="subtitle1" fontWeight={600}>
+    <div className="flex flex-col items-start gap-3">
+      <p className="text-sm font-semibold">
         <FormattedMessage defaultMessage="No API keys yet" />
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
+      </p>
+      <p className="text-sm text-muted-foreground">
         <FormattedMessage defaultMessage="Connect a transcription provider like Groq with your API key." />
-      </Typography>
-      <Button
-        variant="contained"
-        startIcon={<AddIcon />}
-        onClick={() => setShowAddCard(true)}
-      >
+      </p>
+      <Button onClick={() => setShowAddCard(true)}>
+        <RiAddLine className="mr-2 h-4 w-4" />
         <FormattedMessage defaultMessage="Add API key" />
       </Button>
-    </Stack>
+    </div>
   );
 
   const shouldShowLoading = status === "loading" && apiKeys.length === 0;
@@ -935,7 +868,7 @@ export const ApiKeyList = ({
     !shouldShowError;
 
   return (
-    <Stack spacing={1} sx={{ width: "100%" }}>
+    <div className="flex flex-col gap-2 w-full">
       {shouldShowLoading ? (
         loadingState
       ) : shouldShowError ? (
@@ -943,7 +876,7 @@ export const ApiKeyList = ({
       ) : shouldShowEmpty ? (
         emptyState
       ) : (
-        <Stack spacing={1.5} alignItems="stretch" sx={{ width: "100%" }}>
+        <div className="flex flex-col gap-3 items-stretch w-full">
           {apiKeys.map((apiKey) => (
             <ApiKeyCard
               key={apiKey.id}
@@ -958,7 +891,7 @@ export const ApiKeyList = ({
               context={context}
             />
           ))}
-        </Stack>
+        </div>
       )}
       {showAddCard ? (
         <AddApiKeyCard
@@ -968,61 +901,59 @@ export const ApiKeyList = ({
         />
       ) : apiKeys.length > 0 || shouldShowError ? (
         <Button
-          variant="outlined"
-          startIcon={<AddIcon />}
+          variant="outline"
           onClick={() => setShowAddCard(true)}
-          sx={{ alignSelf: "flex-start" }}
+          className="self-start"
         >
+          <RiAddLine className="mr-2 h-4 w-4" />
           <FormattedMessage defaultMessage="Add another key" />
         </Button>
       ) : null}
-      <Dialog
-        open={apiKeyToDelete !== null}
-        onClose={handleCloseDeleteDialog}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>
-          <FormattedMessage defaultMessage="Delete API key" />
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2">
-            <FormattedMessage
-              defaultMessage="Are you sure you want to delete the API key {keyName}?"
-              values={{
-                keyName: (
-                  <Box component="span" fontWeight={600}>
-                    {apiKeyToDelete?.name ?? "this API key"}
-                  </Box>
-                ),
-              }}
-            />
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+
+      <Dialog open={apiKeyToDelete !== null} onOpenChange={(open) => !open && handleCloseDeleteDialog()}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              <FormattedMessage defaultMessage="Delete API key" />
+            </DialogTitle>
+            <DialogDescription>
+              <FormattedMessage
+                defaultMessage="Are you sure you want to delete the API key {keyName}?"
+                values={{
+                  keyName: (
+                    <span className="font-semibold">
+                      {apiKeyToDelete?.name ?? "this API key"}
+                    </span>
+                  ),
+                }}
+              />
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
             <FormattedMessage defaultMessage="Removing the key signs you out of that provider on this device." />
-          </Typography>
+          </p>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCloseDeleteDialog}
+              disabled={deletingApiKeyId !== null}
+            >
+              <FormattedMessage defaultMessage="Cancel" />
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deletingApiKeyId !== null}
+            >
+              {deletingApiKeyId !== null ? (
+                <FormattedMessage defaultMessage="Deleting..." />
+              ) : (
+                <FormattedMessage defaultMessage="Delete" />
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCloseDeleteDialog}
-            disabled={deletingApiKeyId !== null}
-          >
-            <FormattedMessage defaultMessage="Cancel" />
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleConfirmDelete}
-            disabled={deletingApiKeyId !== null}
-          >
-            {deletingApiKeyId !== null ? (
-              <FormattedMessage defaultMessage="Deleting..." />
-            ) : (
-              <FormattedMessage defaultMessage="Delete" />
-            )}
-          </Button>
-        </DialogActions>
       </Dialog>
-    </Stack>
+    </div>
   );
 };

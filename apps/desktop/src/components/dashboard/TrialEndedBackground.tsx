@@ -1,4 +1,3 @@
-import { useColorScheme } from "@mui/material";
 import { useMemo } from "react";
 
 type BezierCurve = {
@@ -97,8 +96,8 @@ const WAVE_CONFIGS = [
 ];
 
 export const TrialEndedBackground = () => {
-  const { mode, systemMode } = useColorScheme();
-  const isDark = (mode === "system" ? systemMode : mode) === "dark";
+  const isDark = typeof document !== "undefined" &&
+    document.documentElement.classList.contains("dark");
 
   const strokeColor = isDark
     ? "rgba(255, 255, 255, 0.3)"

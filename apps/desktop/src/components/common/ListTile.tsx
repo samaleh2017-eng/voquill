@@ -1,16 +1,6 @@
-import {
-  Box,
-  IconButton,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Stack,
-  Typography,
-  type SxProps,
-} from "@mui/material";
+import { cn } from "@/lib/utils";
 import { forwardRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { OverflowTypography } from "./OverflowTypography";
 
 type HoverButtonProps = {
   idle?: React.ReactNode;
@@ -39,37 +29,28 @@ const HoverButton = ({
   };
 
   return (
-    <Box
-      flexShrink={0}
-      sx={{
-        display: "inline-flex",
-        ml: left ? undefined : 1,
-        mr: left ? 1 : undefined,
-      }}
+    <div
+      className={cn(
+        "inline-flex shrink-0 items-center",
+        left ? "mr-3" : "ml-3",
+      )}
     >
-      <Typography
-        variant="body2"
-        component="span"
-        fontWeight="bold"
-        sx={{ display: "flex", alignItems: "center" }}
-      >
-        <Box sx={{ display: hoverState ? "none" : "inline-flex" }}>{idle}</Box>
-        <IconButton
+      <span className="flex items-center text-sm font-bold">
+        <span className={cn(hoverState ? "hidden" : "inline-flex")}>{idle}</span>
+        <div
+          role="button"
+          tabIndex={0}
           onClick={handleClick}
           onMouseDown={handleMouseDown}
-          component="div"
-          size="small"
-          sx={{
-            my: -1,
-            mr: left ? undefined : -1.5,
-            ml: left ? -1.5 : undefined,
-            display: hoverState ? "inline-flex" : "none",
-          }}
+          className={cn(
+            "inline-flex cursor-pointer items-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+            hoverState ? "inline-flex" : "hidden",
+          )}
         >
           {hover}
-        </IconButton>
-      </Typography>
-    </Box>
+        </div>
+      </span>
+    </div>
   );
 };
 
@@ -84,7 +65,8 @@ export type ListTileProps = {
   leadingOnClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   selected?: boolean;
-  sx?: SxProps;
+  sx?: unknown;
+  className?: string;
   href?: string;
   disabled?: boolean;
   disableRipple?: boolean;
@@ -103,35 +85,18 @@ export const ListTile = forwardRef<HTMLDivElement, ListTileProps>(
       leadingOnClick,
       onClick,
       selected = false,
-      sx,
+      className,
       href,
       disabled,
-      disableRipple,
     },
     ref,
   ) => {
     const [hovered, setHovered] = useState(false);
     const nav = useNavigate();
 
-    const onMouseEnter = () => {
-      setHovered(true);
-    };
-
-    const onMouseLeave = () => {
-      setHovered(false);
-    };
-
-    const handleClickLeading = (event: React.MouseEvent<HTMLDivElement>) => {
-      event.stopPropagation();
-      leadingOnClick?.(event);
-    };
-
-    const handleClickTrailing = (event: React.MouseEvent<HTMLDivElement>) => {
-      event.stopPropagation();
-      trailingOnClick?.(event);
-    };
-
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+      if (disabled) return;
+
       if (href) {
         if (event.metaKey || event.ctrlKey) {
           window.open(href, "_blank");
@@ -145,48 +110,54 @@ export const ListTile = forwardRef<HTMLDivElement, ListTileProps>(
     };
 
     return (
-      <ListItem
+      <div
         ref={ref}
-        component="div"
-        disablePadding
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        sx={sx}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className={cn("list-none", className)}
       >
-        <ListItemButton
-          selected={selected}
+        <div
+          role="button"
+          tabIndex={disabled ? -1 : 0}
           onClick={handleClick}
-          disabled={disabled}
-          disableRipple={disableRipple}
+          className={cn(
+            "flex w-full cursor-pointer items-center rounded-lg px-3 py-2.5 text-left transition-colors",
+            selected
+              ? "bg-accent text-accent-foreground"
+              : "hover:bg-accent/50",
+            disabled && "pointer-events-none opacity-50",
+          )}
         >
-          <Stack direction="row" alignItems="center" width="100%">
+          <div className="flex w-full items-center">
             {Boolean(leading) && (
               <HoverButton
                 idle={leading}
                 hover={leadingHover}
                 hovered={hovered}
-                onClick={handleClickLeading}
+                onClick={leadingOnClick}
                 left={true}
               />
             )}
-            <Box flexGrow={1} sx={{ overflow: "hidden" }}>
-              <ListItemText
-                primary={<OverflowTypography>{title}</OverflowTypography>}
-                secondary={subtitle}
-              />
-            </Box>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm">{title}</div>
+              {subtitle && (
+                <div className="truncate text-xs text-muted-foreground">
+                  {subtitle}
+                </div>
+              )}
+            </div>
             {Boolean(trailing) && (
               <HoverButton
                 idle={trailing}
                 hover={trailingHover}
                 hovered={hovered}
-                onClick={handleClickTrailing}
+                onClick={trailingOnClick}
                 left={false}
               />
             )}
-          </Stack>
-        </ListItemButton>
-      </ListItem>
+          </div>
+        </div>
+      </div>
     );
   },
 );

@@ -1,22 +1,25 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  Typography,
-} from "@mui/material";
 import { useMemo } from "react";
 import { AppTarget } from "@repo/types";
 import { FormattedMessage, useIntl } from "react-intl";
 import { setAppTargetPasteKeybind } from "../../actions/app-target.actions";
 import { produceAppState, useAppStore } from "../../store";
 import { StorageImage } from "../common/StorageImage";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const AppKeybindingsDialog = () => {
   const open = useAppStore(
@@ -39,43 +42,41 @@ export const AppKeybindingsDialog = () => {
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        <FormattedMessage defaultMessage="App Paste Bindings" />
-      </DialogTitle>
-      <DialogContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          <FormattedMessage defaultMessage="Different applications use different keyboard shortcuts for pasting. Select the keybind that works best for each app." />
-        </Typography>
+    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            <FormattedMessage defaultMessage="App Paste Bindings" />
+          </DialogTitle>
+          <DialogDescription>
+            <FormattedMessage defaultMessage="Different applications use different keyboard shortcuts for pasting. Select the keybind that works best for each app." />
+          </DialogDescription>
+        </DialogHeader>
         {sortedTargets.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+          <p className="py-3 text-sm text-muted-foreground">
             <FormattedMessage defaultMessage="No apps registered yet. Start dictating in an app and it will appear here." />
-          </Typography>
+          </p>
         ) : (
-          <>
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              sx={{ px: 1, mb: 1 }}
-            >
-              <Typography variant="caption" color="text.secondary">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs text-muted-foreground">
                 <FormattedMessage defaultMessage="App" />
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
+              </span>
+              <span className="text-xs text-muted-foreground">
                 <FormattedMessage defaultMessage="Paste keybind" />
-              </Typography>
-            </Stack>
+              </span>
+            </div>
             {sortedTargets.map((target) => (
               <AppKeybindingRow key={target.id} target={target} />
             ))}
-          </>
+          </div>
         )}
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            <FormattedMessage defaultMessage="Close" />
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>
-          <FormattedMessage defaultMessage="Close" />
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };
@@ -88,8 +89,7 @@ const AppKeybindingRow = ({ target }: AppKeybindingRowProps) => {
   const intl = useIntl();
   const pasteKeybindValue = target.pasteKeybind ?? "ctrl+v";
 
-  const handleChange = (event: SelectChangeEvent<string>) => {
-    const value = event.target.value;
+  const handleChange = (value: string) => {
     void setAppTargetPasteKeybind(
       target.id,
       value === "ctrl+v" ? null : value,
@@ -97,25 +97,9 @@ const AppKeybindingRow = ({ target }: AppKeybindingRowProps) => {
   };
 
   return (
-    <Stack
-      direction="row"
-      alignItems="center"
-      justifyContent="space-between"
-      sx={{ backgroundColor: "level1", mb: 1, borderRadius: 1, px: 1.5, py: 1 }}
-    >
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
-        <Box
-          sx={{
-            overflow: "hidden",
-            borderRadius: 0.75,
-            minWidth: 32,
-            minHeight: 32,
-            maxWidth: 32,
-            maxHeight: 32,
-            bgcolor: "level2",
-            flexShrink: 0,
-          }}
-        >
+    <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 px-3 py-2">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
           {target.iconPath && (
             <StorageImage
               path={target.iconPath}
@@ -125,25 +109,22 @@ const AppKeybindingRow = ({ target }: AppKeybindingRowProps) => {
               size={32}
             />
           )}
-        </Box>
-        <Typography variant="body2" noWrap>
-          {target.name}
-        </Typography>
-      </Stack>
-      <Select
-        value={pasteKeybindValue}
-        onChange={handleChange}
-        size="small"
-        variant="outlined"
-        sx={{ minWidth: 170, flexShrink: 0 }}
-      >
-        <MenuItem value="ctrl+v">
-          <FormattedMessage defaultMessage="Default (Ctrl+V)" />
-        </MenuItem>
-        <MenuItem value="ctrl+shift+v">
-          <FormattedMessage defaultMessage="Terminal (Ctrl+Shift+V)" />
-        </MenuItem>
+        </div>
+        <span className="truncate text-sm">{target.name}</span>
+      </div>
+      <Select value={pasteKeybindValue} onValueChange={handleChange}>
+        <SelectTrigger className="w-[170px] shrink-0" size="sm">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ctrl+v">
+            <FormattedMessage defaultMessage="Default (Ctrl+V)" />
+          </SelectItem>
+          <SelectItem value="ctrl+shift+v">
+            <FormattedMessage defaultMessage="Terminal (Ctrl+Shift+V)" />
+          </SelectItem>
+        </SelectContent>
       </Select>
-    </Stack>
+    </div>
   );
 };

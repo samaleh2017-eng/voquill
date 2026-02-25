@@ -1,30 +1,27 @@
-import { RocketLaunchOutlined } from "@mui/icons-material";
-import { Button, Stack, Typography } from "@mui/material";
+import { RiRocketLine } from "@remixicon/react";
 import { FormattedMessage } from "react-intl";
 import { openUpgradePlanDialog } from "../../actions/pricing.actions";
 import { useAppStore } from "../../store";
 import { getIsPro } from "../../utils/member.utils";
+import { Button } from "@/components/ui/button";
 
 export const VoquillCloudSetting = () => {
   const isPro = useAppStore(getIsPro);
 
   return (
-    <Stack spacing={1} alignItems="flex-start">
-      <Typography variant="body1">
+    <div className="flex flex-col items-start gap-2">
+      <p className="text-sm">
         <FormattedMessage defaultMessage="Use Voquill Cloud" />
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
+      </p>
+      <p className="text-sm text-muted-foreground">
         <FormattedMessage defaultMessage="No downloads or manual setup. Record on any device and we'll keep your data secure, synced, and ready everywhere." />
-      </Typography>
+      </p>
       {!isPro && (
-        <Button
-          variant="blue"
-          onClick={openUpgradePlanDialog}
-          endIcon={<RocketLaunchOutlined />}
-        >
+        <Button onClick={openUpgradePlanDialog}>
           <FormattedMessage defaultMessage="Upgrade to Pro" />
+          <RiRocketLine className="ml-2 size-4" />
         </Button>
       )}
-    </Stack>
+    </div>
   );
 };

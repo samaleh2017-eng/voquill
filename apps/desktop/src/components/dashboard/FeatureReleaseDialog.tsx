@@ -1,15 +1,4 @@
-import { ArrowForward, AutoAwesome } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { RiArrowRightLine, RiSparklingLine } from "@remixicon/react";
 import { ChangeEvent, Fragment, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { showConfetti } from "../../actions/app.actions";
@@ -28,62 +17,59 @@ import { getMyUserPreferences } from "../../utils/user.utils";
 import { HotkeyBadge } from "../common/HotkeyBadge";
 import { AIAgentModeConfiguration } from "../settings/AIAgentModeConfiguration";
 import { HotkeySetting } from "../settings/HotkeySetting";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const IntroPage = () => {
   return (
-    <Stack spacing={3} alignItems="center" textAlign="center" py={2}>
-      <Box
-        sx={{
-          width: 80,
-          height: 80,
-          borderRadius: "50%",
-          background: "linear-gradient(135deg, #0EA5E9 0%, #3B82F6 100%)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: "0 8px 32px rgba(59, 130, 246, 0.4)",
-        }}
-      >
-        <AutoAwesome sx={{ fontSize: 40, color: "white" }} />
-      </Box>
-      <Stack spacing={1} alignItems="center">
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Typography variant="h5" fontWeight={600}>
+    <div className="flex flex-col items-center text-center gap-6 py-4">
+      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-sky-500 to-blue-500 flex items-center justify-center shadow-[0_8px_32px_rgba(59,130,246,0.4)]">
+        <RiSparklingLine className="h-10 w-10 text-white" />
+      </div>
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-semibold">
             <FormattedMessage defaultMessage="Introducing Agent Mode" />
-          </Typography>
-          <Chip label="Beta" size="small" color="primary" />
-        </Stack>
-        <Typography variant="body1" color="text.secondary">
+          </h2>
+          <Badge>Beta</Badge>
+        </div>
+        <p className="text-muted-foreground">
           <FormattedMessage defaultMessage="A powerful new way to interact with your text" />
-        </Typography>
-      </Stack>
-      <Stack spacing={2} textAlign="left" sx={{ maxWidth: 480 }}>
-        <Typography variant="body2" color="text.secondary">
+        </p>
+      </div>
+      <div className="flex flex-col gap-4 text-left max-w-[480px]">
+        <p className="text-sm text-muted-foreground">
           <FormattedMessage defaultMessage="Agent Mode lets you give voice commands to write, edit, or transform text. Instead of just dictating, you can now tell the AI what you want it to do." />
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+        </p>
+        <p className="text-sm text-muted-foreground">
           <FormattedMessage defaultMessage="Try commands like 'Write an email to Bob about the meeting' or 'Make this paragraph more formal'. Agent Mode reads what's in your text field and rewrites it based on your instructions." />
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+        </p>
+        <p className="text-sm text-muted-foreground">
           <FormattedMessage defaultMessage="Run it multiple times to refine your text until it's perfect." />
-        </Typography>
-      </Stack>
-    </Stack>
+        </p>
+      </div>
+    </div>
   );
 };
 
 const HotkeyPage = () => {
   return (
-    <Stack spacing={3} py={4} px={2}>
-      <Stack spacing={1} textAlign="center">
-        <Typography variant="h5" fontWeight={600}>
+    <div className="flex flex-col gap-6 py-8 px-4">
+      <div className="flex flex-col gap-2 text-center">
+        <h2 className="text-xl font-semibold">
           <FormattedMessage defaultMessage="Set Your Shortcut" />
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+        </h2>
+        <p className="text-sm text-muted-foreground">
           <FormattedMessage defaultMessage="Choose the keyboard shortcut you'll use to activate Agent Mode" />
-        </Typography>
-      </Stack>
-      <Box sx={{ pt: 2 }}>
+        </p>
+      </div>
+      <div className="pt-4">
         <HotkeySetting
           title={<FormattedMessage defaultMessage="Agent Mode shortcut" />}
           description={
@@ -92,8 +78,8 @@ const HotkeyPage = () => {
           actionName={AGENT_DICTATE_HOTKEY}
           buttonSize="medium"
         />
-      </Box>
-    </Stack>
+      </div>
+    </div>
   );
 };
 
@@ -105,7 +91,7 @@ const TryItPage = () => {
   );
 
   const handleChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    event: ChangeEvent<HTMLTextAreaElement>,
   ) => {
     setValue(event.target.value);
   };
@@ -130,7 +116,7 @@ const TryItPage = () => {
 
         return (
           <Fragment key={key}>
-            <HotkeyBadge keys={combo} sx={{ mx: 0.25 }} />
+            <HotkeyBadge keys={combo} className="mx-0.5" />
             {separator}
           </Fragment>
         );
@@ -139,26 +125,24 @@ const TryItPage = () => {
   );
 
   return (
-    <Stack spacing={3} py={4} px={2}>
-      <Stack spacing={1} textAlign="center">
-        <Typography variant="h5" fontWeight={600}>
+    <div className="flex flex-col gap-6 py-8 px-4">
+      <div className="flex flex-col gap-2 text-center">
+        <h2 className="text-xl font-semibold">
           <FormattedMessage defaultMessage="Give It a Try!" />
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+        </h2>
+        <p className="text-sm text-muted-foreground">
           <FormattedMessage defaultMessage="Test out Agent Mode right now" />
-        </Typography>
-      </Stack>
-      <Typography variant="body2" color="text.secondary" component="div">
+        </p>
+      </div>
+      <p className="text-sm text-muted-foreground">
         <FormattedMessage
           defaultMessage="Press {hotkeys} and say something like 'Write an email to Bob about his shoes'."
           values={{ hotkeys }}
         />
-      </Typography>
-      <TextField
+      </p>
+      <Textarea
         autoFocus
-        multiline
-        minRows={4}
-        fullWidth
+        rows={4}
         placeholder={intl.formatMessage({
           defaultMessage:
             'Try saying "Write an email to Bob about his shoes" or "Make this more casual"',
@@ -166,31 +150,31 @@ const TryItPage = () => {
         value={value}
         onChange={handleChange}
       />
-      <Typography variant="body2" color="text.secondary" fontStyle="italic">
+      <p className="text-sm text-muted-foreground italic">
         <FormattedMessage defaultMessage="Tip: Run Agent Mode multiple times to keep refining! It remembers what's in the text box." />
-      </Typography>
-    </Stack>
+      </p>
+    </div>
   );
 };
 
 const ProcessorPage = () => {
   return (
-    <Stack spacing={3} py={4} px={2}>
-      <Stack spacing={1} textAlign="center">
-        <Typography variant="h5" fontWeight={600}>
+    <div className="flex flex-col gap-6 py-8 px-4">
+      <div className="flex flex-col gap-2 text-center">
+        <h2 className="text-xl font-semibold">
           <FormattedMessage defaultMessage="Choose Your Processor" />
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+        </h2>
+        <p className="text-sm text-muted-foreground">
           <FormattedMessage defaultMessage="Select which AI provider to use for Agent Mode" />
-        </Typography>
-      </Stack>
-      <Box sx={{ pt: 2 }}>
+        </p>
+      </div>
+      <div className="pt-4">
         <AIAgentModeConfiguration hideCloudOption />
-      </Box>
-      <Typography variant="body2" color="text.secondary" fontStyle="italic">
+      </div>
+      <p className="text-sm text-muted-foreground italic">
         <FormattedMessage defaultMessage="Tip: Choose a stronger model for better results. Smaller or weaker models may produce lower quality output." />
-      </Typography>
-    </Stack>
+      </p>
+    </div>
   );
 };
 
@@ -251,30 +235,29 @@ export const FeatureReleaseDialog = () => {
   };
 
   return (
-    <Dialog open={open} fullWidth maxWidth="sm">
-      <DialogContent sx={{ px: 2, py: 1 }}>{getPageContent()}</DialogContent>
-      <DialogActions sx={{ justifyContent: "space-between", px: 2, pb: 2 }}>
-        {canBack ? (
-          <Button onClick={handleBack}>
-            <FormattedMessage defaultMessage="Back" />
-          </Button>
-        ) : (
-          <div />
-        )}
-        {isLastPage ? (
-          <Button onClick={handleDismiss} variant="contained">
-            <FormattedMessage defaultMessage="Got it!" />
-          </Button>
-        ) : (
-          <Button
-            variant="contained"
-            endIcon={<ArrowForward />}
-            onClick={handleNext}
-          >
-            <FormattedMessage defaultMessage="Next" />
-          </Button>
-        )}
-      </DialogActions>
+    <Dialog open={open}>
+      <DialogContent className="sm:max-w-md [&>button]:hidden" onInteractOutside={(e) => e.preventDefault()}>
+        <div className="px-2 py-1">{getPageContent()}</div>
+        <DialogFooter className="flex-row justify-between sm:justify-between">
+          {canBack ? (
+            <Button variant="ghost" onClick={handleBack}>
+              <FormattedMessage defaultMessage="Back" />
+            </Button>
+          ) : (
+            <div />
+          )}
+          {isLastPage ? (
+            <Button onClick={handleDismiss}>
+              <FormattedMessage defaultMessage="Got it!" />
+            </Button>
+          ) : (
+            <Button onClick={handleNext}>
+              <FormattedMessage defaultMessage="Next" />
+              <RiArrowRightLine className="ml-2 h-4 w-4" />
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 };

@@ -1,5 +1,5 @@
-import { Box, Tab, Tabs } from "@mui/material";
-import { SyntheticEvent } from "react";
+import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export type SegmentedControlOption<Value extends string> = {
   value: Value;
@@ -12,26 +12,7 @@ export type SegmentedControlProps<Value extends string> = {
   options: SegmentedControlOption<Value>[];
   onChange: (value: Value) => void;
   ariaLabel?: string;
-};
-
-const tabSx = {
-  textTransform: "none",
-  minHeight: "unset",
-  py: 1.25,
-  px: 2.5,
-  borderRadius: 1.5,
-  fontWeight: 600,
-  transition: "all 0.2s ease",
-  color: "text.secondary",
-  "&.Mui-selected": {
-    color: "text.primary",
-    bgcolor: "background.paper",
-    boxShadow: "inset 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.05)",
-  },
-  "&:hover:not(.Mui-selected)": {
-    color: "text.primary",
-    bgcolor: "rgba(255,255,255,0.05)",
-  },
+  className?: string;
 };
 
 export const SegmentedControl = <Value extends string>({
@@ -39,63 +20,36 @@ export const SegmentedControl = <Value extends string>({
   options,
   onChange,
   ariaLabel,
+  className,
 }: SegmentedControlProps<Value>) => {
-  const activeIndexCandidate = options.findIndex(
+  const activeCandidate = options.find(
     (option) => option.value === value && !option.disabled,
   );
-  const fallbackIndex = options.findIndex((option) => !option.disabled);
-  const activeIndex =
-    activeIndexCandidate >= 0
-      ? activeIndexCandidate
-      : Math.max(0, fallbackIndex);
-
-  const handleChange = (_event: SyntheticEvent, index: number) => {
-    const option = options[index];
-    if (!option) {
-      return;
-    }
-
-    if (option.disabled) {
-      return;
-    }
-
-    if (option.value !== value) {
-      onChange(option.value);
-    }
-  };
+  const fallback = options.find((option) => !option.disabled);
+  const activeValue = activeCandidate?.value ?? fallback?.value ?? value;
 
   return (
-    <Box
-      sx={{
-        display: "inline-flex",
-        bgcolor: "action.hover",
-        borderRadius: 2,
-        p: 0.5,
-        border: 1,
-        borderColor: "divider",
-        maxWidth: "100%",
+    <Tabs
+      value={activeValue}
+      onValueChange={(v) => {
+        const option = options.find((o) => o.value === v);
+        if (option && !option.disabled && option.value !== value) {
+          onChange(option.value as Value);
+        }
       }}
+      className={cn("w-auto", className)}
     >
-      <Tabs
-        value={activeIndex}
-        onChange={handleChange}
-        aria-label={ariaLabel}
-        sx={{
-          minHeight: "unset",
-          "& .MuiTabs-indicator": {
-            display: "none",
-          },
-        }}
-      >
+      <TabsList aria-label={ariaLabel}>
         {options.map((option) => (
-          <Tab
+          <TabsTrigger
             key={option.value}
-            label={option.label}
-            sx={tabSx}
+            value={option.value}
             disabled={option.disabled}
-          />
+          >
+            {option.label}
+          </TabsTrigger>
         ))}
-      </Tabs>
-    </Box>
+      </TabsList>
+    </Tabs>
   );
 };

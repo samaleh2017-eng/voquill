@@ -1,4 +1,3 @@
-import { Stack, TextField, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import {
@@ -18,6 +17,8 @@ import {
 import { maybeArrayElements } from "./AIPostProcessingConfiguration";
 import { ApiKeyList } from "./ApiKeyList";
 import { VoquillCloudSetting } from "./VoquillCloudSetting";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type AIAgentModeConfigurationProps = {
   hideCloudOption?: boolean;
@@ -58,29 +59,19 @@ export const AIAgentModeConfiguration = ({
   }
 
   return (
-    <Stack spacing={3} alignItems="flex-start" sx={{ width: "100%" }}>
+    <div className="flex w-full flex-col items-start gap-4">
       <SegmentedControl<AgentMode>
         value={agentMode.mode}
         onChange={handleModeChange}
         options={[
           ...maybeArrayElements<SegmentedControlOption<AgentMode>>(
             !hideCloudOption,
-            [
-              {
-                value: "cloud",
-                label: "Voquill",
-              },
-            ],
+            [{ value: "cloud", label: "Voquill" }],
           ),
           { value: "api", label: "API" },
           ...maybeArrayElements<SegmentedControlOption<AgentMode>>(
             !isEnterprise,
-            [
-              {
-                value: "openclaw",
-                label: "OpenClaw",
-              },
-            ],
+            [{ value: "openclaw", label: "OpenClaw" }],
           ),
           { value: "none", label: "Off" },
         ]}
@@ -88,9 +79,9 @@ export const AIAgentModeConfiguration = ({
       />
 
       {agentMode.mode === "none" && (
-        <Typography variant="body2" color="text.secondary">
+        <p className="text-sm text-muted-foreground">
           <FormattedMessage defaultMessage="Agent mode is disabled." />
-        </Typography>
+        </p>
       )}
 
       {agentMode.mode === "api" && (
@@ -104,55 +95,48 @@ export const AIAgentModeConfiguration = ({
       {agentMode.mode === "cloud" && <VoquillCloudSetting />}
 
       {agentMode.mode === "openclaw" && (
-        <Stack spacing={2} sx={{ width: "100%" }}>
-          <Typography variant="body2" color="text.secondary" component="div">
+        <div className="flex w-full flex-col gap-3">
+          <div className="text-sm text-muted-foreground">
             <FormattedMessage
               defaultMessage="To connect, you need your <b>gateway URL</b> and <b>token</b>. <ul><li>Gateway URL is <code>ws://localhost:18789</code> by default.</li><li>To find your token, run: <code>openclaw config get gateway.auth.token</code></li></ul>"
               values={{
                 b: (chunks: React.ReactNode) => <strong>{chunks}</strong>,
                 ul: (chunks: React.ReactNode) => (
-                  <ul style={{ margin: "8px 0", paddingLeft: 20 }}>{chunks}</ul>
+                  <ul className="my-2 list-disc pl-5">{chunks}</ul>
                 ),
                 li: (chunks: React.ReactNode) => (
-                  <li style={{ marginBottom: 4 }}>{chunks}</li>
+                  <li className="mb-1">{chunks}</li>
                 ),
                 code: (chunks: React.ReactNode) => (
-                  <code
-                    style={{
-                      fontSize: "0.85em",
-                      padding: "1px 4px",
-                      borderRadius: 4,
-                      backgroundColor: "rgba(0,0,0,0.08)",
-                    }}
-                  >
+                  <code className="rounded bg-muted px-1 py-0.5 text-[0.85em]">
                     {chunks}
                   </code>
                 ),
               }}
             />
-          </Typography>
-          <TextField
-            label={intl.formatMessage({
-              defaultMessage: "Gateway URL",
-            })}
-            placeholder="ws://localhost:18789"
-            value={agentMode.openclawGatewayUrl ?? ""}
-            onChange={handleGatewayUrlChange}
-            size="small"
-            fullWidth
-          />
-          <TextField
-            label={intl.formatMessage({
-              defaultMessage: "OpenClaw token",
-            })}
-            value={agentMode.openclawToken ?? ""}
-            onChange={handleTokenChange}
-            size="small"
-            fullWidth
-            type="password"
-          />
-        </Stack>
+          </div>
+          <div className="space-y-1.5">
+            <Label>
+              {intl.formatMessage({ defaultMessage: "Gateway URL" })}
+            </Label>
+            <Input
+              placeholder="ws://localhost:18789"
+              value={agentMode.openclawGatewayUrl ?? ""}
+              onChange={handleGatewayUrlChange}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>
+              {intl.formatMessage({ defaultMessage: "OpenClaw token" })}
+            </Label>
+            <Input
+              type="password"
+              value={agentMode.openclawToken ?? ""}
+              onChange={handleTokenChange}
+            />
+          </div>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 };

@@ -1,19 +1,11 @@
-import CloseIcon from "@mui/icons-material/Close";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import SearchIcon from "@mui/icons-material/Search";
-import StarIcon from "@mui/icons-material/Star";
-import StarBorderIcon from "@mui/icons-material/StarBorder";
 import {
-  Box,
-  CircularProgress,
-  Divider,
-  IconButton,
-  InputAdornment,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+  RiCloseLine,
+  RiArrowDownSLine,
+  RiSearchLine,
+  RiStarLine,
+  RiStarFill,
+  RiLoader4Line,
+} from "@remixicon/react";
 import { OpenRouterModel } from "@repo/types";
 import { OPENROUTER_FAVORITE_MODELS } from "@repo/voice-ai";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -26,6 +18,8 @@ import {
   toggleOpenRouterFavoriteModel,
 } from "../../actions/openrouter.actions";
 import { useAppStore } from "../../store";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 
 type OpenRouterModelPickerProps = {
   apiKeyId: string;
@@ -42,7 +36,6 @@ type ModelRowProps = {
   onToggleFavorite: () => void;
 };
 
-// Types for unified list items
 type ListItem =
   | { type: "header"; label: string; count: number }
   | { type: "model"; model: OpenRouterModel; isFavorite: boolean }
@@ -58,69 +51,47 @@ const ModelRow = ({
   const [hovered, setHovered] = useState(false);
 
   return (
-    <Box
+    <div
       onClick={onSelect}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      sx={{
-        px: 1.5,
-        py: 1,
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        gap: 1,
-        backgroundColor: selected
-          ? "action.selected"
+      className={`px-3 py-2 cursor-pointer flex items-center gap-2 rounded-md transition-colors ${
+        selected
+          ? "bg-accent"
           : hovered
-            ? "action.hover"
-            : "transparent",
-        borderRadius: 1,
-        transition: "background-color 0.15s ease",
-      }}
+            ? "bg-accent/50"
+            : "bg-transparent"
+      }`}
     >
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography
-          variant="body2"
-          fontWeight={selected ? 600 : 400}
-          noWrap
-          sx={{ lineHeight: 1.3 }}
-        >
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm truncate leading-tight ${selected ? "font-semibold" : ""}`}>
           {model.name}
-        </Typography>
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          noWrap
-          sx={{ lineHeight: 1.3 }}
-        >
+        </p>
+        <p className="text-xs text-muted-foreground truncate leading-tight">
           {model.id}
-        </Typography>
-      </Box>
+        </p>
+      </div>
       {(hovered || isFavorite) && (
-        <IconButton
-          size="small"
+        <button
+          className={`p-1 rounded hover:bg-accent ${isFavorite ? "text-amber-500" : "text-muted-foreground"}`}
           onClick={(e) => {
             e.stopPropagation();
             onToggleFavorite();
           }}
-          sx={{
-            p: 0.5,
-            color: isFavorite ? "warning.main" : "action.active",
-          }}
         >
           {isFavorite ? (
-            <StarIcon fontSize="small" />
+            <RiStarFill className="h-4 w-4" />
           ) : (
-            <StarBorderIcon fontSize="small" />
+            <RiStarLine className="h-4 w-4" />
           )}
-        </IconButton>
+        </button>
       )}
       {selected && !hovered && !isFavorite && (
-        <Typography variant="caption" color="primary.main" fontWeight={600}>
+        <span className="text-xs text-primary font-semibold">
           <FormattedMessage defaultMessage="Selected" />
-        </Typography>
+        </span>
       )}
-    </Box>
+    </div>
   );
 };
 
@@ -139,22 +110,16 @@ export const OpenRouterModelPicker = ({
     (state) => state.settings.openRouterSearchQuery,
   );
 
-  // Get user favorites from the API key config
   const config = getOpenRouterConfigForKey(apiKeyId);
   const userFavorites = config?.favoriteModels;
 
-  // Use user's favorites if they've customized them, otherwise use defaults
-  // This allows users to remove default favorites by toggling them off
   const allFavoriteIds = useMemo(() => {
     if (userFavorites !== undefined) {
-      // User has customized favorites - use only their list
       return new Set(userFavorites);
     }
-    // No customization yet - use defaults
     return new Set<string>(OPENROUTER_FAVORITE_MODELS);
   }, [userFavorites]);
 
-  // Filter models based on search query
   const filteredModels = useMemo(() => {
     if (!searchQuery.trim()) {
       return models;
@@ -167,7 +132,6 @@ export const OpenRouterModelPicker = ({
     );
   }, [models, searchQuery]);
 
-  // Split into favorites and non-favorites
   const favoriteModels = useMemo(() => {
     return filteredModels.filter((m) => allFavoriteIds.has(m.id));
   }, [filteredModels, allFavoriteIds]);
@@ -176,7 +140,6 @@ export const OpenRouterModelPicker = ({
     return filteredModels.filter((m) => !allFavoriteIds.has(m.id));
   }, [filteredModels, allFavoriteIds]);
 
-  // Build unified list items for single scrollable list
   const listItems = useMemo((): ListItem[] => {
     const items: ListItem[] = [];
 
@@ -204,12 +167,10 @@ export const OpenRouterModelPicker = ({
     return items;
   }, [favoriteModels, otherModels]);
 
-  // Get selected model name for collapsed display
   const selectedModelData = useMemo(() => {
     return models.find((m) => m.id === selectedModel);
   }, [models, selectedModel]);
 
-  // Load models when expanded for the first time
   useEffect(() => {
     if (expanded && modelsStatus === "idle") {
       void loadOpenRouterModels();
@@ -249,96 +210,69 @@ export const OpenRouterModelPicker = ({
     [],
   );
 
-  // Collapsed state - looks like a Select
   if (!expanded) {
     return (
-      <Paper
-        variant="outlined"
+      <div
         onClick={handleExpand}
-        sx={{
-          px: 1.5,
-          py: 1,
-          cursor: disabled ? "default" : "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          opacity: disabled ? 0.5 : 1,
-          "&:hover": {
-            borderColor: disabled ? "divider" : "action.active",
-          },
-        }}
+        className={`rounded-lg border border-border px-3 py-2 cursor-pointer flex items-center justify-between transition-colors hover:border-muted-foreground/40 ${
+          disabled ? "opacity-50 cursor-default hover:border-border" : ""
+        }`}
       >
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="caption" color="text.secondary">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-muted-foreground">
             <FormattedMessage defaultMessage="Model" />
-          </Typography>
-          <Typography variant="body2" noWrap>
+          </p>
+          <p className="text-sm truncate">
             {selectedModelData?.name ?? selectedModel ?? (
               <FormattedMessage defaultMessage="Select a model" />
             )}
-          </Typography>
-        </Box>
-        <ExpandMoreIcon color="action" />
-      </Paper>
+          </p>
+        </div>
+        <RiArrowDownSLine className="h-5 w-5 text-muted-foreground" />
+      </div>
     );
   }
 
-  // Expanded state - search + list
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        overflow: "hidden",
-      }}
-    >
-      {/* Header with search */}
-      <Box sx={{ p: 1.5, borderBottom: 1, borderColor: "divider" }}>
-        <TextField
-          fullWidth
-          size="small"
-          placeholder="Search models..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          autoFocus
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" color="action" />
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton size="small" onClick={handleCollapse} edge="end">
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
+    <div className="rounded-lg border border-border overflow-hidden">
+      <div className="p-3 border-b border-border">
+        <div className="relative">
+          <RiSearchLine className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            className="pl-8 pr-8"
+            placeholder="Search models..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            autoFocus
+          />
+          <button
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-accent"
+            onClick={handleCollapse}
+          >
+            <RiCloseLine className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
 
-      {/* Loading state */}
       {modelsStatus === "loading" && (
-        <Stack spacing={1} alignItems="center" sx={{ py: 4 }}>
-          <CircularProgress size={24} />
-          <Typography variant="body2" color="text.secondary">
+        <div className="flex flex-col items-center gap-2 py-8">
+          <RiLoader4Line className="h-5 w-5 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">
             <FormattedMessage defaultMessage="Loading models..." />
-          </Typography>
-        </Stack>
+          </p>
+        </div>
       )}
 
-      {/* Error state */}
       {modelsStatus === "error" && (
-        <Stack spacing={1} alignItems="center" sx={{ py: 4 }}>
-          <Typography variant="body2" color="error">
+        <div className="flex flex-col items-center gap-2 py-8">
+          <p className="text-sm text-destructive">
             <FormattedMessage defaultMessage="Failed to load models" />
-          </Typography>
-        </Stack>
+          </p>
+        </div>
       )}
 
-      {/* Models list - single scrollable container */}
       {modelsStatus === "success" && (
-        <Box sx={{ height: 320 }}>
+        <div className="h-80">
           {listItems.length > 1 ? (
             <Virtuoso
               style={{ height: "100%" }}
@@ -346,27 +280,16 @@ export const OpenRouterModelPicker = ({
               itemContent={(_index, item) => {
                 if (item.type === "header") {
                   return (
-                    <Box sx={{ px: 1.5, pt: 1.5, pb: 0.5 }}>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        fontWeight={600}
-                      >
+                    <div className="px-3 pt-3 pb-1">
+                      <span className="text-xs text-muted-foreground font-semibold">
                         {item.label}
-                        <Typography
-                          component="span"
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ ml: 0.5 }}
-                        >
-                          ({item.count})
-                        </Typography>
-                      </Typography>
-                    </Box>
+                        <span className="ml-1">({item.count})</span>
+                      </span>
+                    </div>
                   );
                 }
                 if (item.type === "divider") {
-                  return <Divider sx={{ my: 1 }} />;
+                  return <Separator className="my-2" />;
                 }
                 return (
                   <ModelRow
@@ -380,14 +303,14 @@ export const OpenRouterModelPicker = ({
               }}
             />
           ) : (
-            <Box sx={{ px: 1.5, py: 2 }}>
-              <Typography variant="body2" color="text.secondary">
+            <div className="px-3 py-4">
+              <p className="text-sm text-muted-foreground">
                 <FormattedMessage defaultMessage="No models found" />
-              </Typography>
-            </Box>
+              </p>
+            </div>
           )}
-        </Box>
+        </div>
       )}
-    </Paper>
+    </div>
   );
 };

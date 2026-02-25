@@ -1,20 +1,21 @@
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  Typography,
-} from "@mui/material";
 import { invoke } from "@tauri-apps/api/core";
 import { useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { showSnackbar } from "../../actions/app.actions";
 import { getAuthRepo } from "../../repos";
 import { produceAppState, useAppStore } from "../../store";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RiAlertLine } from "@remixicon/react";
 
 export const DeleteAccountDialog = () => {
   const open = useAppStore((state) => state.settings.deleteAccountDialog);
@@ -31,9 +32,7 @@ export const DeleteAccountDialog = () => {
   };
 
   const handleSubmit = async () => {
-    if (!isDeleteEnabled) {
-      return;
-    }
+    if (!isDeleteEnabled) return;
 
     try {
       await getAuthRepo().deleteMyAccount();
@@ -50,77 +49,74 @@ export const DeleteAccountDialog = () => {
     }
   };
 
-  const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmationEmail(event.target.value);
-  };
-
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-      <DialogTitle>
-        <Typography variant="h6" component="div" fontWeight={600} color="error">
-          <FormattedMessage defaultMessage="Delete account" />
-        </Typography>
-      </DialogTitle>
-      <DialogContent>
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          <FormattedMessage defaultMessage="This action cannot be undone. All your data will be permanently deleted." />
-        </Alert>
-        <Typography variant="body1" component="div" sx={{ mb: 2 }}>
-          <FormattedMessage defaultMessage="Are you sure you want to delete your account? This will:" />
-        </Typography>
-        <Box component="ul" sx={{ pl: 2, mb: 2 }}>
-          <Typography component="li" variant="body2">
-            <FormattedMessage defaultMessage="Permanently delete all your data" />
-          </Typography>
-          <Typography component="li" variant="body2">
-            <FormattedMessage defaultMessage="Cancel any active subscriptions" />
-          </Typography>
-          <Typography component="li" variant="body2">
-            <FormattedMessage defaultMessage="Remove access to all premium features" />
-          </Typography>
-          <Typography component="li" variant="body2">
-            <FormattedMessage defaultMessage="Sign you out immediately" />
-          </Typography>
-        </Box>
-        {userEmail && (
-          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-            <FormattedMessage
-              defaultMessage="Account to be deleted: {email}"
-              values={{ email: <strong>{userEmail}</strong> }}
+    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-destructive">
+            <FormattedMessage defaultMessage="Delete account" />
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <Alert variant="destructive">
+            <RiAlertLine className="size-4" />
+            <AlertDescription>
+              <FormattedMessage defaultMessage="This action cannot be undone. All your data will be permanently deleted." />
+            </AlertDescription>
+          </Alert>
+          <p className="text-sm">
+            <FormattedMessage defaultMessage="Are you sure you want to delete your account? This will:" />
+          </p>
+          <ul className="list-disc space-y-1 pl-5 text-sm">
+            <li>
+              <FormattedMessage defaultMessage="Permanently delete all your data" />
+            </li>
+            <li>
+              <FormattedMessage defaultMessage="Cancel any active subscriptions" />
+            </li>
+            <li>
+              <FormattedMessage defaultMessage="Remove access to all premium features" />
+            </li>
+            <li>
+              <FormattedMessage defaultMessage="Sign you out immediately" />
+            </li>
+          </ul>
+          {userEmail && (
+            <p className="text-sm text-muted-foreground">
+              <FormattedMessage
+                defaultMessage="Account to be deleted: {email}"
+                values={{ email: <strong>{userEmail}</strong> }}
+              />
+            </p>
+          )}
+          <div className="space-y-1.5">
+            <Label>
+              <FormattedMessage defaultMessage="To confirm, type your email address below:" />
+            </Label>
+            <Input
+              placeholder={userEmail || ""}
+              value={confirmationEmail}
+              onChange={(e) => setConfirmationEmail(e.target.value)}
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
             />
-          </Typography>
-        )}
-
-        <Typography variant="body2" sx={{ mb: 1 }}>
-          <FormattedMessage defaultMessage="To confirm, type your email address below:" />
-        </Typography>
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder={userEmail || ""}
-          value={confirmationEmail}
-          onChange={handleEmailChange}
-          size="small"
-          sx={{ mb: 2 }}
-          autoComplete="off"
-          autoCapitalize="off"
-          autoCorrect="off"
-          spellCheck={false}
-        />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            <FormattedMessage defaultMessage="Cancel" />
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleSubmit}
+            disabled={!isDeleteEnabled}
+          >
+            <FormattedMessage defaultMessage="Delete account" />
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} variant="text">
-          <FormattedMessage defaultMessage="Cancel" />
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          color="error"
-          disabled={!isDeleteEnabled}
-        >
-          <FormattedMessage defaultMessage="Delete account" />
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };
