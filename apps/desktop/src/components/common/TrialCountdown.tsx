@@ -1,5 +1,4 @@
-import { HourglassBottomRounded } from "@mui/icons-material";
-import { Box, Button, LinearProgress, Stack, Typography } from "@mui/material";
+import { RiHourglassLine } from "@remixicon/react";
 import { useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { openUpgradePlanDialog } from "../../actions/pricing.actions";
@@ -11,6 +10,8 @@ import {
   getTrialProgress,
 } from "../../utils/member.utils";
 import { minutesToMilliseconds } from "../../utils/time.utils";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
 export const TrialCountdown = () => {
   const daysRemaining = useAppStore(getTrialDaysRemaining);
@@ -38,58 +39,36 @@ export const TrialCountdown = () => {
 
   const urgent = daysRemaining <= 0;
   const warning = daysRemaining <= 3;
-  const barColor = urgent ? "error" : warning ? "warning" : "primary";
 
   return (
-    <Stack
-      direction="row"
-      alignItems="center"
-      gap={1.5}
+    <div
       onClick={handleClick}
-      sx={{
-        cursor: "pointer",
-        border: 1,
-        borderColor: urgent
-          ? "error.main"
+      className={`flex cursor-pointer items-center gap-3 rounded-lg border py-1.5 pl-3 pr-2 transition-colors ${
+        urgent
+          ? "border-destructive hover:border-destructive/80"
           : warning
-            ? "warning.main"
-            : "divider",
-        borderRadius: 2,
-        pl: 1.5,
-        pr: 1,
-        py: 0.75,
-        transition: "border-color 0.2s",
-        "&:hover": {
-          borderColor: urgent
-            ? "error.dark"
-            : warning
-              ? "warning.dark"
-              : "primary.main",
-        },
-      }}
+            ? "border-yellow-500 hover:border-yellow-600"
+            : "border-border hover:border-primary"
+      }`}
     >
-      <HourglassBottomRounded
-        sx={{
-          fontSize: 16,
-          color: urgent
-            ? "error.main"
+      <RiHourglassLine
+        className={`size-4 ${
+          urgent
+            ? "text-destructive"
             : warning
-              ? "warning.main"
-              : "text.secondary",
-        }}
+              ? "text-yellow-500"
+              : "text-muted-foreground"
+        }`}
       />
-      <Stack sx={{ minWidth: 80 }}>
-        <Typography
-          variant="caption"
-          fontWeight={600}
-          lineHeight={1.2}
-          sx={{
-            color: urgent
-              ? "error.main"
+      <div className="min-w-[80px]">
+        <span
+          className={`block text-xs font-semibold leading-tight ${
+            urgent
+              ? "text-destructive"
               : warning
-                ? "warning.main"
-                : "text.primary",
-          }}
+                ? "text-yellow-500"
+                : "text-foreground"
+          }`}
         >
           {daysRemaining === 0 ? (
             <FormattedMessage defaultMessage="Last day" />
@@ -101,35 +80,23 @@ export const TrialCountdown = () => {
               values={{ days: daysRemaining }}
             />
           )}
-        </Typography>
-        <Box sx={{ mt: 0.5 }}>
-          <LinearProgress
-            variant="determinate"
+        </span>
+        <div className="mt-1">
+          <Progress
             value={progress * 100}
-            color={barColor}
-            sx={{
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: "action.hover",
-            }}
+            className={`h-1 ${
+              urgent
+                ? "[&>[data-slot=progress-indicator]]:bg-destructive"
+                : warning
+                  ? "[&>[data-slot=progress-indicator]]:bg-yellow-500"
+                  : ""
+            }`}
           />
-        </Box>
-      </Stack>
-      <Button
-        variant="blue"
-        size="small"
-        sx={{
-          fontWeight: 600,
-          fontSize: 12,
-          px: 1.5,
-          py: 0.5,
-          ml: 0.5,
-          minWidth: 0,
-          borderRadius: 2,
-        }}
-      >
+        </div>
+      </div>
+      <Button variant="blue" size="xs" className="ml-1">
         <FormattedMessage defaultMessage="Upgrade" />
       </Button>
-    </Stack>
+    </div>
   );
 };

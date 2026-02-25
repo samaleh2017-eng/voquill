@@ -1,14 +1,4 @@
-import CloseIcon from "@mui/icons-material/Close";
-import {
-  Box,
-  Button,
-  CircularProgress,
-  IconButton,
-  LinearProgress,
-  Paper,
-  Typography,
-} from "@mui/material";
-import { alpha, keyframes, useTheme } from "@mui/material/styles";
+import { RiCloseLine } from "@remixicon/react";
 import { emitTo } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FormattedMessage } from "react-intl";
@@ -20,6 +10,8 @@ import {
 } from "../../utils/keyboard.utils";
 import { AudioWaveform } from "../common/AudioWaveform";
 import { HotkeyBadge } from "../common/HotkeyBadge";
+import { Button } from "../ui/button";
+import { Progress } from "../ui/progress";
 
 const AGENT_OVERLAY_WIDTH = 300;
 const LEFT_MARGIN = 16;
@@ -27,68 +19,25 @@ const TOP_MARGIN = 16;
 const MAX_PAPER_HEIGHT = 600;
 const HEADER_HEIGHT = 40;
 
-const fadeInScale = keyframes`
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-`;
-
-const bubbleFadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
 type MessageBubbleProps = {
   message: AgentWindowMessage;
 };
 
 const MessageBubble = ({ message }: MessageBubbleProps) => {
-  const theme = useTheme();
   const isMe = message.sender === "me";
 
   if (isMe) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "flex-end",
-          mb: 1,
-        }}
-      >
-        <Box
-          sx={{
-            maxWidth: "85%",
-            padding: theme.spacing(1, 1.5),
-            borderRadius: 1,
-            backgroundColor: alpha(theme.palette.grey[500], 0.15),
-            borderBottomRightRadius: 2,
-          }}
+      <div className="mb-2 flex justify-end">
+        <div
+          className="max-w-[85%] rounded bg-muted/50 px-3 py-2"
+          style={{ borderBottomRightRadius: 2 }}
         >
-          <Typography
-            variant="body2"
-            sx={{
-              color: "text.primary",
-              lineHeight: 1.4,
-              wordBreak: "break-word",
-              fontSize: "0.8125rem",
-              whiteSpace: "pre-wrap",
-            }}
-          >
+          <p className="whitespace-pre-wrap break-words text-[0.8125rem] leading-[1.4] text-foreground">
             {message.text}
-          </Typography>
-        </Box>
-      </Box>
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -96,27 +45,11 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
 
   if (message.isError) {
     return (
-      <Box
-        sx={{
-          padding: theme.spacing(1, 1.5),
-          borderRadius: 1,
-          backgroundColor: alpha(theme.palette.error.main, 0.1),
-          mb: 1,
-        }}
-      >
-        <Typography
-          variant="body2"
-          sx={{
-            color: "error.main",
-            lineHeight: 1.5,
-            wordBreak: "break-word",
-            fontSize: "0.8125rem",
-            whiteSpace: "pre-wrap",
-          }}
-        >
+      <div className="mb-2 rounded bg-destructive/10 px-3 py-2">
+        <p className="whitespace-pre-wrap break-words text-[0.8125rem] leading-[1.5] text-destructive">
           {message.text}
-        </Typography>
-      </Box>
+        </p>
+      </div>
     );
   }
 
@@ -125,86 +58,36 @@ const MessageBubble = ({ message }: MessageBubbleProps) => {
   const hasDraft = !!draft;
 
   return (
-    <Box sx={{ mb: 1 }}>
+    <div className="mb-2">
       {hasTools && (
-        <Box sx={{ mb: 0.5 }}>
-          <Typography
-            variant="body2"
-            sx={{
-              color: "text.secondary",
-              lineHeight: 1.4,
-              fontSize: "0.75rem",
-            }}
-          >
+        <div className="mb-1">
+          <p className="text-[0.75rem] leading-[1.4] text-muted-foreground">
             Tools used ({tools.length})
-          </Typography>
+          </p>
           {tools.map((tool, index) => (
-            <Typography
+            <p
               key={index}
-              variant="body2"
-              sx={{
-                color: "text.secondary",
-                lineHeight: 1.4,
-                fontSize: "0.75rem",
-                pl: 1,
-              }}
+              className="pl-2 text-[0.75rem] leading-[1.4] text-muted-foreground"
             >
               • {tool}
-            </Typography>
+            </p>
           ))}
-        </Box>
+        </div>
       )}
       {hasDraft && (
-        <Box
-          sx={{
-            mb: 1,
-            padding: theme.spacing(1.5),
-            borderRadius: 1,
-            backgroundColor: alpha(theme.palette.primary.main, 0.08),
-            borderLeft: `3px solid ${theme.palette.primary.main}`,
-          }}
-        >
-          <Typography
-            variant="caption"
-            sx={{
-              color: "primary.main",
-              fontWeight: 500,
-              fontSize: "0.7rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              display: "block",
-              mb: 0.5,
-            }}
-          >
+        <div className="mb-2 rounded border-l-[3px] border-primary bg-primary/[0.08] p-3">
+          <span className="mb-1 block text-[0.7rem] font-medium uppercase tracking-wider text-primary">
             Draft
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              color: "text.primary",
-              lineHeight: 1.5,
-              wordBreak: "break-word",
-              fontSize: "0.8125rem",
-              whiteSpace: "pre-wrap",
-            }}
-          >
+          </span>
+          <p className="whitespace-pre-wrap break-words text-[0.8125rem] leading-[1.5] text-foreground">
             {draft}
-          </Typography>
-        </Box>
+          </p>
+        </div>
       )}
-      <Typography
-        variant="body2"
-        sx={{
-          color: "text.primary",
-          lineHeight: 1.5,
-          wordBreak: "break-word",
-          fontSize: "0.8125rem",
-          whiteSpace: "pre-wrap",
-        }}
-      >
+      <p className="whitespace-pre-wrap break-words text-[0.8125rem] leading-[1.5] text-foreground">
         {message.text}
-      </Typography>
-    </Box>
+      </p>
+    </div>
   );
 };
 
@@ -217,38 +100,22 @@ const UserRecordingBubble = ({
   levels,
   isProcessing,
 }: UserRecordingBubbleProps) => {
-  const theme = useTheme();
-
   return (
-    <Box
-      sx={{
-        alignSelf: "flex-end",
+    <div
+      className="mb-2 flex items-center justify-center self-end rounded bg-muted/50"
+      style={{
         width: 100,
         height: 40,
-        padding: theme.spacing(1, 1.5),
-        borderRadius: 1,
-        backgroundColor: alpha(theme.palette.grey[500], 0.15),
+        padding: "8px 12px",
         borderBottomRightRadius: 2,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        mb: 1,
-        animation: `${bubbleFadeIn} 0.15s ease-out`,
-        paddingLeft: -16,
-        paddingRight: -16,
+        animation: "agent-bubble-fade-in 0.15s ease-out",
       }}
     >
       {isProcessing ? (
-        <LinearProgress
-          sx={{
-            width: 60,
-            height: 3,
-            borderRadius: 1.5,
-          }}
-        />
+        <Progress className="h-[3px] w-[60px]" />
       ) : (
-        <Box
-          sx={{
+        <div
+          style={{
             width: 60,
             height: 20,
             maskImage:
@@ -261,34 +128,29 @@ const UserRecordingBubble = ({
             levels={levels}
             active={true}
             processing={false}
-            strokeColor={theme.vars?.palette.primary.main}
+            strokeColor="var(--color-primary)"
             strokeWidth={2}
             width={60}
             height={20}
           />
-        </Box>
+        </div>
       )}
-    </Box>
+    </div>
   );
 };
 
 const AgentThinkingBubble = () => {
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        mb: 1,
-        animation: `${bubbleFadeIn} 0.15s ease-out`,
-      }}
+    <div
+      className="mb-2 flex items-center"
+      style={{ animation: "agent-bubble-fade-in 0.15s ease-out" }}
     >
-      <CircularProgress size={16} thickness={4} />
-    </Box>
+      <div className="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+    </div>
   );
 };
 
 export const AgentSection = () => {
-  const theme = useTheme();
   const phase = useAppStore((state) => state.agent.overlayPhase);
   const levels = useAppStore((state) => state.audioLevels);
   const windowState = useAppStore((state) => state.agent.windowState);
@@ -376,106 +238,58 @@ export const AgentSection = () => {
     !isRecording && !showUserProcessingBubble && !showAgentThinkingBubble;
 
   return (
-    <Box
-      sx={{
-        position: "absolute",
+    <div
+      className="pointer-events-none absolute flex items-start justify-start"
+      style={{
         top: `${TOP_MARGIN}px`,
         left: `${LEFT_MARGIN}px`,
         bottom: `${TOP_MARGIN}px`,
-        display: "flex",
-        justifyContent: "flex-start",
-        alignItems: "flex-start",
-        pointerEvents: "none",
       }}
     >
-      <Paper
+      <div
         data-overlay-interactive
         key={animationKey}
-        elevation={4}
-        sx={{
+        className="pointer-events-auto relative flex flex-col overflow-hidden rounded-lg border border-border bg-background"
+        style={{
           width: `${AGENT_OVERLAY_WIDTH}px`,
           maxHeight: `${MAX_PAPER_HEIGHT}px`,
-          borderRadius: 1,
-          border: "1px solid black",
-          borderColor: "level2",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-          backgroundColor: "background.paper",
-          animation: `${fadeInScale} 0.2s ease-out`,
+          animation: "agent-fade-in-scale 0.2s ease-out",
           transformOrigin: "top left",
-          position: "relative",
-          pointerEvents: "auto",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)",
         }}
       >
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
+        <div
+          className="pointer-events-auto absolute top-0 right-0 left-0 z-10 flex items-start p-1 select-none"
+          style={{
             height: HEADER_HEIGHT,
-            background: `linear-gradient(to bottom, ${theme.vars?.palette.background.paper} 0%, ${theme.vars?.palette.background.paper} 50%, transparent 100%)`,
-            zIndex: 1,
-            display: "flex",
-            alignItems: "flex-start",
-            padding: theme.spacing(0.5),
-            pointerEvents: "auto",
-            userSelect: "none",
+            background:
+              "linear-gradient(to bottom, var(--color-background) 0%, var(--color-background) 50%, transparent 100%)",
           }}
         >
-          <IconButton
+          <button
             onClick={handleClose}
-            size="small"
-            sx={{
-              width: 24,
-              height: 24,
-              pointerEvents: "auto",
-              backgroundColor: alpha(theme.palette.grey[500], 0.1),
-              "&:hover": {
-                backgroundColor: alpha(theme.palette.grey[500], 0.2),
-              },
-            }}
+            className="flex size-6 items-center justify-center rounded-md bg-muted/50 hover:bg-muted"
+            style={{ pointerEvents: "auto" }}
           >
-            <CloseIcon sx={{ fontSize: 14 }} />
-          </IconButton>
-        </Box>
-        <Box
+            <RiCloseLine className="size-3.5" />
+          </button>
+        </div>
+        <div
           ref={scrollContainerRef}
-          sx={{
-            padding: theme.spacing(1.5),
-            paddingTop: theme.spacing(5),
-            flex: 1,
-            minHeight: 0,
-            overflowY: "auto",
-            overflowX: "hidden",
-            display: "flex",
-            flexDirection: "column",
-          }}
+          className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto p-3 pt-10"
         >
           <MessageBubble
             message={{ sender: "agent", text: "What can I help you with?" }}
           />
           {messages.length === 0 && showFinishButton && hotkeyCombos[0] && (
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                fontSize: "0.7rem",
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                mt: -0.5,
-                mb: 1,
-              }}
-            >
+            <span className="-mt-1 mb-2 flex items-center gap-1 text-[0.7rem] text-muted-foreground">
               <FormattedMessage defaultMessage="Press" />{" "}
               <HotkeyBadge
                 keys={hotkeyCombos[0]}
-                sx={{ fontSize: "0.65rem", py: 0, px: 0.5 }}
+                className="text-[0.65rem] py-0 px-1"
               />{" "}
               <FormattedMessage defaultMessage="to respond" />
-            </Typography>
+            </span>
           )}
 
           {messages.map((message, index) => {
@@ -485,30 +299,19 @@ export const AgentSection = () => {
               isLastMessage && isAgentMessage && showFinishButton;
 
             return (
-              <Box key={index}>
+              <div key={index}>
                 <MessageBubble message={message} />
                 {showHotkeyHint && hotkeyCombos[0] && (
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: "text.secondary",
-                      fontSize: "0.7rem",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mt: -0.5,
-                      mb: 1,
-                    }}
-                  >
+                  <span className="-mt-1 mb-2 flex items-center gap-1 text-[0.7rem] text-muted-foreground">
                     <FormattedMessage defaultMessage="Press" />{" "}
                     <HotkeyBadge
                       keys={hotkeyCombos[0]}
-                      sx={{ fontSize: "0.65rem", py: 0, px: 0.5 }}
+                      className="text-[0.65rem] py-0 px-1"
                     />{" "}
                     <FormattedMessage defaultMessage="to respond" />
-                  </Typography>
+                  </span>
                 )}
-              </Box>
+              </div>
             );
           })}
 
@@ -523,44 +326,26 @@ export const AgentSection = () => {
           {showAgentThinkingBubble && <AgentThinkingBubble />}
 
           {showFinishButton && (
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                mt: 1,
-              }}
-            >
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={handleClose}
-                sx={{
-                  textTransform: "none",
-                  fontSize: "0.8125rem",
-                }}
-              >
+            <div className="mt-2 flex justify-end">
+              <Button variant="outline" size="sm" onClick={handleClose}>
                 Finish
               </Button>
-            </Box>
+            </div>
           )}
-        </Box>
+        </div>
         {canScrollDown && (
-          <Box
-            sx={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
+          <div
+            className="pointer-events-none absolute right-0 bottom-0 left-0 z-10"
+            style={{
               height: 40,
-              background: `linear-gradient(to top, ${theme.vars?.palette.background.paper} 0%, ${theme.vars?.palette.background.paper} 50%, transparent 100%)`,
-              zIndex: 1,
-              pointerEvents: "none",
+              background:
+                "linear-gradient(to top, var(--color-background) 0%, var(--color-background) 50%, transparent 100%)",
               borderBottomLeftRadius: "inherit",
               borderBottomRightRadius: "inherit",
             }}
           />
         )}
-      </Paper>
-    </Box>
+      </div>
+    </div>
   );
 };

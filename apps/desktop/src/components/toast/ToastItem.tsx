@@ -1,28 +1,9 @@
-import {
-  Box,
-  Button,
-  IconButton,
-  keyframes,
-  Paper,
-  Typography,
-} from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { RiCloseLine, RiErrorWarningLine, RiInformation2Line } from "@remixicon/react";
 import { useIntl } from "react-intl";
 import { Toast, ToastAction } from "../../types/toast.types";
+import { Button } from "../ui/button";
 
 const DEFAULT_DURATION_MS = 3000;
-
-// Progress bar shrinks from 100% to 0%
-const shrinkProgress = keyframes`
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
-`;
 
 type ToastItemProps = {
   toast: Toast;
@@ -49,136 +30,54 @@ export const ToastItem = ({ toast, onClose, onAction }: ToastItemProps) => {
   const actionLabel = toast.action ? getActionLabel(toast.action) : null;
 
   return (
-    <Paper
-      elevation={8}
-      sx={(theme) => ({
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        borderRadius: `${theme.shape.borderRadius}px`,
-        backgroundColor: theme.vars?.palette.level1 ?? theme.palette.grey[100],
-        border: `1px solid ${theme.vars?.palette.level2 ?? theme.palette.grey[300]}`,
-        boxShadow: `0 10px 40px ${theme.vars?.palette.shadow ?? "rgba(0,0,0,0.15)"}, 0 4px 12px ${theme.vars?.palette.shadow ?? "rgba(0,0,0,0.1)"}`,
-      })}
-    >
-      <IconButton
-        size="small"
+    <div className="relative flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-[0_10px_40px_rgba(0,0,0,0.15),0_4px_12px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.4),0_4px_12px_rgba(0,0,0,0.25)]">
+      <button
         onClick={onClose}
-        sx={(theme) => ({
-          position: "absolute",
-          top: 4,
-          right: 4,
-          padding: 0.5,
-          color:
-            theme.vars?.palette.text.secondary ?? theme.palette.text.secondary,
-          "&:hover": {
-            color:
-              theme.vars?.palette.text.primary ?? theme.palette.text.primary,
-          },
-        })}
+        className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
       >
-        <CloseIcon sx={{ fontSize: 16 }} />
-      </IconButton>
+        <RiCloseLine className="size-4" />
+      </button>
       {/* Content */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "flex-start",
-          gap: 1.5,
-          p: 2,
-        }}
-      >
-        <Box sx={{ flexShrink: 0, pt: 0.25 }}>
+      <div className="flex items-start gap-3 p-4">
+        <div className="shrink-0 pt-0.5">
           {isError ? (
-            <ErrorOutlineIcon
-              sx={(theme) => ({
-                color:
-                  theme.vars?.palette.error.main ?? theme.palette.error.main,
-                fontSize: 24,
-              })}
-            />
+            <RiErrorWarningLine className="size-6 text-destructive" />
           ) : (
-            <InfoOutlinedIcon
-              sx={(theme) => ({
-                color: theme.vars?.palette.blue ?? theme.palette.info.main,
-                fontSize: 24,
-              })}
-            />
+            <RiInformation2Line className="size-6 text-primary" />
           )}
-        </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            variant="subtitle2"
-            sx={(theme) => ({
-              fontWeight: 600,
-              color: isError
-                ? (theme.vars?.palette.error.main ?? theme.palette.error.main)
-                : (theme.vars?.palette.text.primary ??
-                  theme.palette.text.primary),
-              mb: 0.5,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            })}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p
+            className={`mb-1 truncate text-sm font-semibold ${isError ? "text-destructive" : "text-foreground"}`}
           >
             {toast.title}
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={(theme) => ({
-              color:
-                theme.vars?.palette.text.secondary ??
-                theme.palette.text.secondary,
-              wordBreak: "break-word",
-              display: "-webkit-box",
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            })}
-          >
+          </p>
+          <p className="line-clamp-3 break-words text-sm text-muted-foreground">
             {toast.message}
-          </Typography>
-        </Box>
+          </p>
+        </div>
         {actionLabel && toast.action && (
-          <Box sx={{ flexShrink: 0, ml: 1 }} alignSelf="center">
+          <div className="ml-2 shrink-0 self-center">
             <Button
-              size="small"
-              variant="contained"
+              size="xs"
               onClick={() => onAction?.(toast.action!)}
-              sx={{
-                textTransform: "none",
-                whiteSpace: "nowrap",
-                fontSize: 12,
-                py: 0.5,
-                px: 1.5,
-                minWidth: "auto",
-              }}
             >
               {actionLabel}
             </Button>
-          </Box>
+          </div>
         )}
-      </Box>
+      </div>
 
       {/* Progress bar */}
-      <Box
-        sx={(theme) => ({
-          height: 4,
-          backgroundColor:
-            theme.vars?.palette.level2 ?? theme.palette.grey[300],
-        })}
-      >
-        <Box
+      <div className="h-1 bg-muted">
+        <div
           key={toast.id}
-          sx={(theme) => ({
-            height: "100%",
-            backgroundColor:
-              theme.vars?.palette.primary.main ?? theme.palette.primary.main,
-            animation: `${shrinkProgress} ${duration}ms linear forwards`,
-          })}
+          className="h-full bg-primary"
+          style={{
+            animation: `toast-progress-shrink ${duration}ms linear forwards`,
+          }}
         />
-      </Box>
-    </Paper>
+      </div>
+    </div>
   );
 };

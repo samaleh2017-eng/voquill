@@ -1,4 +1,3 @@
-import { Box } from "@mui/material";
 import { useEffect } from "react";
 import { AgentOverlaySideEffects } from "./AgentOverlaySideEffects";
 import { AgentSection } from "./AgentSection";
@@ -13,19 +12,9 @@ export const AgentOverlayRoot = () => {
   return (
     <>
       <AgentOverlaySideEffects />
-      <Box
-        sx={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "transparent",
-          pointerEvents: "none",
-        }}
-      >
+      <div className="pointer-events-none fixed inset-0 bg-transparent">
         <AgentSection />
-      </Box>
+      </div>
     </>
   );
 };
