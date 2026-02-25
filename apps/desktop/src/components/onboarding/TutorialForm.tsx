@@ -249,11 +249,7 @@ ${userName}`;
         </span>
         <HotkeyBadge
           keys={primaryHotkey}
-          sx={{
-            bgcolor: "rgba(255,255,255,0.2)",
-            borderColor: "rgba(255,255,255,0.3)",
-            color: "primary.contrastText",
-          }}
+          className="border-white/30 bg-white/20 text-primary-foreground"
         />
         <span className="text-sm font-medium">
           <FormattedMessage defaultMessage="to dictate" />

@@ -5,7 +5,6 @@ type HotkeyBadgeProps = {
   keys: string[];
   onClick?: () => void;
   className?: string;
-  sx?: Record<string, unknown>;
 };
 
 export const HotkeyBadge = ({ keys, onClick, className }: HotkeyBadgeProps) => {
