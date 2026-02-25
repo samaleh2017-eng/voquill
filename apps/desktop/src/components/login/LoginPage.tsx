@@ -1,35 +1,28 @@
-import { Button, Card, Stack } from "@mui/material";
+import { RiArrowLeftLine } from "@remixicon/react";
 import { FormattedMessage } from "react-intl";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { LoginForm } from "./LoginForm";
-import { ArrowBack } from "@mui/icons-material";
 
 export default function LoginPage() {
   return (
-    <Stack sx={{ p: 2, minHeight: "100%", pb: { xs: 4, md: 8 } }}>
-      <Stack
-        spacing={2}
-        alignItems="center"
-        sx={{
-          m: "auto",
-          width: "100%",
-          maxWidth: 520,
-        }}
-      >
-        <Card
-          sx={{
-            p: { xs: 2, sm: 4 },
-            boxShadow: 6,
-            width: "100%",
-            overflow: "hidden",
-          }}
-        >
-          <LoginForm />
+    <div className="flex min-h-full flex-col items-center justify-center p-4 pb-8 md:pb-16">
+      <div className="w-full max-w-md space-y-4">
+        <Card className="shadow-lg">
+          <CardContent className="p-6 sm:p-8">
+            <LoginForm />
+          </CardContent>
         </Card>
-        <Button component={Link} to="/" startIcon={<ArrowBack />}>
-          <FormattedMessage defaultMessage="Go back" />
-        </Button>
-      </Stack>
-    </Stack>
+        <div className="flex justify-center">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/">
+              <RiArrowLeftLine className="size-4" />
+              <FormattedMessage defaultMessage="Go back" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

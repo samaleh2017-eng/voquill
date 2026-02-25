@@ -1,18 +1,16 @@
-import {
-  Button,
-  Divider,
-  IconButton,
-  Link,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { RiEyeLine, RiEyeOffLine } from "@remixicon/react";
+import { useState } from "react";
 import { FormattedMessage } from "react-intl";
-import { OidcProviders } from "./OidcProviders";
 import { setMode, submitSignIn } from "../../actions/login.actions";
 import { produceAppState, useAppStore } from "../../store";
-import { getCanSubmitLogin, getShouldShowEmailForm } from "../../utils/login.utils";
-import { useState } from "react";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+  getCanSubmitLogin,
+  getShouldShowEmailForm,
+} from "../../utils/login.utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { OidcProviders } from "./OidcProviders";
 
 type SignInFormProps = {
   hideOidcProviders?: boolean;
@@ -51,64 +49,85 @@ export const SignInForm = ({ hideOidcProviders = false }: SignInFormProps) => {
   };
 
   return (
-    <Stack spacing={2}>
+    <div className="space-y-4">
       {!hideOidcProviders && <OidcProviders />}
 
       {showEmailForm && (
         <>
           {!hideOidcProviders && (
-            <Divider>
-              <FormattedMessage defaultMessage="or" />
-            </Divider>
+            <div className="relative flex items-center py-1">
+              <div className="flex-1 border-t border-border" />
+              <span className="px-3 text-xs text-muted-foreground">
+                <FormattedMessage defaultMessage="or" />
+              </span>
+              <div className="flex-1 border-t border-border" />
+            </div>
           )}
 
-          <TextField
-            label={<FormattedMessage defaultMessage="Email" />}
-            type="email"
-            fullWidth
-            value={email}
-            onChange={handleChangeEmail}
-            size="small"
-          />
-          <TextField
-            label={<FormattedMessage defaultMessage="Password" />}
-            type={passwordVisible ? "text" : "password"}
-            fullWidth
-            value={password}
-            onChange={handleChangePassword}
-            size="small"
-            InputProps={{
-              endAdornment: (
-                <IconButton
-                  onClick={() => setPasswordVisible((v) => !v)}
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="login-email">
+                <FormattedMessage defaultMessage="Email" />
+              </Label>
+              <Input
+                id="login-email"
+                type="email"
+                value={email}
+                onChange={handleChangeEmail}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="login-password">
+                <FormattedMessage defaultMessage="Password" />
+              </Label>
+              <div className="relative">
+                <Input
+                  id="login-password"
+                  type={passwordVisible ? "text" : "password"}
+                  value={password}
+                  onChange={handleChangePassword}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
                   tabIndex={-1}
-                  size="small"
+                  onClick={() => setPasswordVisible((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  {!passwordVisible ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              ),
-            }}
-          />
+                  {passwordVisible ? (
+                    <RiEyeLine className="size-4" />
+                  ) : (
+                    <RiEyeOffLine className="size-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
 
           <Button
-            variant="contained"
-            fullWidth
+            className="w-full"
             disabled={!canSubmit}
             onClick={handleSubmit}
           >
             <FormattedMessage defaultMessage="Log in" />
           </Button>
 
-          <Stack direction="row" justifyContent="space-between" spacing={1}>
-            <Link component="button" onClick={handleClickReset}>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={handleClickReset}
+              className="text-sm text-primary hover:underline"
+            >
               <FormattedMessage defaultMessage="Forgot?" />
-            </Link>
-            <Link component="button" onClick={handleClickRegister}>
+            </button>
+            <button
+              onClick={handleClickRegister}
+              className="text-sm text-primary hover:underline"
+            >
               <FormattedMessage defaultMessage="Create account" />
-            </Link>
-          </Stack>
+            </button>
+          </div>
         </>
       )}
-    </Stack>
+    </div>
   );
 };

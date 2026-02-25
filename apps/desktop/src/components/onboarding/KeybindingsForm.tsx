@@ -1,5 +1,4 @@
-import { ArrowForward } from "@mui/icons-material";
-import { Box, Button, Stack, Typography } from "@mui/material";
+import { RiArrowRightLine } from "@remixicon/react";
 import { useEffect, useRef, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { showErrorSnackbar } from "../../actions/app.actions";
@@ -16,6 +15,7 @@ import {
 } from "../../utils/keyboard.utils";
 import { HotkeyBadge } from "../common/HotkeyBadge";
 import { KeyPressSimulator } from "../common/KeyPressSimulator";
+import { Button } from "@/components/ui/button";
 import {
   BackButton,
   DualPaneLayout,
@@ -124,11 +124,11 @@ export const KeybindingsForm = () => {
 
   const form = (
     <OnboardingFormLayout back={<BackButton />} actions={<div />}>
-      <Stack spacing={2} pb={8}>
-        <Typography variant="h4" fontWeight={600}>
+      <div className="space-y-4 pb-8">
+        <h2 className="text-2xl font-semibold">
           <FormattedMessage defaultMessage="Test your keyboard shortcut" />
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
+        </h2>
+        <p className="text-base text-muted-foreground">
           <FormattedMessage
             defaultMessage="The {recommendedKey} key works great for most users."
             values={{
@@ -137,8 +137,8 @@ export const KeybindingsForm = () => {
               ),
             }}
           />
-        </Typography>
-      </Stack>
+        </p>
+      </div>
     </OnboardingFormLayout>
   );
 
@@ -150,91 +150,56 @@ export const KeybindingsForm = () => {
   };
 
   const rightContent = (
-    <Stack
+    <div
       ref={boxRef}
       tabIndex={0}
       onBlur={handleBlur}
-      spacing={3}
-      sx={{
-        bgcolor: "level1",
-        borderRadius: 2,
-        p: 4,
-        maxWidth: 400,
-        outline: "none",
-      }}
+      className="flex max-w-[400px] flex-col gap-6 rounded-lg bg-muted p-8 outline-none"
     >
-      <Typography variant="h6" fontWeight={600}>
+      <h3 className="text-base font-semibold">
         {isListening ? (
           <FormattedMessage defaultMessage="Press your hotkey combo, then release" />
         ) : (
           <FormattedMessage defaultMessage="Does the key light up green when pressed?" />
         )}
-      </Typography>
+      </h3>
 
-      <Box
-        sx={{
-          bgcolor: "level2",
-          borderRadius: 2,
-          p: 3,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: 80,
-          border: "2px solid",
-          borderColor: isListening ? "primary.main" : "transparent",
-          ...(isListening && {
-            animation: "borderPulse 1s ease-in-out infinite",
-          }),
-          "@keyframes borderPulse": {
-            "0%, 100%": {
-              borderColor: "#1976d2",
-            },
-            "50%": {
-              borderColor: "#90caf9",
-            },
-          },
-        }}
+      <div
+        className={`flex min-h-[80px] items-center justify-center rounded-lg border-2 bg-background p-6 ${
+          isListening
+            ? "animate-pulse border-primary"
+            : "border-transparent"
+        }`}
       >
         {isListening ? (
           keysHeld.length > 0 ? (
             <KeyPressSimulator keys={keysHeld} />
           ) : (
-            <Box
-              sx={{
-                height: 48,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
+            <div className="flex h-12 items-center justify-center">
+              <p className="text-sm text-muted-foreground">
                 <FormattedMessage defaultMessage="Press your new key combo..." />
-              </Typography>
-            </Box>
+              </p>
+            </div>
           )
         ) : (
           <KeyPressSimulator keys={currentKeys} />
         )}
-      </Box>
+      </div>
 
-      <Stack direction="row" spacing={2} justifyContent="flex-end">
+      <div className="flex justify-end gap-2">
         <Button
-          variant="text"
+          variant="ghost"
           onClick={handleChangeShortcut}
           disabled={isListening}
         >
           <FormattedMessage defaultMessage="Change hotkey" />
         </Button>
-        <Button
-          variant="contained"
-          onClick={handleConfirm}
-          endIcon={<ArrowForward />}
-          disabled={isListening}
-        >
+        <Button onClick={handleConfirm} disabled={isListening}>
           <FormattedMessage defaultMessage="It works" />
+          <RiArrowRightLine className="size-4" />
         </Button>
-      </Stack>
-    </Stack>
+      </div>
+    </div>
   );
 
   return (
@@ -242,7 +207,7 @@ export const KeybindingsForm = () => {
       flex={[2, 3]}
       left={form}
       right={rightContent}
-      rightSx={{ bgcolor: "transparent" }}
+      rightClassName="bg-transparent"
     />
   );
 };

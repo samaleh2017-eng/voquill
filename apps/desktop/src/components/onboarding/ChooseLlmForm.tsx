@@ -1,10 +1,10 @@
-import { ArrowForward } from "@mui/icons-material";
-import { Box, Button, Stack, Typography } from "@mui/material";
+import { RiArrowRightLine } from "@remixicon/react";
 import { FormattedMessage } from "react-intl";
 import { goToOnboardingPage } from "../../actions/onboarding.actions";
 import { useAppStore } from "../../store";
 import { trackButtonClick } from "../../utils/analytics.utils";
 import { AIPostProcessingConfiguration } from "../settings/AIPostProcessingConfiguration";
+import { Button } from "@/components/ui/button";
 import {
   BackButton,
   DualPaneLayout,
@@ -27,37 +27,32 @@ export const ChooseLlmForm = () => {
     <OnboardingFormLayout
       back={<BackButton />}
       actions={
-        <Button
-          variant="contained"
-          endIcon={<ArrowForward />}
-          onClick={handleContinue}
-          disabled={!canContinue}
-        >
+        <Button onClick={handleContinue} disabled={!canContinue}>
           <FormattedMessage defaultMessage="Continue" />
+          <RiArrowRightLine className="size-4" />
         </Button>
       }
     >
-      <Stack spacing={3}>
-        <Box>
-          <Typography variant="h4" fontWeight={600} pb={1}>
+      <div className="space-y-6">
+        <div>
+          <h2 className="pb-2 text-2xl font-semibold">
             <FormattedMessage defaultMessage="Set up post-processing" />
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
+          </h2>
+          <p className="text-base text-muted-foreground">
             <FormattedMessage defaultMessage="Choose if Voquill should enhance transcripts automatically after they are transcribed." />
-          </Typography>
-        </Box>
+          </p>
+        </div>
 
         <AIPostProcessingConfiguration hideCloudOption={true} />
-      </Stack>
+      </div>
     </OnboardingFormLayout>
   );
 
   const rightContent = (
-    <Box
-      component="img"
+    <img
       src="https://illustrations.popsy.co/amber/designer.svg"
       alt="Illustration"
-      sx={{ maxWidth: 400, maxHeight: 400 }}
+      className="max-h-[400px] max-w-[400px]"
     />
   );
 

@@ -1,7 +1,7 @@
-import { ArrowBack } from "@mui/icons-material";
-import { Button, Stack, Typography } from "@mui/material";
+import { RiArrowLeftLine } from "@remixicon/react";
 import { FormattedMessage } from "react-intl";
 import { setMode } from "../../actions/login.actions";
+import { Button } from "@/components/ui/button";
 
 export const ResetSentForm = () => {
   const handleClickBack = () => {
@@ -9,13 +9,14 @@ export const ResetSentForm = () => {
   };
 
   return (
-    <Stack spacing={2} alignItems="center">
-      <Typography textAlign="center" variant="body2">
+    <div className="flex flex-col items-center space-y-4">
+      <p className="text-center text-sm text-muted-foreground">
         <FormattedMessage defaultMessage="An email has been sent to you with a link to reset your password." />
-      </Typography>
-      <Button size="small" startIcon={<ArrowBack />} onClick={handleClickBack}>
+      </p>
+      <Button variant="ghost" size="sm" onClick={handleClickBack}>
+        <RiArrowLeftLine className="size-4" />
         <FormattedMessage defaultMessage="Back" />
       </Button>
-    </Stack>
+    </div>
   );
 };

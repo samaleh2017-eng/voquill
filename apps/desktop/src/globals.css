@@ -93,3 +93,40 @@
 :root[data-overlay="true"] body {
   background-color: transparent !important;
 }
+
+@keyframes bouncy-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bouncy-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes bouncy-fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(10px); }
+}
+
+@keyframes pulse-discord {
+  0%, 100% {
+    border-color: rgba(88, 101, 242, 0.4);
+    box-shadow: 0 0 0 0 rgba(88, 101, 242, 0.4);
+  }
+  50% {
+    border-color: rgba(88, 101, 242, 1);
+    box-shadow: 0 0 0 4px rgba(88, 101, 242, 0.3);
+  }
+}
+
+@keyframes pulse-email {
+  0%, 100% {
+    border-color: rgba(26, 115, 232, 0.4);
+    box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.4);
+  }
+  50% {
+    border-color: rgba(26, 115, 232, 1);
+    box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.3);
+  }
+}
