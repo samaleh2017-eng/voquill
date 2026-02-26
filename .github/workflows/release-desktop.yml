@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - windows-installer
+      - capy/tailwind-shadcn-layout
     paths:
       - "apps/desktop/**"
       - "apps/windows-installer/**"
