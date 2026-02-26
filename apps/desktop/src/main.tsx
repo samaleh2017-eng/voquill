@@ -21,6 +21,7 @@ import { ToastOverlayRoot } from "./components/overlay/ToastOverlayRoot";
 import { AppWithLoading } from "./components/root/AppWithLoading";
 import { SnackbarEmitter } from "./components/root/SnackbarEmitter";
 import { Toaster } from "./components/ui/sonner";
+import { TooltipProvider } from "./components/ui/tooltip";
 import { getIntlConfig } from "./i18n";
 import { createEffectiveAuth } from "./utils/auth.utils";
 import { getIsEmulators, getStripePublicKey } from "./utils/env.utils";
@@ -114,7 +115,9 @@ const Main = ({ children }: ChildrenProps) => {
   return (
     <React.StrictMode>
       <IntlProvider {...intlConfig}>
-        {children}
+        <TooltipProvider>
+          {children}
+        </TooltipProvider>
       </IntlProvider>
     </React.StrictMode>
   );
