@@ -13,10 +13,12 @@ import {
   RiMagicLine,
   RiMicLine,
   RiMoneyDollarCircleLine,
+  RiMoonLine,
   RiMoreLine,
   RiRocketLine,
   RiShieldLine,
   RiSparklingLine,
+  RiSunLine,
   RiUserUnfollowLine,
   RiVolumeUpLine,
 } from "@remixicon/react";
@@ -27,6 +29,7 @@ import { showErrorSnackbar } from "../../actions/app.actions";
 import { setAutoLaunchEnabled } from "../../actions/settings.actions";
 import { loadTones } from "../../actions/tone.actions";
 import { setPreferredLanguage } from "../../actions/user.actions";
+import { useTheme } from "../../hooks/theme.hooks";
 import { getAuthRepo, getStripeRepo } from "../../repos";
 import { produceAppState, useAppStore } from "../../store";
 import {
@@ -85,6 +88,7 @@ export default function SettingsPage() {
   ]);
   const autoLaunchLoading = autoLaunchStatus === "loading";
   const intl = useIntl();
+  const { theme, setTheme } = useTheme();
 
   const dictationLanguage = useAppStore((state) => {
     const user = getMyUser(state);
@@ -229,6 +233,22 @@ export default function SettingsPage() {
             disabled={autoLaunchLoading}
             onCheckedChange={handleToggleAutoLaunch}
           />
+        }
+      />
+      <ListTile
+        title={<FormattedMessage defaultMessage="Appearance" />}
+        leading={theme === 'dark' ? <RiMoonLine className="size-5 text-muted-foreground" /> : <RiSunLine className="size-5 text-muted-foreground" />}
+        trailing={
+          <Select value={theme} onValueChange={(v) => setTheme(v as 'light' | 'dark' | 'system')}>
+            <SelectTrigger className="w-[140px]" size="sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="light"><FormattedMessage defaultMessage="Light" /></SelectItem>
+              <SelectItem value="dark"><FormattedMessage defaultMessage="Dark" /></SelectItem>
+              <SelectItem value="system"><FormattedMessage defaultMessage="System" /></SelectItem>
+            </SelectContent>
+          </Select>
         }
       />
       <ListTile

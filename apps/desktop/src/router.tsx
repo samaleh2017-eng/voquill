@@ -17,7 +17,7 @@ import { AppLayout } from "./components/layout/AppLayout";
 
 const AuthWrapper = () => {
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="flex h-full w-full flex-col bg-background">
       <Outlet />
     </div>
   );

@@ -108,7 +108,7 @@ export function VirtualizedListPage<Item>({
 
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden">
-      <div className="sticky top-0 z-10 pr-2 backdrop-blur-md">
+      <div className="sticky top-0 z-10 pr-2 bg-background/80 backdrop-blur-md">
         <div
           className={cn("relative mx-auto w-full px-4", headerMaxWidthClass)}
           style={{

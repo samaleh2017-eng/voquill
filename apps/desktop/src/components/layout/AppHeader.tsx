@@ -1,6 +1,13 @@
 import { useMemo } from "react";
 import { FormattedMessage } from "react-intl";
-import { RiRocketLine, RiUserLine } from "@remixicon/react";
+import {
+  RiComputerLine,
+  RiMoonLine,
+  RiRocketLine,
+  RiSunLine,
+  RiUserLine,
+} from "@remixicon/react";
+import { useTheme } from "../../hooks/theme.hooks";
 import { useHeaderPortal } from "../../hooks/header.hooks";
 import { useIsOnboarded } from "../../hooks/user.hooks";
 import { produceAppState, useAppStore } from "../../store";
@@ -30,6 +37,7 @@ function maybeArrayElements<T>(visible: boolean, values: T[]): T[] {
 
 export function AppHeader() {
   const { leftContent } = useHeaderPortal();
+  const { theme, setTheme } = useTheme();
   const isOnboarded = useIsOnboarded();
   const isPro = useAppStore(getIsPro);
   const isOnTrial = useAppStore(getIsOnTrial);
@@ -90,6 +98,34 @@ export function AppHeader() {
           )}
 
           {isOnTrial && <TrialCountdown />}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm">
+                {theme === 'dark' ? (
+                  <RiMoonLine className="size-4" />
+                ) : theme === 'light' ? (
+                  <RiSunLine className="size-4" />
+                ) : (
+                  <RiComputerLine className="size-4" />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setTheme('light')}>
+                <RiSunLine className="mr-2 size-4" />
+                <FormattedMessage defaultMessage="Light" />
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme('dark')}>
+                <RiMoonLine className="mr-2 size-4" />
+                <FormattedMessage defaultMessage="Dark" />
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme('system')}>
+                <RiComputerLine className="mr-2 size-4" />
+                <FormattedMessage defaultMessage="System" />
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

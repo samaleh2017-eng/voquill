@@ -1,4 +1,5 @@
 import { Suspense, useEffect } from "react";
+import { useTheme } from "../../hooks/theme.hooks";
 import { ErrorBoundary } from "react-error-boundary";
 import { Outlet, useLocation } from "react-router-dom";
 import { trackPageView } from "../../utils/analytics.utils";
@@ -20,6 +21,7 @@ function ErrorFallback({ error }: { error: Error }) {
 }
 
 export default function Root() {
+  useTheme();
   const location = useLocation();
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function Root() {
       <HeaderPortalProvider>
         <ErrorBoundary FallbackComponent={ErrorFallback}>
           <Suspense fallback={<LoadingApp />}>
-            <div className="h-full w-full">
+            <div className="h-full w-full bg-background text-foreground">
               <Outlet />
             </div>
           </Suspense>
