@@ -21,7 +21,7 @@
     </script>
     <style>
       :root {
-        color-scheme: light dark;
+        color-scheme: light;
       }
 
       body {
@@ -43,6 +43,7 @@
         var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         if (isDark) {
           document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
         }
       })();
     </script>
