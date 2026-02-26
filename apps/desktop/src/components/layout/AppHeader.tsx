@@ -78,7 +78,7 @@ export function AppHeader() {
   ];
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4">
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/50 px-4">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         {leftContent}

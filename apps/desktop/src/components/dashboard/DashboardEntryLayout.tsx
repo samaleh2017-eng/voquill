@@ -20,10 +20,10 @@ export const DashboardEntryLayout = ({
   const maxWidthClass = MAX_WIDTH_MAP[maxWidth] ?? MAX_WIDTH_MAP.sm;
 
   return (
-    <div className="flex-grow overflow-y-auto pr-2">
+    <div className="flex-grow overflow-y-auto">
       <div
         className={cn(
-          "mx-auto flex w-full flex-col px-4 pt-1 pb-16",
+          "mx-auto flex w-full flex-col px-6 pt-6 pb-16",
           maxWidthClass,
         )}
       >
