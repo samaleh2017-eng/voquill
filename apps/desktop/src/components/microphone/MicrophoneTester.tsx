@@ -1,5 +1,4 @@
-import { LoadingButton } from "@mui/lab";
-import { Alert, Box, Button, Stack, useTheme } from "@mui/material";
+import { RiLoader4Line } from "@remixicon/react";
 import { Nullable } from "@repo/types";
 import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -7,6 +6,8 @@ import { FormattedMessage } from "react-intl";
 import { produceAppState, useAppStore } from "../../store";
 import { buildWaveFile, ensureFloat32Array } from "../../utils/audio.utils";
 import { AudioWaveform } from "../common/AudioWaveform";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type StopRecordingResponse = {
   samples: number[] | Float32Array;
@@ -46,16 +47,11 @@ export const MicrophoneTester = ({
   waveformHeight = 96,
   disabled = false,
   buttonLayout = "row",
-  fadeColor = "level0",
+  fadeColor: _fadeColor,
   justifyButtons = "flex-start",
 }: MicrophoneTesterProps) => {
   const overlayPhase = useAppStore((state) => state.overlayPhase);
   const audioLevels = useAppStore((state) => state.audioLevels);
-  const theme = useTheme();
-  const effectiveFadeColor =
-    fadeColor === "level0"
-      ? theme.vars?.palette.level0
-      : theme.vars?.palette?.level1;
 
   const [testState, setTestState] = useState<
     "idle" | "starting" | "recording" | "stopping"
@@ -256,17 +252,20 @@ export const MicrophoneTester = ({
     disabled || isGlobalRecording || isTestLoading || isTestRunning;
   const disableStopButton = disabled || isTestStopping;
 
+  const justifyClass =
+    justifyButtons === "center"
+      ? "justify-center"
+      : justifyButtons === "flex-end"
+        ? "justify-end"
+        : justifyButtons === "space-between"
+          ? "justify-between"
+          : "justify-start";
+
   return (
-    <Stack spacing={1.5}>
-      <Box
-        sx={{
-          position: "relative",
-          width: "100%",
-          height: waveformHeight,
-          overflow: "hidden",
-          display: "flex",
-          alignItems: "center",
-        }}
+    <div className="flex flex-col gap-3">
+      <div
+        className="relative w-full overflow-hidden flex items-center"
+        style={{ height: waveformHeight }}
       >
         <AudioWaveform
           levels={audioLevels}
@@ -274,44 +273,46 @@ export const MicrophoneTester = ({
           processing={isTestLoading || isTestStopping}
           style={{ width: "100%", height: "100%" }}
         />
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            pointerEvents: "none",
-            background: `linear-gradient(90deg, ${effectiveFadeColor} 0%, transparent 18%, transparent 82%, ${effectiveFadeColor} 100%)`,
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `linear-gradient(90deg, var(--color-background) 0%, transparent 18%, transparent 82%, var(--color-background) 100%)`,
           }}
         />
-      </Box>
+      </div>
 
-      <Stack
-        direction={buttonLayout}
-        spacing={1.5}
-        alignItems={buttonLayout === "row" ? "center" : "stretch"}
-        width="100%"
-        justifyContent={justifyButtons}
+      <div
+        className={`flex gap-3 w-full ${
+          buttonLayout === "column" ? "flex-col items-stretch" : `flex-row items-center ${justifyClass}`
+        }`}
       >
-        <LoadingButton
-          variant={isTestRunning ? "outlined" : "contained"}
-          color={isTestRunning ? "error" : "primary"}
+        <Button
+          variant={isTestRunning ? "outline" : "default"}
+          className={isTestRunning ? "border-destructive text-destructive hover:bg-destructive/10" : ""}
           onClick={
             isTestRunning ? () => void handleStopTest() : handleStartTest
           }
-          loading={isTestLoading || isTestStopping}
-          disabled={isTestRunning ? disableStopButton : disableStartButton}
-          fullWidth={buttonLayout === "column"}
+          disabled={
+            (isTestLoading || isTestStopping)
+              ? true
+              : isTestRunning
+                ? disableStopButton
+                : disableStartButton
+          }
         >
+          {(isTestLoading || isTestStopping) && (
+            <RiLoader4Line className="mr-2 h-4 w-4 animate-spin" />
+          )}
           {isTestRunning ? (
             <FormattedMessage defaultMessage="Finish" />
           ) : (
             <FormattedMessage defaultMessage="Record" />
           )}
-        </LoadingButton>
+        </Button>
         <Button
-          variant="outlined"
+          variant="outline"
           disabled={previewUrl == null || disabled}
           onClick={handleTogglePreview}
-          fullWidth={buttonLayout === "column"}
         >
           {isPreviewPlaying ? (
             <FormattedMessage defaultMessage="Pause" />
@@ -319,19 +320,23 @@ export const MicrophoneTester = ({
             <FormattedMessage defaultMessage="Play" />
           )}
         </Button>
-      </Stack>
+      </div>
 
       {isGlobalRecording && (
-        <Alert severity="info">
-          <FormattedMessage defaultMessage="You cannot start a microphone test while a transcription is in progress." />
+        <Alert>
+          <AlertDescription>
+            <FormattedMessage defaultMessage="You cannot start a microphone test while a transcription is in progress." />
+          </AlertDescription>
         </Alert>
       )}
 
       {testError && (
-        <Alert severity="warning" onClose={() => setTestError(null)}>
-          {testError}
+        <Alert variant="destructive">
+          <AlertDescription>
+            {testError}
+          </AlertDescription>
         </Alert>
       )}
-    </Stack>
+    </div>
   );
 };

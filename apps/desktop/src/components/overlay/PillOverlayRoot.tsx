@@ -1,8 +1,4 @@
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import CloseIcon from "@mui/icons-material/Close";
-import { Box, IconButton, LinearProgress, Typography } from "@mui/material";
-import { alpha, useTheme } from "@mui/material/styles";
+import { RiArrowLeftSLine, RiArrowRightSLine, RiCloseLine } from "@remixicon/react";
 import { invoke } from "@tauri-apps/api/core";
 import { emitTo } from "@tauri-apps/api/event";
 import { useEffect, useRef, useState } from "react";
@@ -25,6 +21,7 @@ import {
 } from "../../utils/user.utils";
 import { AudioWaveform } from "../common/AudioWaveform";
 import { HotkeyBadge } from "../common/HotkeyBadge";
+import { Progress } from "../ui/progress";
 
 export const PILL_OVERLAY_WIDTH = 256;
 export const PILL_OVERLAY_HEIGHT = 96;
@@ -56,7 +53,6 @@ export const PillOverlayRoot = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [isFlashingTooltip, setIsFlashingTooltip] = useState(false);
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const theme = useTheme();
   const phase = useAppStore((state) => state.overlayPhase);
   const levels = useAppStore((state) => state.audioLevels);
   const isManualMode = useAppStore(
@@ -159,14 +155,9 @@ export const PillOverlayRoot = () => {
   };
 
   return (
-    <Box
-      sx={{
-        width: "100vw",
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-end",
+    <div
+      className="flex h-screen w-screen flex-col items-center justify-end"
+      style={{
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? "translateY(0)" : "translateY(8px)",
         transition: isVisible
@@ -176,38 +167,29 @@ export const PillOverlayRoot = () => {
       }}
     >
       {/* Tooltip */}
-      <Box
-        sx={{
+      <div
+        style={{
           opacity: overlayShown ? 1 : 0,
           transform: overlayShown ? "translateY(0)" : "translateY(4px)",
           transition: "all 150ms ease-out",
-          marginBottom: theme.spacing(1),
+          marginBottom: "8px",
           pointerEvents: isManualMode && overlayShown ? "auto" : "none",
         }}
       >
-        <Box
-          sx={{
-            backgroundColor: alpha(theme.palette.common.black, 0.92),
+        <div
+          className="rounded-xl px-3 py-1.5"
+          style={{
+            backgroundColor: "rgba(0, 0, 0, 0.92)",
             backdropFilter: "blur(14px)",
-            borderRadius: theme.spacing(1.5),
-            padding: `${theme.spacing(0.75)} ${theme.spacing(1.5)}`,
           }}
         >
-          <Typography
-            variant="caption"
-            sx={{
-              color: theme.palette.common.white,
-              whiteSpace: "nowrap",
-              fontWeight: 500,
-              display: "flex",
-              alignItems: "center",
-              gap: isManualMode ? 1 : 0.5,
-            }}
-            component="span"
+          <span
+            className="flex items-center whitespace-nowrap text-xs font-medium text-white"
+            style={{ gap: isManualMode ? "8px" : "4px" }}
           >
             {isManualMode ? (
               <>
-                <ChevronLeftIcon
+                <RiArrowLeftSLine
                   onMouseDown={(e) => {
                     e.stopPropagation();
                     invoke("restore_overlay_focus").catch(() => {});
@@ -215,9 +197,9 @@ export const PillOverlayRoot = () => {
                       console.error,
                     );
                   }}
-                  sx={{
+                  className="shrink-0 cursor-pointer"
+                  style={{
                     fontSize: "16px",
-                    cursor: "pointer",
                     padding: "8px",
                     margin: "-8px",
                     boxSizing: "content-box",
@@ -225,23 +207,18 @@ export const PillOverlayRoot = () => {
                     width: showStyleSwitchers ? 16 : 0,
                     transition: "opacity 200ms ease-out, width 150ms ease-out",
                     overflow: "hidden",
-                    flexShrink: 0,
                   }}
                 />
-                <Box
-                  component="span"
-                  sx={{
+                <span
+                  className="truncate text-center"
+                  style={{
                     width: flashingInfo ? 140 : 82,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    textAlign: "center",
                     transition: "width 150ms ease-out",
                   }}
                 >
                   {activeToneName}
-                </Box>
-                <ChevronRightIcon
+                </span>
+                <RiArrowRightSLine
                   onMouseDown={(e) => {
                     e.stopPropagation();
                     invoke("restore_overlay_focus").catch(() => {});
@@ -249,9 +226,9 @@ export const PillOverlayRoot = () => {
                       console.error,
                     );
                   }}
-                  sx={{
+                  className="shrink-0 cursor-pointer"
+                  style={{
                     fontSize: "16px",
-                    cursor: "pointer",
                     padding: "8px",
                     margin: "-8px",
                     boxSizing: "content-box",
@@ -259,7 +236,6 @@ export const PillOverlayRoot = () => {
                     width: showStyleSwitchers ? 16 : 0,
                     transition: "opacity 200ms ease-out, width 150ms ease-out",
                     overflow: "hidden",
-                    flexShrink: 0,
                   }}
                 />
               </>
@@ -270,110 +246,72 @@ export const PillOverlayRoot = () => {
                   hotkey: (
                     <HotkeyBadge
                       keys={hotkeyKeys}
-                      sx={{
-                        bgcolor: alpha(theme.palette.common.white, 0.15),
-                        borderColor: alpha(theme.palette.common.white, 0.3),
-                        color: theme.palette.common.white,
-                        fontSize: "inherit",
-                        py: 0,
-                        px: 0.75,
-                      }}
+                      className="border-white/30 bg-white/15 text-white text-[inherit] py-0 px-1.5"
                     />
                   ),
                 }}
               />
             )}
-          </Typography>
-        </Box>
-      </Box>
+          </span>
+        </div>
+      </div>
 
       {/* Pill with hover zone */}
-      <Box
-        sx={{
-          paddingBottom: `${MIN_PILL_HOVER_PADDING}px`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+      <div
+        className="flex items-center justify-center"
+        style={{ paddingBottom: `${MIN_PILL_HOVER_PADDING}px` }}
       >
-        <Box
-          sx={{
-            position: "relative",
-          }}
-        >
-          <Box
+        <div className="relative">
+          <div
             onMouseDown={handleMouseDownDictate}
-            sx={{
-              position: "relative",
+            className="relative flex cursor-pointer items-center justify-center overflow-hidden pointer-events-auto"
+            style={{
               width: isExpanded ? EXPANDED_PILL_WIDTH : MIN_PILL_WIDTH,
               height: isExpanded ? EXPANDED_PILL_HEIGHT : MIN_PILL_HEIGHT,
-              borderRadius: isExpanded ? theme.spacing(2) : theme.spacing(0.75),
-              backgroundColor: alpha(
-                theme.palette.common.black,
-                isExpanded ? 0.92 : 0.6,
-              ),
-              border: `1px solid ${alpha(theme.palette.common.white, 0.3)}`,
+              borderRadius: isExpanded ? "16px" : "6px",
+              backgroundColor: `rgba(0, 0, 0, ${isExpanded ? 0.92 : 0.6})`,
+              border: "1px solid rgba(255, 255, 255, 0.3)",
               backdropFilter: "blur(14px)",
               transition: "all 200ms ease-out",
-              overflow: "hidden",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              pointerEvents: "auto",
             }}
           >
             {/* Inner content container */}
-            <Box
-              sx={{
-                position: "relative",
+            <div
+              className="relative flex h-full items-center justify-center"
+              style={{
                 width: EXPANDED_PILL_WIDTH - 8,
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
                 opacity: isExpanded ? 1 : 0,
                 transition: "opacity 150ms ease-out",
               }}
             >
               {isHovered && (
-                <Typography
-                  sx={{
-                    position: "absolute",
-                    color: alpha(theme.palette.common.white, 0.4),
-                    fontSize: "11px",
-                    fontWeight: 500,
-                    letterSpacing: "0.02em",
-                    whiteSpace: "nowrap",
+                <span
+                  className="absolute whitespace-nowrap text-[11px] font-medium tracking-wide"
+                  style={{
+                    color: "rgba(255, 255, 255, 0.4)",
                     opacity: isIdle ? 1 : 0,
                     transition: "opacity 150ms ease-out",
                   }}
                 >
                   <FormattedMessage defaultMessage="Click to dictate" />
-                </Typography>
+                </span>
               )}
 
               {/* Processing indicator */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  width: "100%",
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+              <div
+                className="absolute flex h-full w-full items-center justify-center"
+                style={{
                   opacity: isProcessing ? 1 : 0,
                   transition: "opacity 150ms ease-out",
                 }}
               >
-                <LinearProgress sx={{ width: "100%", height: "2px" }} />
-              </Box>
+                <Progress className="h-0.5 w-full" />
+              </div>
 
               {/* Audio waveform */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  inset: 0,
+              <div
+                className="absolute inset-0"
+                style={{
                   opacity: isListening ? 1 : 0,
                   transition: "opacity 150ms ease-out",
                 }}
@@ -382,59 +320,51 @@ export const PillOverlayRoot = () => {
                   levels={levels}
                   active={isListening}
                   processing={isProcessing}
-                  strokeColor={theme.palette.common.white}
+                  strokeColor="#ffffff"
                   width={EXPANDED_PILL_WIDTH}
                   height={EXPANDED_PILL_HEIGHT}
                   baselineOffset={0}
                 />
-              </Box>
+              </div>
 
               {/* Gradient overlay for waveform edges */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  inset: 0,
-                  pointerEvents: "none",
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{
                   opacity: isIdle ? 0 : 1,
                   transition: "opacity 150ms ease-out",
-                  background: `linear-gradient(90deg, ${alpha(
-                    theme.palette.common.black,
-                    0.9,
-                  )} 0%, transparent 18%, transparent 85%, ${alpha(
-                    theme.palette.common.black,
-                    0.9,
-                  )} 100%)`,
+                  background:
+                    "linear-gradient(90deg, rgba(0,0,0,0.9) 0%, transparent 18%, transparent 85%, rgba(0,0,0,0.9) 100%)",
                 }}
               />
-            </Box>
-          </Box>
+            </div>
+          </div>
 
           {/* Cancel button */}
-          <IconButton
+          <button
             onMouseDown={handleCancelDictation}
-            size="small"
-            sx={{
-              position: "absolute",
+            className="absolute flex items-center justify-center rounded-full pointer-events-auto"
+            style={{
               top: -4,
               right: -6,
               width: 18,
               height: 18,
-              backgroundColor: theme.palette.grey[600],
+              backgroundColor: "#757575",
               opacity: !isIdle && isHovered ? 1 : 0,
               transform: !isIdle && isHovered ? "scale(1)" : "scale(0)",
               pointerEvents: !isIdle && isHovered ? "auto" : "none",
               transition: "opacity 200ms ease-out, transform 200ms ease-out",
-              color: theme.palette.common.white,
+              color: "#ffffff",
               zIndex: 1,
-              "&:hover": {
-                backgroundColor: theme.palette.grey[500],
-              },
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
             }}
           >
-            <CloseIcon sx={{ fontSize: 12 }} />
-          </IconButton>
-        </Box>
-      </Box>
-    </Box>
+            <RiCloseLine style={{ fontSize: 12, width: 12, height: 12 }} />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };

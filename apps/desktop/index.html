@@ -21,18 +21,11 @@
     </script>
     <style>
       :root {
-        color-scheme: light dark;
+        color-scheme: light;
       }
 
       body {
         margin: 0;
-        background-color: #121212;
-      }
-
-      @media (prefers-color-scheme: light) {
-        body {
-          background-color: #fff;
-        }
       }
 
       :root[data-overlay="true"],
@@ -44,9 +37,19 @@
         display: none !important;
       }
     </style>
+    <script>
+      (function() {
+        var theme = localStorage.getItem('voquill-theme') || 'system';
+        var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
+        }
+      })();
+    </script>
   </head>
 
-  <body>
+  <body class="bg-background text-foreground">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

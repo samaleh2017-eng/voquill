@@ -1,4 +1,3 @@
-import { useTheme } from "@mui/material";
 import chroma from "chroma-js";
 import { useEffect, useMemo, useRef } from "react";
 import { useWindowSize } from "../../hooks/helper.hooks";
@@ -7,9 +6,7 @@ import { Perlin } from "../../utils/math.utils";
 export const VectorField = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { width, height } = useWindowSize();
-  const theme = useTheme();
 
-  // Initialize Perlin noise generator
   const perlin = useMemo(() => new Perlin(), []);
 
   useEffect(() => {
@@ -19,23 +16,18 @@ export const VectorField = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set canvas size
-    // Handle high DPI displays
     const dpr = window.devicePixelRatio || 1;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
 
-    // Configuration
-    const GRID_SPACING = 40; // Space between vectors
-    const TIME_SPEED = 0.0025; // Speed of animation
-    const NOISE_SCALE = 0.0018; // Scale of noise coordinates
-    const MAG_SCALE = 0.01; // Scale for magnitude noise
-    const MAX_VECTOR_LENGTH = 24; // Maximum length of a vector
+    const GRID_SPACING = 40;
+    const TIME_SPEED = 0.0025;
+    const NOISE_SCALE = 0.0018;
+    const MAG_SCALE = 0.01;
+    const MAX_VECTOR_LENGTH = 24;
     const LINE_WIDTH = 2;
 
-    // Color scale
-    // Nice Orange: #FF9F1C, Nice Blue: #3B82F6 (matches web app)
     const colorScale = chroma.scale(["#3B82F6", "#FF9F1C"]).mode("rgb");
 
     let animationFrameId: number;
@@ -44,13 +36,11 @@ export const VectorField = () => {
     const render = () => {
       time += TIME_SPEED;
 
-      // Clear canvas
       ctx.clearRect(0, 0, width, height);
 
       const cols = Math.ceil(width / GRID_SPACING) + 1;
       const rows = Math.ceil(height / GRID_SPACING) + 1;
 
-      // Center the grid
       const offsetX = (width - (cols - 1) * GRID_SPACING) / 2;
       const offsetY = (height - (rows - 1) * GRID_SPACING) / 2;
 
@@ -59,37 +49,29 @@ export const VectorField = () => {
           const x = i * GRID_SPACING + offsetX;
           const y = j * GRID_SPACING + offsetY;
 
-          // Noise 1: Angle
-          // Map noise [-1, 1] to angle. Multiplying by PI * 2 allows for full rotation.
           const nAngle = perlin.noise(x * NOISE_SCALE, y * NOISE_SCALE, time);
           const angle = nAngle * Math.PI * 2;
 
-          // Noise 2: Magnitude (offset by large number)
-          // Normalize noise from [-1, 1] to [0, 1]
           const rawMag = perlin.noise(
             x * MAG_SCALE + 2000,
             y * MAG_SCALE + 2000,
             time,
           );
-          // Map [-1, 1] to [0, 1]
           const magnitude = (rawMag + 1) / 2;
 
-          // Calculate vector length
           const length = magnitude * MAX_VECTOR_LENGTH;
 
-          // Start the line at (x, y)
           const x1 = x;
           const y1 = y;
           const x2 = x + Math.cos(angle) * length;
           const y2 = y + Math.sin(angle) * length;
 
-          // Color based on magnitude
           const color = colorScale(magnitude).hex();
 
           ctx.strokeStyle = color;
           ctx.lineWidth = LINE_WIDTH;
-          ctx.lineCap = "round"; // Makes zero-length lines look like dots
-          ctx.globalAlpha = 0.8; // Slight transparency
+          ctx.lineCap = "round";
+          ctx.globalAlpha = 0.8;
 
           ctx.beginPath();
           ctx.moveTo(x1, y1);
@@ -106,7 +88,7 @@ export const VectorField = () => {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [width, height, perlin, theme]);
+  }, [width, height, perlin]);
 
   return (
     <canvas
@@ -117,7 +99,7 @@ export const VectorField = () => {
         left: 0,
         width: "100%",
         height: "100%",
-        zIndex: 0, // Will be behind content if content has higher z-index or is stacked on top
+        zIndex: 0,
         pointerEvents: "none",
       }}
     />

@@ -1,5 +1,5 @@
-import { Box } from "@mui/material";
 import { Suspense, useEffect } from "react";
+import { useTheme } from "../../hooks/theme.hooks";
 import { ErrorBoundary } from "react-error-boundary";
 import { Outlet, useLocation } from "react-router-dom";
 import { trackPageView } from "../../utils/analytics.utils";
@@ -13,14 +13,15 @@ import { RootSideEffects } from "./RootSideEffects";
 
 function ErrorFallback({ error }: { error: Error }) {
   return (
-    <Box sx={{ padding: 2 }}>
+    <div className="p-4">
       <h2>Something went wrong:</h2>
-      <pre style={{ whiteSpace: "pre-wrap" }}>{error.message}</pre>
-    </Box>
+      <pre className="whitespace-pre-wrap">{error.message}</pre>
+    </div>
   );
 }
 
 export default function Root() {
+  useTheme();
   const location = useLocation();
 
   useEffect(() => {
@@ -37,9 +38,9 @@ export default function Root() {
       <HeaderPortalProvider>
         <ErrorBoundary FallbackComponent={ErrorFallback}>
           <Suspense fallback={<LoadingApp />}>
-            <Box sx={{ width: "100%", height: "100%" }}>
+            <div className="h-full w-full bg-background text-foreground">
               <Outlet />
-            </Box>
+            </div>
           </Suspense>
         </ErrorBoundary>
       </HeaderPortalProvider>

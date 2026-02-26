@@ -1,5 +1,4 @@
 import { Fragment } from "react";
-import { Typography } from "@mui/material";
 import { FormattedMessage } from "react-intl";
 import { useAppStore } from "../../store";
 import {
@@ -37,7 +36,7 @@ export const DictationInstruction = () => {
 
         return (
           <Fragment key={key}>
-            <HotkeyBadge keys={combo} sx={{ mx: 0.25 }} />
+            <HotkeyBadge keys={combo} className="mx-0.5" />
             {separator}
           </Fragment>
         );
@@ -46,7 +45,7 @@ export const DictationInstruction = () => {
   );
 
   return (
-    <Typography variant="body2" color="text.secondary" component="div">
+    <p className="text-sm text-muted-foreground">
       {combos.length === 1 ? (
         <FormattedMessage
           defaultMessage="Press {hotkeys} to dictate anywhere."
@@ -58,6 +57,6 @@ export const DictationInstruction = () => {
           values={{ hotkeys }}
         />
       )}
-    </Typography>
+    </p>
   );
 };

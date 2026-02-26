@@ -1,11 +1,11 @@
-import { Google, VpnKey } from "@mui/icons-material";
-import { Button, Stack } from "@mui/material";
+import { RiGoogleFill, RiKey2Line } from "@remixicon/react";
 import { FormattedMessage } from "react-intl";
 import {
   submitSignInWithGoogle,
   submitSignInWithSso,
 } from "../../actions/login.actions";
 import { useAppStore } from "../../store";
+import { Button } from "@/components/ui/button";
 
 type OidcProvidersProps = {
   onBeforeSignIn?: () => void;
@@ -30,15 +30,17 @@ export const OidcProviders = ({
     submitSignInWithSso(providerId);
   };
 
+  const buttonVariant = variant === "contained" ? "default" : "outline";
+
   if (!isEnterprise) {
     return (
       <Button
-        fullWidth
-        variant={variant}
-        startIcon={<Google />}
+        className="w-full"
+        variant={buttonVariant}
         disabled={loading}
         onClick={handleGoogleClick}
       >
+        <RiGoogleFill className="size-4" />
         <FormattedMessage defaultMessage="Continue with Google" />
       </Button>
     );
@@ -49,19 +51,19 @@ export const OidcProviders = ({
   }
 
   return (
-    <Stack spacing={2}>
+    <div className="space-y-2">
       {oidcProviders.map((provider) => (
         <Button
           key={provider.id}
-          fullWidth
-          variant={variant}
-          startIcon={<VpnKey />}
+          className="w-full"
+          variant={buttonVariant}
           disabled={loading}
           onClick={() => handleSsoClick(provider.id)}
         >
+          <RiKey2Line className="size-4" />
           {provider.name}
         </Button>
       ))}
-    </Stack>
+    </div>
   );
 };

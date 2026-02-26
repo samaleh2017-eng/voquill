@@ -1,5 +1,8 @@
-import { ArrowForward, Check, OpenInNew } from "@mui/icons-material";
-import { Box, Button, Stack, Typography } from "@mui/material";
+import {
+  RiArrowRightLine,
+  RiCheckLine,
+  RiExternalLinkLine,
+} from "@remixicon/react";
 import { useCallback, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { goToOnboardingPage } from "../../actions/onboarding.actions";
@@ -10,6 +13,7 @@ import {
   isPermissionAuthorized,
   requestAccessibilityPermission,
 } from "../../utils/permission.utils";
+import { Button } from "@/components/ui/button";
 import {
   BackButton,
   DualPaneLayout,
@@ -49,86 +53,60 @@ export const A11yPermsForm = () => {
     <OnboardingFormLayout
       back={<BackButton />}
       actions={
-        <Button
-          variant="contained"
-          endIcon={<ArrowForward />}
-          onClick={handleContinue}
-          disabled={!isAuthorized}
-        >
+        <Button onClick={handleContinue} disabled={!isAuthorized}>
           <FormattedMessage defaultMessage="Continue" />
+          <RiArrowRightLine className="size-4" />
         </Button>
       }
     >
-      <Stack spacing={3}>
-        <Box>
-          <Typography variant="h4" fontWeight={600} pb={1}>
+      <div className="space-y-6">
+        <div>
+          <h2 className="pb-2 text-2xl font-semibold">
             <FormattedMessage defaultMessage="Enable accessibility" />
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
+          </h2>
+          <p className="text-base text-muted-foreground">
             <FormattedMessage defaultMessage="Voquill needs accessibility permissions to paste transcriptions into focused text fields." />
-          </Typography>
-        </Box>
+          </p>
+        </div>
 
         {isAuthorized ? (
-          <Button
-            variant="outlined"
-            color="success"
-            startIcon={<Check />}
-            disabled
-            sx={{ alignSelf: "flex-start" }}
-          >
+          <Button variant="outline" disabled className="self-start text-green-600">
+            <RiCheckLine className="size-4" />
             <FormattedMessage defaultMessage="Access granted" />
           </Button>
         ) : (
           <Button
-            variant="outlined"
+            variant="outline"
             onClick={() => void handleAllow()}
             disabled={requesting}
-            endIcon={<OpenInNew />}
-            sx={{ alignSelf: "flex-start" }}
+            className="self-start"
           >
             <FormattedMessage defaultMessage="Allow access" />
+            <RiExternalLinkLine className="size-4" />
           </Button>
         )}
-      </Stack>
+      </div>
     </OnboardingFormLayout>
   );
 
   const rightContent = (
-    <Box
-      sx={{
-        borderRadius: "12px",
-        border: "1px solid gray",
-        overflow: "hidden",
-        maxHeight: "100%",
-      }}
-    >
-      <Box
-        component="video"
+    <div className="max-h-full overflow-hidden rounded-xl border border-border">
+      <video
         src={enableA11yVideo}
         autoPlay
         loop
         muted
         playsInline
-        sx={{
-          display: "block",
-          margin: "-2px",
-          width: "auto",
-          height: "auto",
-          maxWidth: "calc(100% + 4px)",
-          maxHeight: "calc(100% + 4px)",
-        }}
+        className="-m-0.5 block h-auto max-h-[calc(100%+4px)] w-auto max-w-[calc(100%+4px)]"
       />
-    </Box>
+    </div>
   );
 
   return (
     <DualPaneLayout
       left={form}
       right={rightContent}
-      rightSx={{
-        bgcolor: "transparent",
-      }}
+      rightClassName="bg-transparent"
     />
   );
 };

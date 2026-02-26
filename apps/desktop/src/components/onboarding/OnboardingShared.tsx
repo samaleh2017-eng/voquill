@@ -1,16 +1,14 @@
-import { Stack, SxProps } from "@mui/material";
+import { cn } from "@/lib/utils";
 
 export type FormContainerProps = {
   children: React.ReactNode;
-  sx?: SxProps;
+  className?: string;
 };
 
-export const FormContainer = ({ children, sx }: FormContainerProps) => {
+export const FormContainer = ({ children, className }: FormContainerProps) => {
   return (
-    <Stack
-      sx={{ maxWidth: 500, width: "100%", p: 2, maxHeight: "100%", ...sx }}
-    >
+    <div className={cn("max-h-full w-full max-w-[500px] p-2", className)}>
       {children}
-    </Stack>
+    </div>
   );
 };

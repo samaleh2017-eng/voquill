@@ -1,10 +1,12 @@
-import { ArrowForward } from "@mui/icons-material";
-import { Box, Button, Stack, TextField, Typography } from "@mui/material";
+import { RiArrowRightLine } from "@remixicon/react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { goToOnboardingPage } from "../../actions/onboarding.actions";
 import { produceAppState, useAppStore } from "../../store";
 import { trackButtonClick } from "../../utils/analytics.utils";
 import { isMacOS } from "../../utils/env.utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   BackButton,
   DualPaneLayout,
@@ -70,97 +72,86 @@ export const UserDetailsForm = () => {
     <OnboardingFormLayout
       back={<BackButton />}
       actions={
-        <Button
-          variant="contained"
-          endIcon={<ArrowForward />}
-          onClick={handleContinue}
-          disabled={!canContinue}
-        >
+        <Button onClick={handleContinue} disabled={!canContinue}>
           <FormattedMessage defaultMessage="Continue" />
+          <RiArrowRightLine className="size-4" />
         </Button>
       }
     >
-      <Stack spacing={3}>
-        <Box>
-          <Typography variant="h4" fontWeight={600} pb={1}>
+      <div className="space-y-6">
+        <div>
+          <h2 className="pb-2 text-2xl font-semibold">
             <FormattedMessage defaultMessage="Tell us about yourself" />
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
+          </h2>
+          <p className="text-base text-muted-foreground">
             <FormattedMessage defaultMessage="This information helps personalize your experience." />
-          </Typography>
-        </Box>
+          </p>
+        </div>
 
-        <Stack spacing={2}>
-          <TextField
-            variant="outlined"
-            size="small"
-            label={<FormattedMessage defaultMessage="Full name" />}
-            placeholder={intl.formatMessage({ defaultMessage: "John Doe" })}
-            value={name}
-            onChange={handleNameChange}
-            onBlur={handleNameBlur}
-            autoFocus
-            autoComplete="name"
-            slotProps={{
-              inputLabel: { shrink: true },
-              htmlInput: {
-                "data-voquill-ignore": "true",
-              },
-            }}
-          />
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="onboarding-name">
+              <FormattedMessage defaultMessage="Full name" />
+            </Label>
+            <Input
+              id="onboarding-name"
+              placeholder={intl.formatMessage({ defaultMessage: "John Doe" })}
+              value={name}
+              onChange={handleNameChange}
+              onBlur={handleNameBlur}
+              autoFocus
+              autoComplete="name"
+              data-voquill-ignore="true"
+            />
+          </div>
 
           {!isEnterprise && (
             <>
-              <TextField
-                variant="outlined"
-                size="small"
-                label={<FormattedMessage defaultMessage="Title" />}
-                placeholder={intl.formatMessage({
-                  defaultMessage: "Vice President",
-                })}
-                value={title}
-                onChange={handleTitleChange}
-                onBlur={handleTitleBlur}
-                autoComplete="organization-title"
-                slotProps={{
-                  inputLabel: { shrink: true },
-                  htmlInput: {
-                    "data-voquill-ignore": "true",
-                  },
-                }}
-              />
+              <div className="space-y-1.5">
+                <Label htmlFor="onboarding-title">
+                  <FormattedMessage defaultMessage="Title" />
+                </Label>
+                <Input
+                  id="onboarding-title"
+                  placeholder={intl.formatMessage({
+                    defaultMessage: "Vice President",
+                  })}
+                  value={title}
+                  onChange={handleTitleChange}
+                  onBlur={handleTitleBlur}
+                  autoComplete="organization-title"
+                  data-voquill-ignore="true"
+                />
+              </div>
 
-              <TextField
-                variant="outlined"
-                size="small"
-                label={<FormattedMessage defaultMessage="Company" />}
-                placeholder={intl.formatMessage({
-                  defaultMessage: "Acme Inc.",
-                })}
-                value={company}
-                onChange={handleCompanyChange}
-                onBlur={handleCompanyBlur}
-                autoComplete="organization"
-                slotProps={{
-                  inputLabel: { shrink: true },
-                  htmlInput: {
-                    "data-voquill-ignore": "true",
-                  },
-                }}
-              />
+              <div className="space-y-1.5">
+                <Label htmlFor="onboarding-company">
+                  <FormattedMessage defaultMessage="Company" />
+                </Label>
+                <Input
+                  id="onboarding-company"
+                  placeholder={intl.formatMessage({
+                    defaultMessage: "Acme Inc.",
+                  })}
+                  value={company}
+                  onChange={handleCompanyChange}
+                  onBlur={handleCompanyBlur}
+                  autoComplete="organization"
+                  data-voquill-ignore="true"
+                />
+              </div>
             </>
           )}
-        </Stack>
-      </Stack>
+        </div>
+      </div>
     </OnboardingFormLayout>
   );
 
   const rightContent = (
-    <Box
-      component="img"
+    <img
       src="https://illustrations.popsy.co/amber/man-riding-a-rocket.svg"
       alt="Illustration"
-      sx={{ maxWidth: 400, maxHeight: 400 }}
+      className="max-h-[400px] max-w-[400px]"
     />
   );
 

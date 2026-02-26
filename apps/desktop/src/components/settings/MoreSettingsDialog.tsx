@@ -1,23 +1,6 @@
-import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import type { SelectChangeEvent } from "@mui/material";
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  ListItemButton,
-  ListItemText,
-  MenuItem,
-  Select,
-  Stack,
-  Switch,
-} from "@mui/material";
+import { RiDownloadLine, RiMoreLine } from "@remixicon/react";
 import type { DictationPillVisibility, StylingMode } from "@repo/types";
-import { ChangeEvent, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import {
   setDictationPillVisibility,
@@ -46,6 +29,22 @@ import {
   type MenuPopoverItem,
 } from "../common/MenuPopover";
 import { SettingSection } from "../common/SettingSection";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const MoreSettingsDialog = () => {
   const intl = useIntl();
@@ -82,44 +81,36 @@ export const MoreSettingsDialog = () => {
     });
   };
 
-  const handleToggleShowUpdates = (event: ChangeEvent<HTMLInputElement>) => {
-    const showUpdates = event.target.checked;
-    void setIgnoreUpdateDialog(!showUpdates);
+  const handleToggleShowUpdates = (checked: boolean) => {
+    void setIgnoreUpdateDialog(!checked);
   };
 
-  const handleToggleIncognitoMode = (event: ChangeEvent<HTMLInputElement>) => {
-    const enabled = event.target.checked;
-    void setIncognitoModeEnabled(enabled);
+  const handleToggleIncognitoMode = (checked: boolean) => {
+    void setIncognitoModeEnabled(checked);
   };
 
-  const handleToggleIncognitoIncludeInStats = (
-    event: ChangeEvent<HTMLInputElement>,
-  ) => {
-    const enabled = event.target.checked;
-    void setIncognitoModeIncludeInStats(enabled);
+  const handleToggleIncognitoIncludeInStats = (checked: boolean) => {
+    void setIncognitoModeIncludeInStats(checked);
   };
 
   const handleDictationPillVisibilityChange = (
-    event: SelectChangeEvent<DictationPillVisibility>,
+    value: string,
   ) => {
-    const visibility = event.target.value as DictationPillVisibility;
-    void setDictationPillVisibility(visibility);
+    void setDictationPillVisibility(value as DictationPillVisibility);
   };
 
-  const handleStylingModeChange = (event: SelectChangeEvent<string>) => {
-    const value = event.target.value;
+  const handleStylingModeChange = (value: string) => {
     void setStylingMode(value === "" ? null : (value as StylingMode));
   };
 
-  const handleToggleUseNewBackend = (event: ChangeEvent<HTMLInputElement>) => {
-    const enabled = event.target.checked;
-    void setUseNewBackend(enabled);
+  const handleToggleUseNewBackend = (checked: boolean) => {
+    void setUseNewBackend(checked);
   };
 
   const [logLevel, setLogLevelState] = useState<LogLevel>(getLogLevel);
 
-  const handleLogLevelChange = (event: SelectChangeEvent<LogLevel>) => {
-    const level = event.target.value as LogLevel;
+  const handleLogLevelChange = (value: string) => {
+    const level = value as LogLevel;
     setLogLevel(level);
     setLogLevelState(level);
   };
@@ -147,22 +138,22 @@ export const MoreSettingsDialog = () => {
       {
         kind: "genericItem" as const,
         builder: ({ close }: { close: () => void }) => (
-          <ListItemButton
+          <button
+            className="w-full px-3 py-2 text-left hover:bg-accent"
             onClick={() => {
               close();
               handleStartAutoDownload();
             }}
           >
-            <ListItemText
-              primary={intl.formatMessage({
-                defaultMessage: "Auto download",
-              })}
-              secondary={intl.formatMessage({
+            <div className="text-sm">
+              {intl.formatMessage({ defaultMessage: "Auto download" })}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {intl.formatMessage({
                 defaultMessage: "Only active for the duration of this session.",
               })}
-              secondaryTypographyProps={{ variant: "caption" }}
-            />
-          </ListItemButton>
+            </div>
+          </button>
         ),
       },
     ],
@@ -170,12 +161,14 @@ export const MoreSettingsDialog = () => {
   );
 
   return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogTitle>
-        <FormattedMessage defaultMessage="More settings" />
-      </DialogTitle>
-      <DialogContent dividers sx={{ minWidth: 360 }}>
-        <Stack spacing={3}>
+    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            <FormattedMessage defaultMessage="More settings" />
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-5">
           <SettingSection
             title={<FormattedMessage defaultMessage="Incognito mode" />}
             description={
@@ -183,9 +176,8 @@ export const MoreSettingsDialog = () => {
             }
             action={
               <Switch
-                edge="end"
                 checked={incognitoModeEnabled}
-                onChange={handleToggleIncognitoMode}
+                onCheckedChange={handleToggleIncognitoMode}
               />
             }
           />
@@ -200,9 +192,8 @@ export const MoreSettingsDialog = () => {
               }
               action={
                 <Switch
-                  edge="end"
                   checked={incognitoIncludeInStats}
-                  onChange={handleToggleIncognitoIncludeInStats}
+                  onCheckedChange={handleToggleIncognitoIncludeInStats}
                 />
               }
             />
@@ -217,9 +208,8 @@ export const MoreSettingsDialog = () => {
             }
             action={
               <Switch
-                edge="end"
                 checked={!ignoreUpdateDialog}
-                onChange={handleToggleShowUpdates}
+                onCheckedChange={handleToggleShowUpdates}
               />
             }
           />
@@ -232,21 +222,24 @@ export const MoreSettingsDialog = () => {
               <FormattedMessage defaultMessage="Control when the dictation pill is shown on screen." />
             }
             action={
-              <Select<DictationPillVisibility>
-                size="small"
+              <Select
                 value={dictationPillVisibility}
-                onChange={handleDictationPillVisibilityChange}
-                sx={{ minWidth: 152 }}
+                onValueChange={handleDictationPillVisibilityChange}
               >
-                <MenuItem value="persistent">
-                  {intl.formatMessage({ defaultMessage: "Persistent" })}
-                </MenuItem>
-                <MenuItem value="while_active">
-                  {intl.formatMessage({ defaultMessage: "While active" })}
-                </MenuItem>
-                <MenuItem value="hidden">
-                  {intl.formatMessage({ defaultMessage: "Hidden" })}
-                </MenuItem>
+                <SelectTrigger className="w-[152px]" size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="persistent">
+                    {intl.formatMessage({ defaultMessage: "Persistent" })}
+                  </SelectItem>
+                  <SelectItem value="while_active">
+                    {intl.formatMessage({ defaultMessage: "While active" })}
+                  </SelectItem>
+                  <SelectItem value="hidden">
+                    {intl.formatMessage({ defaultMessage: "Hidden" })}
+                  </SelectItem>
+                </SelectContent>
               </Select>
             }
           />
@@ -258,18 +251,21 @@ export const MoreSettingsDialog = () => {
                 <FormattedMessage defaultMessage="Choose how to switch between writing styles." />
               }
               action={
-                <Select<string>
-                  size="small"
+                <Select
                   value={stylingMode}
-                  onChange={handleStylingModeChange}
-                  sx={{ minWidth: 152 }}
+                  onValueChange={handleStylingModeChange}
                 >
-                  <MenuItem value="app">
-                    {intl.formatMessage({ defaultMessage: "Based on app" })}
-                  </MenuItem>
-                  <MenuItem value="manual">
-                    {intl.formatMessage({ defaultMessage: "Manual" })}
-                  </MenuItem>
+                  <SelectTrigger className="w-[152px]" size="sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="app">
+                      {intl.formatMessage({ defaultMessage: "Based on app" })}
+                    </SelectItem>
+                    <SelectItem value="manual">
+                      {intl.formatMessage({ defaultMessage: "Manual" })}
+                    </SelectItem>
+                  </SelectContent>
                 </Select>
               }
             />
@@ -283,9 +279,8 @@ export const MoreSettingsDialog = () => {
               }
               action={
                 <Switch
-                  edge="end"
                   checked={useNewBackend}
-                  onChange={handleToggleUseNewBackend}
+                  onCheckedChange={handleToggleUseNewBackend}
                 />
               }
             />
@@ -297,18 +292,18 @@ export const MoreSettingsDialog = () => {
               <FormattedMessage defaultMessage="Controls how much detail is captured in diagnostic logs." />
             }
             action={
-              <Select<LogLevel>
-                size="small"
-                value={logLevel}
-                onChange={handleLogLevelChange}
-                sx={{ minWidth: 152 }}
-              >
-                <MenuItem value="info">
-                  {intl.formatMessage({ defaultMessage: "Info" })}
-                </MenuItem>
-                <MenuItem value="verbose">
-                  {intl.formatMessage({ defaultMessage: "Verbose" })}
-                </MenuItem>
+              <Select value={logLevel} onValueChange={handleLogLevelChange}>
+                <SelectTrigger className="w-[152px]" size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="info">
+                    {intl.formatMessage({ defaultMessage: "Info" })}
+                  </SelectItem>
+                  <SelectItem value="verbose">
+                    {intl.formatMessage({ defaultMessage: "Verbose" })}
+                  </SelectItem>
+                </SelectContent>
               </Select>
             }
           />
@@ -321,81 +316,45 @@ export const MoreSettingsDialog = () => {
             action={
               autoDownloadLogs ? (
                 <Button
-                  size="small"
-                  color="error"
-                  startIcon={
-                    <Box
-                      sx={{
-                        position: "relative",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: 10,
-                        height: 10,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: "50%",
-                          backgroundColor: "error.main",
-                        }}
-                      />
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          width: 8,
-                          height: 8,
-                          borderRadius: "50%",
-                          backgroundColor: "error.main",
-                          animation:
-                            "ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite",
-                          "@keyframes ping": {
-                            "0%": {
-                              transform: "scale(1)",
-                              opacity: 0.75,
-                            },
-                            "75%, 100%": {
-                              transform: "scale(2.5)",
-                              opacity: 0,
-                            },
-                          },
-                        }}
-                      />
-                    </Box>
-                  }
+                  size="sm"
+                  variant="destructive"
                   onClick={handleStopAutoDownload}
                 >
+                  <span className="relative mr-1.5 flex size-2">
+                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-red-400 opacity-75" />
+                    <span className="relative inline-flex size-2 rounded-full bg-red-500" />
+                  </span>
                   <FormattedMessage defaultMessage="Stop" />
                 </Button>
               ) : (
-                <Stack direction="row" spacing={0.5} alignItems="center">
+                <div className="flex items-center gap-1">
                   <MenuPopoverBuilder items={autoDownloadMenuItems}>
                     {({ ref, open }) => (
-                      <IconButton ref={ref} onClick={open} size="small">
-                        <MoreVertIcon fontSize="small" />
-                      </IconButton>
+                      <Button
+                        ref={ref as React.Ref<HTMLButtonElement>}
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={open}
+                      >
+                        <RiMoreLine className="size-4" />
+                      </Button>
                     )}
                   </MenuPopoverBuilder>
-                  <Button
-                    size="small"
-                    startIcon={<DownloadRoundedIcon />}
-                    onClick={handleDownloadLogs}
-                  >
+                  <Button size="sm" onClick={handleDownloadLogs}>
+                    <RiDownloadLine className="mr-1 size-3.5" />
                     <FormattedMessage defaultMessage="Download" />
                   </Button>
-                </Stack>
+                </div>
               )
             }
           />
-        </Stack>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            <FormattedMessage defaultMessage="Close" />
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>
-          <FormattedMessage defaultMessage="Close" />
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };

@@ -1,67 +1,66 @@
-import { ExpandMore } from "@mui/icons-material";
+import { FormattedMessage } from "react-intl";
 import {
   Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Chip,
-  Stack,
-  Typography,
-  useTheme,
-  type SxProps,
-} from "@mui/material";
-import { FormattedMessage } from "react-intl";
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 
 type FaqRowProps = {
+  value: string;
   title?: React.ReactNode;
   children?: React.ReactNode;
 };
 
-const FaqRow = ({ title, children }: FaqRowProps) => {
+const FaqRow = ({ value, title, children }: FaqRowProps) => {
   return (
-    <Accordion sx={{ width: "100%" }}>
-      <AccordionSummary expandIcon={<ExpandMore />}>{title}</AccordionSummary>
-      <AccordionDetails>{children}</AccordionDetails>
-    </Accordion>
+    <AccordionItem value={value}>
+      <AccordionTrigger>{title}</AccordionTrigger>
+      <AccordionContent>{children}</AccordionContent>
+    </AccordionItem>
   );
 };
 
 export type FaqProps = {
-  sx?: SxProps;
+  className?: string;
 };
 
-export const Faq = ({ sx }: FaqProps) => {
-  const theme = useTheme();
-
+export const Faq = ({ className }: FaqProps) => {
   return (
-    <Stack justifyContent="center" alignItems="center">
-      <Stack alignItems="stretch" sx={{ p: 4, gap: 2, maxWidth: 800, ...sx }}>
-        <Chip
-          label={<FormattedMessage defaultMessage="FAQ" />}
-          sx={{ bgcolor: theme.palette.level1, alignSelf: "center" }}
-        />
-        <Typography variant="h4" sx={{ mb: 2 }} textAlign="center">
+    <div className="flex justify-center items-center">
+      <div className={`flex flex-col items-stretch p-8 gap-4 max-w-[800px] ${className ?? ""}`}>
+        <Badge variant="secondary" className="self-center">
+          <FormattedMessage defaultMessage="FAQ" />
+        </Badge>
+        <h2 className="text-2xl font-semibold text-center mb-4">
           <FormattedMessage defaultMessage="Frequently asked questions" />
-        </Typography>
-        <FaqRow
-          title={
-            <FormattedMessage defaultMessage="How does the voice activation work?" />
-          }
-        >
-          <FormattedMessage defaultMessage="Simply click the microphone bubble that appears in any text input field. Start speaking and watch as your voice is converted to text in real-time." />
-        </FaqRow>
-        <FaqRow
-          title={
-            <FormattedMessage defaultMessage="What websites does it work on?" />
-          }
-        >
-          <FormattedMessage defaultMessage="Voquill works on virtually any website with text input fields - email clients, social media, forms, documents, and more." />
-        </FaqRow>
-        <FaqRow
-          title={<FormattedMessage defaultMessage="Is my voice data secure?" />}
-        >
-          <FormattedMessage defaultMessage="Absolutely. Our code is open-source, so you can see for yourself. You can even choose to process your voice entirely on-device." />
-        </FaqRow>
-      </Stack>
-    </Stack>
+        </h2>
+        <Accordion type="single" collapsible className="w-full">
+          <FaqRow
+            value="voice-activation"
+            title={
+              <FormattedMessage defaultMessage="How does the voice activation work?" />
+            }
+          >
+            <FormattedMessage defaultMessage="Simply click the microphone bubble that appears in any text input field. Start speaking and watch as your voice is converted to text in real-time." />
+          </FaqRow>
+          <FaqRow
+            value="websites"
+            title={
+              <FormattedMessage defaultMessage="What websites does it work on?" />
+            }
+          >
+            <FormattedMessage defaultMessage="Voquill works on virtually any website with text input fields - email clients, social media, forms, documents, and more." />
+          </FaqRow>
+          <FaqRow
+            value="security"
+            title={<FormattedMessage defaultMessage="Is my voice data secure?" />}
+          >
+            <FormattedMessage defaultMessage="Absolutely. Our code is open-source, so you can see for yourself. You can even choose to process your voice entirely on-device." />
+          </FaqRow>
+        </Accordion>
+      </div>
+    </div>
   );
 };

@@ -1,21 +1,10 @@
 import {
-  CheckCircleOutline,
-  HighlightOff,
-  OpenInNew,
-  PendingOutlined,
-  RestartAlt,
-} from "@mui/icons-material";
-import {
-  Alert,
-  Button,
-  Box,
-  Chip,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from "@mui/material";
+  RiCheckboxCircleLine,
+  RiCloseCircleLine,
+  RiExternalLinkLine,
+  RiLoader4Line,
+  RiRestartLine,
+} from "@remixicon/react";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -32,8 +21,15 @@ import {
 } from "../../utils/permission.utils";
 import { useLocation } from "react-router-dom";
 import { setGotStartedAtNow } from "../../actions/user.actions";
-
-const ICON_SIZE = 28;
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const getPurposeDescription = (
   kind: PermissionKind,
@@ -57,31 +53,26 @@ const PermissionRow = ({ kind }: { kind: PermissionKind }) => {
   const status = useAppStore((state) => state.permissions[kind]);
   const [requesting, setRequesting] = useState(false);
 
-  const { icon, color, chipColor, chipLabel } = useMemo(() => {
+  const { icon, chipVariant, chipLabel } = useMemo(() => {
     if (!status) {
       return {
-        icon: <PendingOutlined sx={{ fontSize: ICON_SIZE }} />,
-        color: "text.secondary" as const,
-        chipColor: "default" as const,
+        icon: <RiLoader4Line className="h-7 w-7 animate-spin text-muted-foreground" />,
+        chipVariant: "secondary" as const,
         chipLabel: intl.formatMessage({ defaultMessage: "Checking" }),
       };
     }
 
     if (isPermissionAuthorized(status.state)) {
       return {
-        icon: (
-          <CheckCircleOutline color="success" sx={{ fontSize: ICON_SIZE }} />
-        ),
-        color: "success.main" as const,
-        chipColor: "success" as const,
+        icon: <RiCheckboxCircleLine className="h-7 w-7 text-green-500" />,
+        chipVariant: "default" as const,
         chipLabel: intl.formatMessage({ defaultMessage: "Authorized" }),
       };
     }
 
     return {
-      icon: <HighlightOff color="error" sx={{ fontSize: ICON_SIZE }} />,
-      color: "error.main" as const,
-      chipColor: "error" as const,
+      icon: <RiCloseCircleLine className="h-7 w-7 text-destructive" />,
+      chipVariant: "destructive" as const,
       chipLabel: describePermissionState(status.state),
     };
   }, [status, intl]);
@@ -115,35 +106,28 @@ const PermissionRow = ({ kind }: { kind: PermissionKind }) => {
   }, [kind, requesting, requestingDisabled]);
 
   return (
-    <Stack
-      direction="row"
-      spacing={2}
-      alignItems="flex-start"
-      sx={{ paddingY: 1.5 }}
-    >
-      <Box sx={{ lineHeight: 0, color }}>{icon}</Box>
-      <Stack spacing={0.5} sx={{ flex: 1 }}>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Typography variant="h6">{title}</Typography>
-          <Chip size="small" color={chipColor} label={chipLabel} />
-        </Stack>
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-          {instructions}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+    <div className="flex items-start gap-3 py-3">
+      <div className="leading-none">{icon}</div>
+      <div className="flex-1 flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <h3 className="text-base font-semibold">{title}</h3>
+          <Badge variant={chipVariant}>{chipLabel}</Badge>
+        </div>
+        <p className="text-sm font-medium">{instructions}</p>
+        <p className="text-sm text-muted-foreground">
           {getPurposeDescription(kind, intl)}
-        </Typography>
-      </Stack>
+        </p>
+      </div>
       <Button
-        variant="outlined"
-        size="small"
+        variant="outline"
+        size="sm"
         onClick={() => void handleRequest()}
         disabled={requesting || requestingDisabled}
-        endIcon={<OpenInNew />}
       >
         <FormattedMessage defaultMessage="Enable" />
+        <RiExternalLinkLine className="ml-1.5 h-3.5 w-3.5" />
       </Button>
-    </Stack>
+    </div>
   );
 };
 
@@ -154,7 +138,6 @@ export const PermissionsDialog = () => {
   const location = useLocation();
   const isWelcomePage = location.pathname === "/welcome";
 
-  // Track when a permission transitions from not authorized to authorized
   useEffect(() => {
     const prev = previousPermissionsRef.current;
     for (const kind of REQUIRED_PERMISSIONS) {
@@ -212,65 +195,45 @@ export const PermissionsDialog = () => {
     }
   }, []);
 
-  const handleClose = (
-    _event: unknown,
-    reason: "backdropClick" | "escapeKeyDown",
-  ) => {
-    if (reason === "backdropClick" || reason === "escapeKeyDown") {
-      return;
-    }
-  };
-
   return (
-    <Dialog
-      open={open || showRestartMessage}
-      onClose={handleClose}
-      fullWidth
-      maxWidth="sm"
-      disableEscapeKeyDown
-      slotProps={{
-        backdrop: {
-          sx: { backdropFilter: "blur(4px)" },
-        },
-        paper: {
-          sx: (theme) => ({
-            paddingBottom: 2,
-            backgroundColor: theme.vars?.palette.level1,
-          }),
-        },
-      }}
-    >
-      <DialogTitle>
-        <FormattedMessage defaultMessage="Permissions needed" />
-      </DialogTitle>
-      <DialogContent>
-        <Stack spacing={3}>
-          <Typography variant="body1">
+    <Dialog open={open || showRestartMessage}>
+      <DialogContent
+        className="sm:max-w-md bg-card pb-6 [&>button]:hidden"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
+        <DialogHeader>
+          <DialogTitle>
+            <FormattedMessage defaultMessage="Permissions needed" />
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-6">
+          <p className="text-sm">
             <FormattedMessage defaultMessage="Voquill is an AI dictation tool. It needs microphone and accessibility access in order to function properly." />
-          </Typography>
-          <Stack>
+          </p>
+          <div className="flex flex-col divide-y divide-border">
             {REQUIRED_PERMISSIONS.map((kind) => (
               <PermissionRow key={kind} kind={kind} />
             ))}
-          </Stack>
+          </div>
           {showRestartMessage && (
-            <Alert
-              severity="info"
-              action={
+            <Alert>
+              <AlertDescription className="flex items-center justify-between">
+                <span>
+                  <FormattedMessage defaultMessage="Please restart the application for the new permissions to take effect." />
+                </span>
                 <Button
-                  color="inherit"
-                  size="small"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => void handleRestart()}
-                  startIcon={<RestartAlt />}
                 >
+                  <RiRestartLine className="mr-1.5 h-4 w-4" />
                   <FormattedMessage defaultMessage="Restart" />
                 </Button>
-              }
-            >
-              <FormattedMessage defaultMessage="Please restart the application for the new permissions to take effect." />
+              </AlertDescription>
             </Alert>
           )}
-        </Stack>
+        </div>
       </DialogContent>
     </Dialog>
   );

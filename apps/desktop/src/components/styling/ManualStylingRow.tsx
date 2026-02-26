@@ -1,11 +1,10 @@
 import {
-  Deselect,
-  Edit,
-  InfoOutlined,
-  MoreVert,
-  PublicOutlined,
-} from "@mui/icons-material";
-import { IconButton, Radio, Stack, Tooltip, Typography } from "@mui/material";
+  RiMoreLine,
+  RiPencilLine,
+  RiInformationLine,
+  RiCloseCircleLine,
+  RiGlobalLine,
+} from "@remixicon/react";
 import { getRec } from "@repo/utilities";
 import { useCallback, useMemo } from "react";
 import { FormattedMessage } from "react-intl";
@@ -19,13 +18,19 @@ import {
   getActiveManualToneIds,
   getManuallySelectedToneId,
 } from "../../utils/tone.utils";
-import { ListTile } from "../common/ListTile";
 import {
-  MenuPopoverBuilder,
-  type MenuPopoverItem,
-} from "../common/MenuPopover";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-// Replace - and other symbols with a period. No newlines.
 const formatPromptForPreview = (prompt: string) => {
   return prompt
     .split("\n")
@@ -72,126 +77,104 @@ export const ManualStylingRow = ({ id }: ManualStylingRowProps) => {
   const isGlobal = tone?.isGlobal === true;
   const isSystem = tone?.isSystem === true;
   const canEdit = !isGlobal && !isSystem;
-  const hasPrompt = Boolean(tone?.promptTemplate);
   const canDeselect = activeToneCount > 1;
 
-  const menuItems = useMemo((): MenuPopoverItem[] => {
-    const items: MenuPopoverItem[] = [];
+  const menuItems = useMemo(() => {
+    const items: {
+      label: React.ReactNode;
+      icon: React.ReactNode;
+      onClick: () => void;
+    }[] = [];
     if (canEdit) {
       items.push({
-        kind: "listItem",
-        title: <FormattedMessage defaultMessage="Edit" />,
-        leading: <Edit fontSize="small" />,
-        onClick: ({ close }) => {
-          close();
-          handleEdit();
-        },
+        label: <FormattedMessage defaultMessage="Edit" />,
+        icon: <RiPencilLine className="mr-2 size-4" />,
+        onClick: handleEdit,
       });
     }
     items.push({
-      kind: "listItem",
-      title: <FormattedMessage defaultMessage="View full prompt" />,
-      leading: <InfoOutlined fontSize="small" />,
-      onClick: ({ close }) => {
-        close();
-        handleViewPrompt();
-      },
+      label: <FormattedMessage defaultMessage="View full prompt" />,
+      icon: <RiInformationLine className="mr-2 size-4" />,
+      onClick: handleViewPrompt,
     });
     if (canDeselect) {
       items.push({
-        kind: "listItem",
-        title: <FormattedMessage defaultMessage="Deselect style" />,
-        leading: <Deselect fontSize="small" />,
-        onClick: ({ close }) => {
-          close();
-          handleDeselect();
-        },
+        label: <FormattedMessage defaultMessage="Deselect style" />,
+        icon: <RiCloseCircleLine className="mr-2 size-4" />,
+        onClick: handleDeselect,
       });
     }
     return items;
-  }, [
-    canEdit,
-    canDeselect,
-    hasPrompt,
-    handleEdit,
-    handleViewPrompt,
-    handleDeselect,
-  ]);
+  }, [canEdit, canDeselect, handleEdit, handleViewPrompt, handleDeselect]);
 
   const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
-  const trailing = (
-    <Stack
-      direction="row"
-      spacing={0.5}
-      alignItems="center"
-      onClick={stopPropagation}
-      onMouseDown={stopPropagation}
-    >
-      {isGlobal && (
-        <Tooltip
-          disableInteractive
-          title={
-            <FormattedMessage defaultMessage="This style is managed by your organization." />
-          }
-        >
-          <span>
-            <IconButton size="small" disabled>
-              <PublicOutlined fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
-      )}
-      <MenuPopoverBuilder items={menuItems}>
-        {({ ref, open }) => (
-          <IconButton
-            ref={ref}
-            onClick={(e) => {
-              e.stopPropagation();
-              open();
-            }}
-            size="small"
-          >
-            <MoreVert fontSize="small" />
-          </IconButton>
-        )}
-      </MenuPopoverBuilder>
-    </Stack>
-  );
-
   return (
-    <ListTile
+    <div
       onClick={handleSelect}
-      leading={
-        <Radio
+      className="mb-2 flex cursor-pointer items-center gap-3 rounded-lg bg-muted/50 px-3 py-3 transition-colors hover:bg-accent/50"
+    >
+      <div className="shrink-0" onClick={stopPropagation}>
+        <input
+          type="radio"
           checked={isSelected}
-          size="small"
-          disableRipple
-          sx={{ mr: 1 }}
-          onClick={(e) => {
-            stopPropagation(e);
-            handleSelect();
-          }}
-          onMouseDown={stopPropagation}
+          onChange={handleSelect}
+          className="size-4 cursor-pointer accent-primary"
         />
-      }
-      title={tone?.name}
-      subtitle={
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}
-        >
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-foreground">
+          {tone?.name}
+        </p>
+        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
           {formatPromptForPreview(tone?.promptTemplate ?? "-")}
-        </Typography>
-      }
-      trailing={trailing}
-      sx={{ backgroundColor: "level1", mb: 1, borderRadius: 1 }}
-    />
+        </p>
+      </div>
+
+      <div
+        className="flex shrink-0 items-center gap-1"
+        onClick={stopPropagation}
+        onMouseDown={stopPropagation}
+      >
+        {isGlobal && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <button
+                    disabled
+                    className="rounded-md p-1.5 text-muted-foreground opacity-50"
+                  >
+                    <RiGlobalLine className="size-4" />
+                  </button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <FormattedMessage defaultMessage="This style is managed by your organization." />
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              onClick={stopPropagation}
+              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <RiMoreLine className="size-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {menuItems.map((item, i) => (
+              <DropdownMenuItem key={i} onClick={item.onClick}>
+                {item.icon}
+                {item.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
   );
 };

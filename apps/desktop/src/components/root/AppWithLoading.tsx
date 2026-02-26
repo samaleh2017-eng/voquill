@@ -1,4 +1,3 @@
-import { Box } from "@mui/material";
 import Router from "../../router";
 import { useAppStore } from "../../store";
 import { LoadingApp } from "./LoadingApp";
@@ -10,9 +9,9 @@ export const AppWithLoading = () => {
   return (
     <>
       <AppSideEffects />
-      <Box sx={{ height: "100vh", width: "100vw", overflow: "hidden" }}>
+      <div className="h-screen w-screen overflow-hidden">
         {initialized ? <Router /> : <LoadingApp />}
-      </Box>
+      </div>
     </>
   );
 };

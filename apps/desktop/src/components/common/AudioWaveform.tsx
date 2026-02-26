@@ -1,5 +1,3 @@
-import { Box } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import type { CSSProperties } from "react";
 import { useEffect, useRef } from "react";
 
@@ -79,8 +77,7 @@ export const AudioWaveform = ({
   style,
   baselineOffset = 0,
 }: AudioWaveformProps) => {
-  const theme = useTheme();
-  const resolvedColor = strokeColor ?? theme.vars?.palette.primary.main;
+  const resolvedColor = strokeColor ?? "var(--color-primary)";
   const waveRefs = useRef<(SVGPathElement | null)[]>([]);
   const animationFrameRef = useRef<number | null>(null);
   const animationStateRef = useRef<AnimationState>({
@@ -241,13 +238,13 @@ export const AudioWaveform = ({
   );
 
   return (
-    <Box
+    <div
       className={className}
-      style={style}
-      sx={{
+      style={{
         position: "relative",
         width: "100%",
         height: "100%",
+        ...style,
       }}
     >
       <svg
@@ -272,6 +269,6 @@ export const AudioWaveform = ({
           />
         ))}
       </svg>
-    </Box>
+    </div>
   );
 };

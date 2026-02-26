@@ -1,7 +1,12 @@
-import { CheckBox, CheckBoxOutlineBlank } from "@mui/icons-material";
-import { Box, Stack, Tooltip, Typography } from "@mui/material";
-import { FormattedMessage } from "react-intl";
 import { isDefined } from "@repo/utilities";
+import { RiCheckboxFill, RiCheckboxBlankLine } from "@remixicon/react";
+import { FormattedMessage } from "react-intl";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type SectionProps = {
   title: React.ReactNode;
@@ -26,67 +31,51 @@ export const Section = ({
   const headerEnabled = !blocked;
 
   const content = (
-    <Stack mb={4}>
-      <Stack
-        direction="row"
-        alignItems="center"
-        sx={{ opacity: headerEnabled ? 1 : 0.3 }}
+    <div className="mb-6">
+      <div
+        className="flex items-center"
+        style={{ opacity: headerEnabled ? 1 : 0.3 }}
       >
-        <Typography variant="h6" fontWeight="bold">
-          {title}
-        </Typography>
+        <h3 className="text-lg font-bold">{title}</h3>
         {isDefined(enabled) && (
-          <Box
-            sx={{ ml: 1, cursor: "pointer", pt: 1 }}
+          <button
+            className="ml-2 cursor-pointer pt-0.5"
             onClick={onToggleEnable}
           >
-            {enabled ? <CheckBox /> : <CheckBoxOutlineBlank />}
-          </Box>
+            {enabled ? (
+              <RiCheckboxFill className="size-5" />
+            ) : (
+              <RiCheckboxBlankLine className="size-5" />
+            )}
+          </button>
         )}
-      </Stack>
-      <Box sx={{ opacity: fieldEnabled ? 1 : 0.3 }}>
+      </div>
+      <div style={{ opacity: fieldEnabled ? 1 : 0.3 }}>
         {description && (
-          <Typography variant="body2" color="textSecondary" mt={1}>
-            {description}
-          </Typography>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         )}
-        <Box sx={{ mt: 2 }}>{children}</Box>
-      </Box>
-    </Stack>
+        <div className="mt-3">{children}</div>
+      </div>
+    </div>
   );
 
   if (blocked) {
     return (
-      <Tooltip
-        title={
-          blockedReason || (
-            <FormattedMessage defaultMessage="This setting is not available." />
-          )
-        }
-        disableInteractive
-      >
-        <span
-          style={{
-            display: "inline-block",
-            cursor: "not-allowed",
-            pointerEvents: "none",
-            position: "relative",
-          }}
-        >
-          {content}
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              cursor: "not-allowed",
-              pointerEvents: "auto",
-            }}
-          />
-        </span>
-      </Tooltip>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="relative inline-block cursor-not-allowed pointer-events-none">
+              {content}
+              <div className="absolute inset-0 cursor-not-allowed pointer-events-auto" />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            {blockedReason || (
+              <FormattedMessage defaultMessage="This setting is not available." />
+            )}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 

@@ -1,4 +1,3 @@
-import { Box, keyframes } from "@mui/material";
 import { emitTo } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useState } from "react";
 import { produceAppState, useAppStore } from "../../store";
@@ -8,32 +7,6 @@ import { ToastItem } from "../toast/ToastItem";
 const TOAST_CONTENT_WIDTH = 350;
 const ANIMATION_IN_MS = 350;
 const ANIMATION_OUT_MS = 150;
-
-const slideIn = keyframes`
-  0% {
-    transform: translateX(20%) scale(0.9);
-    opacity: 0;
-  }
-  50% {
-    transform: translateX(-3%) scale(1.02);
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(0) scale(1);
-    opacity: 1;
-  }
-`;
-
-const slideOut = keyframes`
-  0% {
-    transform: translateX(0) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(10%) scale(0.95);
-    opacity: 0;
-  }
-`;
 
 export const ToastSection = () => {
   const currentToast = useAppStore((state) => state.currentToast);
@@ -79,23 +52,15 @@ export const ToastSection = () => {
   }
 
   return (
-    <Box
+    <div
       key={displayedToast.id}
-      sx={{
-        position: "absolute",
-        top: 8,
-        right: 8,
-        display: "flex",
-        justifyContent: "flex-end",
-        alignItems: "flex-start",
-        pointerEvents: "none",
-      }}
+      className="pointer-events-none absolute top-2 right-2 flex items-start justify-end"
     >
-      <Box
+      <div
         data-overlay-interactive
-        sx={{
-          animation: `${isAnimatingOut ? slideOut : slideIn} ${isAnimatingOut ? ANIMATION_OUT_MS : ANIMATION_IN_MS}ms ease-out forwards`,
-          pointerEvents: "auto",
+        className="pointer-events-auto"
+        style={{
+          animation: `${isAnimatingOut ? "overlay-slide-out" : "overlay-slide-in"} ${isAnimatingOut ? ANIMATION_OUT_MS : ANIMATION_IN_MS}ms ease-out forwards`,
           width: TOAST_CONTENT_WIDTH - 16,
         }}
       >
@@ -104,7 +69,7 @@ export const ToastSection = () => {
           onClose={handleClose}
           onAction={handleAction}
         />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };

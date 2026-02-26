@@ -92,7 +92,6 @@ export type AppState = {
   snackbarCounter: number;
   snackbarMode: SnackbarMode;
   snackbarDuration: number;
-  snackbarTransitionDuration?: number;
 
   toastQueue: Toast[];
   currentToast: Toast | null;
@@ -133,7 +132,6 @@ export const INITIAL_APP_STATE: AppState = {
   snackbarCounter: 0,
   snackbarMode: "info",
   snackbarDuration: 3000,
-  snackbarTransitionDuration: undefined,
   toastQueue: [],
   currentToast: null,
   overlayCursor: null,

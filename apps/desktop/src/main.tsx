@@ -1,9 +1,5 @@
-import "@fontsource/roboto/300.css";
-import "@fontsource/roboto/400.css";
-import "@fontsource/roboto/500.css";
-import "@fontsource/roboto/700.css";
-import { CssBaseline } from "@mui/material";
-import { ThemeProvider } from "@mui/material/styles";
+import "./globals.css";
+import "@fontsource-variable/inter";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { FirebaseOptions, initializeApp } from "firebase/app";
@@ -24,8 +20,9 @@ import { PillOverlayRoot } from "./components/overlay/PillOverlayRoot";
 import { ToastOverlayRoot } from "./components/overlay/ToastOverlayRoot";
 import { AppWithLoading } from "./components/root/AppWithLoading";
 import { SnackbarEmitter } from "./components/root/SnackbarEmitter";
+import { Toaster } from "./components/ui/sonner";
+import { TooltipProvider } from "./components/ui/tooltip";
 import { getIntlConfig } from "./i18n";
-import { theme } from "./theme";
 import { createEffectiveAuth } from "./utils/auth.utils";
 import { getIsEmulators, getStripePublicKey } from "./utils/env.utils";
 
@@ -118,10 +115,9 @@ const Main = ({ children }: ChildrenProps) => {
   return (
     <React.StrictMode>
       <IntlProvider {...intlConfig}>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
+        <TooltipProvider>
           {children}
-        </ThemeProvider>
+        </TooltipProvider>
       </IntlProvider>
     </React.StrictMode>
   );
@@ -150,6 +146,7 @@ if (isPillOverlayWindow) {
   root.render(
     <Main>
       <Elements stripe={stripePromise}>
+        <Toaster position="bottom-center" />
         <SnackbarEmitter />
         <AppWithLoading />
       </Elements>

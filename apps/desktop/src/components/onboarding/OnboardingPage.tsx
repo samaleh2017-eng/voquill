@@ -1,4 +1,3 @@
-import { Stack } from "@mui/material";
 import { useEffect } from "react";
 import { trackOnboardingStep } from "../../utils/analytics.utils";
 import { useAppStore } from "../../store";
@@ -22,12 +21,7 @@ export default function OnboardingPage() {
   }, [currentPage]);
 
   return (
-    <Stack
-      direction="row"
-      alignItems="center"
-      justifyContent="center"
-      sx={{ height: "100%" }}
-    >
+    <div className="flex h-full items-center justify-center">
       {currentPage === "signIn" && <SignInForm />}
       {currentPage === "chooseTranscription" && <ChooseTranscriptionForm />}
       {currentPage === "chooseLlm" && <ChooseLlmForm />}
@@ -39,6 +33,6 @@ export default function OnboardingPage() {
       {currentPage === "micCheck" && <MicCheckForm />}
       {currentPage === "unlockedPro" && <UnlockedProForm />}
       {currentPage === "tutorial" && <TutorialForm />}
-    </Stack>
+    </div>
   );
 }

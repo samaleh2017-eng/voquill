@@ -1,5 +1,4 @@
-import { ArrowForward, Check } from "@mui/icons-material";
-import { Box, Button, Stack, Typography, useTheme } from "@mui/material";
+import { RiArrowRightLine, RiCheckLine } from "@remixicon/react";
 import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FormattedMessage } from "react-intl";
@@ -12,6 +11,7 @@ import { produceAppState, useAppStore } from "../../store";
 import { trackButtonClick } from "../../utils/analytics.utils";
 import { AudioWaveform } from "../common/AudioWaveform";
 import { MicrophoneSelector } from "../microphone/MicrophoneSelector";
+import { Button } from "@/components/ui/button";
 import {
   BackButton,
   DualPaneLayout,
@@ -19,7 +19,6 @@ import {
 } from "./OnboardingCommon";
 
 export const MicCheckForm = () => {
-  const theme = useTheme();
   const isEnterprise = useAppStore((state) => state.isEnterprise);
 
   const [recordingState, setRecordingState] = useState<
@@ -127,111 +126,70 @@ export const MicCheckForm = () => {
 
   const form = (
     <OnboardingFormLayout back={<BackButton />} actions={<div />}>
-      <Stack spacing={2} pb={8}>
-        <Typography variant="h4" fontWeight={600}>
+      <div className="space-y-4 pb-8">
+        <h2 className="text-2xl font-semibold">
           <FormattedMessage defaultMessage="Test your microphone" />
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
+        </h2>
+        <p className="text-base text-muted-foreground">
           <FormattedMessage defaultMessage="Say something and watch the waves respond to your voice." />
-        </Typography>
-      </Stack>
+        </p>
+      </div>
     </OnboardingFormLayout>
   );
 
   const rightContent = (
-    <Stack
-      spacing={3}
-      sx={{
-        bgcolor: "level1",
-        borderRadius: 2,
-        p: 4,
-        maxWidth: 400,
-        width: "100%",
-      }}
-    >
+    <div className="flex w-full max-w-[400px] flex-col gap-6 rounded-lg bg-muted p-8">
       {showMicSelector ? (
         <>
-          <Typography variant="h6" fontWeight={600}>
+          <h3 className="text-base font-semibold">
             <FormattedMessage defaultMessage="Choose a different microphone" />
-          </Typography>
+          </h3>
           <MicrophoneSelector
             value={preferredMicrophone}
             onChange={(value) => {
               setOnboardingPreferredMicrophone(value);
             }}
           />
-          <Stack direction="row" justifyContent="flex-end">
-            <Button
-              variant="contained"
-              onClick={handleMicSelected}
-              endIcon={<Check />}
-            >
+          <div className="flex justify-end">
+            <Button onClick={handleMicSelected}>
               <FormattedMessage defaultMessage="Use this mic" />
+              <RiCheckLine className="size-4" />
             </Button>
-          </Stack>
+          </div>
         </>
       ) : (
         <>
-          <Typography variant="h6" fontWeight={600}>
+          <h3 className="text-base font-semibold">
             <FormattedMessage defaultMessage="Do the waves respond to your voice?" />
-          </Typography>
+          </h3>
 
-          <Box
-            sx={{
-              bgcolor: "level2",
-              borderRadius: 2,
-              p: 2,
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            <Box
-              sx={{
-                position: "relative",
-                width: "100%",
-                height: 80,
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
+          <div className="relative overflow-hidden rounded-lg bg-background p-4">
+            <div className="relative flex h-20 w-full items-center">
               <AudioWaveform
                 levels={audioLevels}
                 active={isRecording}
                 processing={isStarting}
                 style={{ width: "100%", height: "100%" }}
               />
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  left: -1,
-                  right: -1,
-                  pointerEvents: "none",
-                  background: `linear-gradient(90deg, ${theme.vars?.palette.level2} 0%, transparent 18%, transparent 82%, ${theme.vars?.palette.level2} 100%)`,
-                }}
-              />
-            </Box>
-          </Box>
+              <div className="pointer-events-none absolute inset-x-[-1px] inset-y-0 bg-gradient-to-r from-background via-transparent to-background [background-size:18%_100%,64%_100%,18%_100%] [background-position:left,center,right] bg-no-repeat" />
+            </div>
+          </div>
 
-          <Stack direction="row" spacing={2} justifyContent="flex-end">
+          <div className="flex justify-end gap-2">
             <Button
-              variant="text"
+              variant="ghost"
               onClick={() => void handleChangeMicrophone()}
             >
               <FormattedMessage defaultMessage="Try another mic" />
             </Button>
-            <Button
-              variant="contained"
-              onClick={() => void handleConfirm()}
-              endIcon={<ArrowForward />}
-            >
+            <Button onClick={() => void handleConfirm()}>
               <FormattedMessage defaultMessage="Looks good" />
+              <RiArrowRightLine className="size-4" />
             </Button>
-          </Stack>
+          </div>
         </>
       )}
-    </Stack>
+    </div>
   );
 
   return (
@@ -239,7 +197,7 @@ export const MicCheckForm = () => {
       flex={[2, 3]}
       left={form}
       right={rightContent}
-      rightSx={{ bgcolor: "transparent" }}
+      rightClassName="bg-transparent"
     />
   );
 };

@@ -1,36 +1,31 @@
-import { Box, Stack, SxProps, Typography } from "@mui/material";
 import { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 type SettingSectionProps = {
   title: ReactNode;
   description: ReactNode;
   action?: ReactNode;
-  sx?: SxProps;
+  className?: string;
 };
 
 export const SettingSection = ({
   title,
   description,
   action,
-  sx,
+  className,
 }: SettingSectionProps) => {
   return (
-    <Stack
-      direction="row"
-      spacing={2}
-      alignItems="center"
-      justifyContent="space-between"
-      sx={sx}
+    <div
+      className={cn(
+        "flex items-center justify-between gap-4",
+        className,
+      )}
     >
-      <Stack spacing={0.5} flex={1}>
-        <Typography variant="body1" fontWeight={600}>
-          {title}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {description}
-        </Typography>
-      </Stack>
-      {action && <Box>{action}</Box>}
-    </Stack>
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="text-sm font-semibold">{title}</span>
+        <span className="text-sm text-muted-foreground">{description}</span>
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
+    </div>
   );
 };

@@ -1,19 +1,4 @@
-import { Add, Close } from "@mui/icons-material";
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { RiAddLine, RiCloseLine } from "@remixicon/react";
 import type { Hotkey } from "@repo/types";
 import { useEffect, useMemo, useState } from "react";
 import { FormattedMessage } from "react-intl";
@@ -38,6 +23,24 @@ import {
 } from "../../utils/language.utils";
 import { getDetectedSystemLocale, getMyUser } from "../../utils/user.utils";
 import { HotKey } from "../common/HotKey";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RiAlertLine } from "@remixicon/react";
 
 type DictationLanguageRowProps = {
   language: string;
@@ -56,39 +59,32 @@ const DictationLanguageRow = ({
   onDelete,
   canDelete,
 }: DictationLanguageRowProps) => {
-  const handleLanguageChange = (event: SelectChangeEvent<string>) => {
-    onLanguageChange(event.target.value);
-  };
-
   return (
-    <Stack direction="row" spacing={1} alignItems="center" width="100%">
+    <div className="flex w-full items-center gap-2">
       <HotKey value={hotkeyKeys} onChange={onHotkeyChange} />
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Select
-          value={language}
-          onChange={handleLanguageChange}
-          size="small"
-          variant="outlined"
-          fullWidth
-          MenuProps={{
-            PaperProps: {
-              style: { maxHeight: 300 },
-            },
-          }}
-        >
-          {DICTATION_LANGUAGE_OPTIONS.map(([value, label]) => (
-            <MenuItem key={value} value={value}>
-              {label}
-            </MenuItem>
-          ))}
+      <div className="min-w-0 flex-1">
+        <Select value={language} onValueChange={onLanguageChange}>
+          <SelectTrigger className="w-full" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px]">
+            {DICTATION_LANGUAGE_OPTIONS.map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
-      </Box>
+      </div>
       {canDelete && (
-        <IconButton size="small" onClick={onDelete}>
-          <Close color="disabled" />
-        </IconButton>
+        <button
+          onClick={onDelete}
+          className="rounded-md p-1 text-muted-foreground hover:bg-accent"
+        >
+          <RiCloseLine className="size-4" />
+        </button>
       )}
-    </Stack>
+    </div>
   );
 };
 
@@ -242,9 +238,7 @@ export const DictationLanguageDialog = () => {
         const b = new Set(filled[j].hotkeyKeys);
         const aSubsetOfB = [...a].every((k) => b.has(k));
         const bSubsetOfA = [...b].every((k) => a.has(k));
-        if (aSubsetOfB || bSubsetOfA) {
-          return true;
-        }
+        if (aSubsetOfB || bSubsetOfA) return true;
       }
     }
     return false;
@@ -253,18 +247,23 @@ export const DictationLanguageDialog = () => {
   const canDelete = rows.length > 1;
 
   return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogTitle>
-        <FormattedMessage defaultMessage="Dictation language" />
-        <Typography variant="body2" color="text.secondary">
-          <FormattedMessage defaultMessage="Configure multiple dictation languages with hotkeys." />
-        </Typography>
-      </DialogTitle>
-      <DialogContent dividers sx={{ width: 480 }}>
-        <Stack spacing={1}>
+    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            <FormattedMessage defaultMessage="Dictation language" />
+          </DialogTitle>
+          <DialogDescription>
+            <FormattedMessage defaultMessage="Configure multiple dictation languages with hotkeys." />
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
           {hasHotkeyConflict && (
-            <Alert severity="warning" variant="outlined">
-              <FormattedMessage defaultMessage="Some hotkeys share overlapping keys, which may cause conflicts." />
+            <Alert variant="destructive">
+              <RiAlertLine className="size-4" />
+              <AlertDescription>
+                <FormattedMessage defaultMessage="Some hotkeys share overlapping keys, which may cause conflicts." />
+              </AlertDescription>
             </Alert>
           )}
           {rows.map((row) => (
@@ -278,27 +277,22 @@ export const DictationLanguageDialog = () => {
               canDelete={canDelete}
             />
           ))}
-          <Button
-            variant="text"
-            startIcon={<Add />}
-            size="small"
-            onClick={handleAddLanguage}
-            sx={{ alignSelf: "flex-end", py: 0.5 }}
-          >
-            <Typography variant="body2" fontWeight={500}>
+          <div className="flex justify-end">
+            <Button variant="ghost" size="sm" onClick={handleAddLanguage}>
+              <RiAddLine className="mr-1 size-3.5" />
               <FormattedMessage defaultMessage="Add language" />
-            </Typography>
+            </Button>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            <FormattedMessage defaultMessage="Cancel" />
           </Button>
-        </Stack>
+          <Button onClick={() => void handleSave()}>
+            <FormattedMessage defaultMessage="Save" />
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>
-          <FormattedMessage defaultMessage="Cancel" />
-        </Button>
-        <Button variant="contained" onClick={() => void handleSave()}>
-          <FormattedMessage defaultMessage="Save" />
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };

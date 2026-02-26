@@ -1,9 +1,11 @@
-import { ArrowBack } from "@mui/icons-material";
-import { Button, Stack, TextField, Typography } from "@mui/material";
+import { RiArrowLeftLine } from "@remixicon/react";
 import { FormattedMessage } from "react-intl";
 import { setMode, submitResetPassword } from "../../actions/login.actions";
 import { produceAppState, useAppStore } from "../../store";
 import { getCanSubmitResetPassword } from "../../utils/login.utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const ResetPasswordForm = () => {
   const isEnterprise = useAppStore((state) => state.isEnterprise);
@@ -26,41 +28,41 @@ export const ResetPasswordForm = () => {
 
   if (isEnterprise) {
     return (
-      <Stack spacing={2} alignItems="center">
-        <Typography variant="body2">
+      <div className="flex flex-col items-center space-y-4">
+        <p className="text-sm text-muted-foreground">
           <FormattedMessage defaultMessage="Contact your administrator to reset your password. They can either reset your password or delete your account and have you create a new one." />
-        </Typography>
-        <Button size="small" startIcon={<ArrowBack />} onClick={handleClickBack}>
+        </p>
+        <Button variant="ghost" size="sm" onClick={handleClickBack}>
+          <RiArrowLeftLine className="size-4" />
           <FormattedMessage defaultMessage="Back" />
         </Button>
-      </Stack>
+      </div>
     );
   }
 
   return (
-    <Stack spacing={2} alignItems="center">
-      <Typography textAlign="center" variant="body2">
+    <div className="flex flex-col items-center space-y-4">
+      <p className="text-center text-sm text-muted-foreground">
         <FormattedMessage defaultMessage="Enter your email and we'll send a reset link." />
-      </Typography>
-      <TextField
-        label={<FormattedMessage defaultMessage="Email" />}
-        type="email"
-        fullWidth
-        value={email}
-        onChange={handleChangeEmail}
-        size="small"
-      />
-      <Button
-        variant="contained"
-        fullWidth
-        disabled={!canSubmit}
-        onClick={handleSubmit}
-      >
+      </p>
+      <div className="w-full space-y-1.5">
+        <Label htmlFor="reset-email">
+          <FormattedMessage defaultMessage="Email" />
+        </Label>
+        <Input
+          id="reset-email"
+          type="email"
+          value={email}
+          onChange={handleChangeEmail}
+        />
+      </div>
+      <Button className="w-full" disabled={!canSubmit} onClick={handleSubmit}>
         <FormattedMessage defaultMessage="Send reset link" />
       </Button>
-      <Button size="small" startIcon={<ArrowBack />} onClick={handleClickBack}>
+      <Button variant="ghost" size="sm" onClick={handleClickBack}>
+        <RiArrowLeftLine className="size-4" />
         <FormattedMessage defaultMessage="Back" />
       </Button>
-    </Stack>
+    </div>
   );
 };

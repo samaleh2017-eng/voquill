@@ -1,20 +1,20 @@
-import { Google } from "@mui/icons-material";
-import { Button } from "@mui/material";
+import { RiGoogleFill } from "@remixicon/react";
 import { FormattedMessage } from "react-intl";
 import { useAppStore } from "../../store";
 import { submitSignInWithGoogle } from "../../actions/login.actions";
+import { Button } from "@/components/ui/button";
 
 export const SignInWithGoogleButton = () => {
   const loading = useAppStore((state) => state.login.status === "loading");
 
   return (
     <Button
-      fullWidth
-      variant="outlined"
-      startIcon={<Google />}
+      className="w-full"
+      variant="outline"
       disabled={loading}
       onClick={submitSignInWithGoogle}
     >
+      <RiGoogleFill className="size-4" />
       <FormattedMessage defaultMessage="Continue with Google" />
     </Button>
   );

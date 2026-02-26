@@ -1,13 +1,4 @@
-import { CheckRounded } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Stack,
-  Typography,
-  type SxProps,
-} from "@mui/material";
+import { RiCheckLine } from "@remixicon/react";
 import { MemberPlan } from "@repo/types";
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -16,6 +7,7 @@ import { useOnEnter } from "../../hooks/helper.hooks";
 import { useAppStore } from "../../store";
 import { getEffectivePlan, getIsOnTrial } from "../../utils/member.utils";
 import { getDollarPriceFromKey, PricingPlan } from "../../utils/price.utils";
+import { Button } from "@/components/ui/button";
 
 type CheckmarkRowProps = {
   children?: React.ReactNode;
@@ -24,67 +16,39 @@ type CheckmarkRowProps = {
 
 const CheckmarkRow = ({ children, disabled }: CheckmarkRowProps) => {
   return (
-    <Stack
-      direction="row"
-      spacing={0.5}
-      alignItems="center"
-      sx={{ opacity: disabled ? 0.3 : 1 }}
-    >
-      <CheckRounded sx={{ fontSize: 16 }} />
-      <Typography variant="body2">{children}</Typography>
-    </Stack>
+    <div className={`flex items-center gap-1.5 ${disabled ? "opacity-30" : ""}`}>
+      <RiCheckLine className="h-4 w-4 shrink-0" />
+      <p className="text-sm">{children}</p>
+    </div>
   );
 };
 
 type PlanCardProps = {
-  cardSx?: SxProps;
-  buttonSx?: SxProps;
-  buttonVariant?: "contained" | "outlined" | "text";
+  highlighted?: boolean;
   title?: React.ReactNode;
   price?: React.ReactNode;
   children?: React.ReactNode;
-  color?: string;
-  disabled?: boolean;
   button?: React.ReactNode;
 };
 
 const PlanCard = ({
-  cardSx,
+  highlighted,
   title,
   price,
   children,
-  color,
   button,
 }: PlanCardProps) => {
   return (
-    <Card
-      sx={{
-        width: { xs: "100%", sm: 260 },
-        border: "3px solid",
-        borderColor: color ?? "transparent",
-        backgroundColor: "level0",
-        ...cardSx,
-      }}
+    <div
+      className={`w-full sm:w-[260px] rounded-xl border-[3px] p-4 flex flex-col gap-1 bg-card ${
+        highlighted ? "border-primary" : "border-border"
+      }`}
     >
-      <CardContent
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "stretch",
-          gap: 0.25,
-          p: 1.5,
-        }}
-      >
-        <Typography variant="caption" color="text.secondary">
-          {title}
-        </Typography>
-        <Typography variant="h5" fontWeight={600}>
-          {price}
-        </Typography>
-        <Box sx={{ mt: 1, mb: 1.5 }}>{button}</Box>
-        {children}
-      </CardContent>
-    </Card>
+      <p className="text-xs text-muted-foreground">{title}</p>
+      <div className="text-xl font-semibold">{price}</div>
+      <div className="mt-2 mb-3">{button}</div>
+      {children}
+    </div>
   );
 };
 
@@ -95,77 +59,37 @@ type BillingToggleProps = {
 
 const BillingToggle = ({ isYearly, onToggle }: BillingToggleProps) => {
   return (
-    <Stack alignItems="center" sx={{ mb: 2 }}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
-        <Typography
-          sx={{
-            fontSize: "0.85rem",
-            fontWeight: 500,
-            color: !isYearly ? "text.primary" : "text.secondary",
-            transition: "color 0.2s ease",
-          }}
+    <div className="flex justify-center mb-4">
+      <div className="flex items-center gap-3">
+        <span
+          className={`text-sm font-medium transition-colors ${
+            !isYearly ? "text-foreground" : "text-muted-foreground"
+          }`}
         >
           <FormattedMessage defaultMessage="Monthly" />
-        </Typography>
-        <Box
-          component="button"
+        </span>
+        <button
           onClick={onToggle}
-          sx={{
-            position: "relative",
-            width: 44,
-            height: 22,
-            borderRadius: 999,
-            backgroundColor: "level2",
-            border: "1px solid",
-            borderColor: "divider",
-            cursor: "pointer",
-            transition: "background 0.2s ease",
-            "&:hover": {
-              backgroundColor: "level3",
-            },
-          }}
+          className="relative w-11 h-[22px] rounded-full bg-muted border border-border cursor-pointer transition-colors hover:bg-accent"
         >
-          <Box
-            sx={{
-              position: "absolute",
-              top: 2,
-              left: 2,
-              width: 16,
-              height: 16,
-              borderRadius: "50%",
-              backgroundColor: "text.primary",
-              transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              transform: isYearly ? "translateX(22px)" : "translateX(0)",
-            }}
+          <div
+            className={`absolute top-[2px] left-[2px] w-4 h-4 rounded-full bg-foreground transition-transform duration-300 ${
+              isYearly ? "translate-x-[22px]" : "translate-x-0"
+            }`}
           />
-        </Box>
-        <Typography
-          sx={{
-            fontSize: "0.85rem",
-            fontWeight: 500,
-            color: isYearly ? "text.primary" : "text.secondary",
-            transition: "color 0.2s ease",
-          }}
+        </button>
+        <span
+          className={`text-sm font-medium transition-colors ${
+            isYearly ? "text-foreground" : "text-muted-foreground"
+          }`}
         >
           <FormattedMessage defaultMessage="Yearly" />
-        </Typography>
-        <Box
-          sx={{
-            py: 0.25,
-            px: 1,
-            borderRadius: 999,
-            backgroundColor: "rgba(34, 197, 94, 0.12)",
-            border: "1px solid rgba(34, 197, 94, 0.2)",
-            color: "#22c55e",
-            fontSize: "0.7rem",
-            fontWeight: 600,
-            letterSpacing: "0.02em",
-          }}
-        >
+        </span>
+        <span className="py-0.5 px-2 rounded-full bg-green-500/12 border border-green-500/20 text-green-500 text-[0.7rem] font-semibold tracking-wide">
           <FormattedMessage defaultMessage="Save 33%" />
-        </Box>
-      </Stack>
-    </Stack>
+        </span>
+      </div>
+    </div>
   );
 };
 
@@ -173,13 +97,13 @@ export type PlanListProps = {
   onSelect: (plan: PricingPlan) => void;
   disabled?: boolean;
   text?: string;
-  sx?: SxProps;
+  className?: string;
   ignoreCurrentPlan?: boolean;
 };
 
 export const PlanList = ({
   onSelect,
-  sx,
+  className,
   text,
   disabled,
   ignoreCurrentPlan,
@@ -228,25 +152,22 @@ export const PlanList = ({
     <PlanCard
       title={<FormattedMessage defaultMessage="Trial" />}
       price={
-        <Stack>
-          <Typography variant="h5" fontWeight={600}>
+        <div>
+          <p className="text-xl font-semibold">
             <FormattedMessage defaultMessage="Free" />
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
+          </p>
+          <p className="text-xs text-muted-foreground">
             <FormattedMessage defaultMessage="No credit card required" />
-          </Typography>
-        </Stack>
+          </p>
+        </div>
       }
-      buttonVariant="outlined"
-      cardSx={{ borderColor: "level1" }}
       button={
         <Button
-          variant="outlined"
-          size="small"
+          variant="outline"
+          size="sm"
           onClick={() => onSelect("free")}
           disabled={getText("free").disabled}
-          fullWidth
-          sx={{ py: 0.5 }}
+          className="w-full"
         >
           {getText("free").text}
         </Button>
@@ -278,18 +199,19 @@ export const PlanList = ({
 
   const proCard = (
     <PlanCard
+      highlighted
       title={<FormattedMessage defaultMessage="Pro" />}
       price={
-        <Stack>
-          <Typography variant="h5" fontWeight={600}>
+        <div>
+          <p className="text-xl font-semibold">
             {displayPrice
               ? intl.formatMessage(
                   { defaultMessage: "${displayPrice}/month" },
                   { displayPrice },
                 )
               : "--"}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
+          </p>
+          <p className="text-xs text-muted-foreground">
             {isYearly && yearlyTotal ? (
               <FormattedMessage
                 defaultMessage="Billed annually (${total}/year)"
@@ -298,18 +220,16 @@ export const PlanList = ({
             ) : (
               <FormattedMessage defaultMessage="Billed monthly" />
             )}
-          </Typography>
-        </Stack>
+          </p>
+        </div>
       }
-      cardSx={{ borderColor: "primary.main" }}
       button={
         <Button
           variant="blue"
-          size="small"
+          size="sm"
           onClick={() => onSelect(isYearly ? "pro_yearly" : "pro_monthly")}
           disabled={getText("pro").disabled}
-          fullWidth
-          sx={{ py: 0.5 }}
+          className="w-full"
         >
           {getText("pro").text}
         </Button>
@@ -324,9 +244,6 @@ export const PlanList = ({
       <CheckmarkRow>
         <FormattedMessage defaultMessage="Access to beta features" />
       </CheckmarkRow>
-      {/* <CheckmarkRow>
-        <FormattedMessage defaultMessage="Advanced agent mode" />
-      </CheckmarkRow> */}
       <CheckmarkRow>
         <FormattedMessage defaultMessage="Cross-device sync" />
       </CheckmarkRow>
@@ -337,29 +254,15 @@ export const PlanList = ({
   );
 
   return (
-    <Stack
-      sx={{
-        flexDirection: "column",
-        alignItems: "center",
-        ...sx,
-      }}
-    >
+    <div className={`flex flex-col items-center ${className ?? ""}`}>
       <BillingToggle
         isYearly={isYearly}
         onToggle={() => setIsYearly(!isYearly)}
       />
-      <Stack
-        sx={{
-          flexDirection: "row",
-          gap: 2,
-          alignItems: "stretch",
-          justifyContent: "center",
-          flexWrap: "wrap",
-        }}
-      >
+      <div className="flex flex-row gap-4 items-stretch justify-center flex-wrap">
         {trialCard}
         {proCard}
-      </Stack>
-    </Stack>
+      </div>
+    </div>
   );
 };

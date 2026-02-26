@@ -1,22 +1,19 @@
-import {
-  Alert,
-  Button,
-  Box,
-  Chip,
-  CircularProgress,
-  Divider,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { RiLoader4Line } from "@remixicon/react";
 import { Nullable } from "@repo/types";
 import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FormattedMessage } from "react-intl";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const AUTO_OPTION_VALUE = "__microphone_auto__";
 
@@ -98,9 +95,8 @@ export const MicrophoneSelector = ({
     return base;
   }, [devices, value]);
 
-  const handleSelectChange = useCallback(
-    (event: SelectChangeEvent<string>) => {
-      const nextValue = event.target.value;
+  const handleValueChange = useCallback(
+    (nextValue: string) => {
       const normalized = nextValue === AUTO_OPTION_VALUE ? null : nextValue;
       onChange(normalized);
     },
@@ -114,93 +110,72 @@ export const MicrophoneSelector = ({
   }, [loadDevices, loading]);
 
   return (
-    <Stack spacing={1.5}>
-      <FormControl fullWidth size="small" disabled={disabled || loading}>
-        <InputLabel id="microphone-select-label">
-          <FormattedMessage defaultMessage="Microphone" />
-        </InputLabel>
+    <div className="flex flex-col gap-3">
+      <div className="space-y-1.5">
+        <Label><FormattedMessage defaultMessage="Microphone" /></Label>
         <Select
-          labelId="microphone-select-label"
           value={selectValue}
-          label={<FormattedMessage defaultMessage="Microphone" />}
-          onChange={handleSelectChange}
+          onValueChange={handleValueChange}
+          disabled={disabled || loading}
         >
-          <MenuItem value={AUTO_OPTION_VALUE}>
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              spacing={1}
-            >
-              <Typography>
-                <FormattedMessage defaultMessage="Automatic" />
-              </Typography>
-              <Chip
-                size="small"
-                label={<FormattedMessage defaultMessage="Recommended" />}
-                color="primary"
-                variant="filled"
-              />
-            </Stack>
-          </MenuItem>
-          <Divider sx={{ my: 0.5 }} />
-          {options.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              <Stack
-                direction="row"
-                spacing={2}
-                justifyContent="space-between"
-                width="100%"
-              >
-                <Box display="flex" flexDirection="column">
-                  <Typography>{option.label}</Typography>
-                  {option.unavailable ? (
-                    <Typography variant="caption" color="warning.main">
-                      <FormattedMessage defaultMessage="Currently unavailable" />
-                    </Typography>
-                  ) : option.caution ? (
-                    <Typography variant="caption" color="text.secondary">
-                      <FormattedMessage defaultMessage="May provide lower audio quality" />
-                    </Typography>
-                  ) : null}
-                </Box>
-                <Stack direction="row" spacing={0.75} alignItems="center">
-                  {option.isDefault && (
-                    <Chip
-                      size="small"
-                      label={<FormattedMessage defaultMessage="Default" />}
-                      color="primary"
-                      variant="outlined"
-                    />
-                  )}
-                  {option.caution && !option.unavailable && (
-                    <Chip
-                      size="small"
-                      label={<FormattedMessage defaultMessage="Caution" />}
-                      color="warning"
-                      variant="outlined"
-                    />
-                  )}
-                </Stack>
-              </Stack>
-            </MenuItem>
-          ))}
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={AUTO_OPTION_VALUE}>
+              <div className="flex items-center justify-between gap-2">
+                <span><FormattedMessage defaultMessage="Automatic" /></span>
+                <Badge variant="default" className="text-[10px]">
+                  <FormattedMessage defaultMessage="Recommended" />
+                </Badge>
+              </div>
+            </SelectItem>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                <div className="flex items-center justify-between gap-4 w-full">
+                  <div className="flex flex-col">
+                    <span>{option.label}</span>
+                    {option.unavailable ? (
+                      <span className="text-xs text-amber-500">
+                        <FormattedMessage defaultMessage="Currently unavailable" />
+                      </span>
+                    ) : option.caution ? (
+                      <span className="text-xs text-muted-foreground">
+                        <FormattedMessage defaultMessage="May provide lower audio quality" />
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {option.isDefault && (
+                      <Badge variant="outline" className="text-[10px]">
+                        <FormattedMessage defaultMessage="Default" />
+                      </Badge>
+                    )}
+                    {option.caution && !option.unavailable && (
+                      <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-500">
+                        <FormattedMessage defaultMessage="Caution" />
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
-      </FormControl>
+      </div>
 
-      <Stack direction="row" spacing={1} alignItems="center">
-        <Button
-          variant="text"
-          onClick={handleRefresh}
-          size="small"
-          disabled={loading}
-        >
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={loading}>
           <FormattedMessage defaultMessage="Refresh devices" />
         </Button>
-        {loading && <CircularProgress size={18} />}
-      </Stack>
+        {loading && <RiLoader4Line className="h-4 w-4 animate-spin text-muted-foreground" />}
+      </div>
 
-      {error && <Alert severity="error">{error}</Alert>}
-    </Stack>
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+    </div>
   );
 };

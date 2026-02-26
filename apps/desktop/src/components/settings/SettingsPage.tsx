@@ -1,46 +1,35 @@
 import {
-  AppsOutlined,
-  ArrowOutwardRounded,
-  AutoAwesomeOutlined,
-  AutoFixHighOutlined,
-  DeleteForeverOutlined,
-  DescriptionOutlined,
-  Edit,
-  GraphicEqOutlined,
-  KeyboardAltOutlined,
-  LanguageOutlined,
-  LockOutlined,
-  LogoutOutlined,
-  MicOutlined,
-  MoreVertOutlined,
-  PaymentOutlined,
-  PersonRemoveOutlined,
-  PrivacyTipOutlined,
-  RocketLaunchOutlined,
-  VolumeUpOutlined,
-  WarningAmberOutlined,
-} from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  Link,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  Switch,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+  RiAlertLine,
+  RiAppsLine,
+  RiDeleteBinLine,
+  RiEditLine,
+  RiEqualizerLine,
+  RiExternalLinkLine,
+  RiFileTextLine,
+  RiGlobalLine,
+  RiKeyboardLine,
+  RiLockLine,
+  RiLogoutBoxLine,
+  RiMagicLine,
+  RiMicLine,
+  RiMoneyDollarCircleLine,
+  RiMoonLine,
+  RiMoreLine,
+  RiRocketLine,
+  RiShieldLine,
+  RiSparklingLine,
+  RiSunLine,
+  RiUserUnfollowLine,
+  RiVolumeUpLine,
+} from "@remixicon/react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { ChangeEvent, useState } from "react";
+import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { showErrorSnackbar } from "../../actions/app.actions";
 import { setAutoLaunchEnabled } from "../../actions/settings.actions";
 import { loadTones } from "../../actions/tone.actions";
 import { setPreferredLanguage } from "../../actions/user.actions";
+import { useTheme } from "../../hooks/theme.hooks";
 import { getAuthRepo, getStripeRepo } from "../../repos";
 import { produceAppState, useAppStore } from "../../store";
 import {
@@ -66,6 +55,22 @@ import {
 import { ListTile } from "../common/ListTile";
 import { Section } from "../common/Section";
 import { DashboardEntryLayout } from "../dashboard/DashboardEntryLayout";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function SettingsPage() {
   const hasEmailProvider = useAppStore(getHasEmailProvider);
@@ -83,6 +88,7 @@ export default function SettingsPage() {
   ]);
   const autoLaunchLoading = autoLaunchStatus === "loading";
   const intl = useIntl();
+  const { theme, setTheme } = useTheme();
 
   const dictationLanguage = useAppStore((state) => {
     const user = getMyUser(state);
@@ -120,8 +126,7 @@ export default function SettingsPage() {
     });
   };
 
-  const handleDictationLanguageChange = (event: SelectChangeEvent<string>) => {
-    const nextValue = event.target.value;
+  const handleDictationLanguageChange = (nextValue: string) => {
     void setPreferredLanguage(nextValue).then(() => {
       loadTones();
     });
@@ -193,9 +198,8 @@ export default function SettingsPage() {
     });
   };
 
-  const handleToggleAutoLaunch = (event: ChangeEvent<HTMLInputElement>) => {
-    const enabled = event.target.checked;
-    void setAutoLaunchEnabled(enabled);
+  const handleToggleAutoLaunch = (checked: boolean) => {
+    void setAutoLaunchEnabled(checked);
   };
 
   const handleManageSubscription = async () => {
@@ -222,42 +226,56 @@ export default function SettingsPage() {
     <Section title={<FormattedMessage defaultMessage="General" />}>
       <ListTile
         title={<FormattedMessage defaultMessage="Start on system startup" />}
-        leading={<RocketLaunchOutlined />}
-        disableRipple={true}
+        leading={<RiRocketLine className="size-5 text-muted-foreground" />}
         trailing={
           <Switch
-            edge="end"
             checked={autoLaunchEnabled}
             disabled={autoLaunchLoading}
-            onChange={handleToggleAutoLaunch}
+            onCheckedChange={handleToggleAutoLaunch}
           />
         }
       />
       <ListTile
+        title={<FormattedMessage defaultMessage="Appearance" />}
+        leading={theme === 'dark' ? <RiMoonLine className="size-5 text-muted-foreground" /> : <RiSunLine className="size-5 text-muted-foreground" />}
+        trailing={
+          <Select value={theme} onValueChange={(v) => setTheme(v as 'light' | 'dark' | 'system')}>
+            <SelectTrigger className="w-[140px]" size="sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="light"><FormattedMessage defaultMessage="Light" /></SelectItem>
+              <SelectItem value="dark"><FormattedMessage defaultMessage="Dark" /></SelectItem>
+              <SelectItem value="system"><FormattedMessage defaultMessage="System" /></SelectItem>
+            </SelectContent>
+          </Select>
+        }
+      />
+      <ListTile
         title={<FormattedMessage defaultMessage="Microphone" />}
-        leading={<MicOutlined />}
+        leading={<RiMicLine className="size-5 text-muted-foreground" />}
         onClick={openMicrophoneDialog}
       />
       <ListTile
         title={<FormattedMessage defaultMessage="Audio" />}
-        leading={<VolumeUpOutlined />}
+        leading={<RiVolumeUpLine className="size-5 text-muted-foreground" />}
         onClick={openAudioDialog}
       />
       <ListTile
         title={<FormattedMessage defaultMessage="Hotkey shortcuts" />}
-        leading={<KeyboardAltOutlined />}
+        leading={<RiKeyboardLine className="size-5 text-muted-foreground" />}
         onClick={openShortcutsDialog}
       />
       {!isMacOS() && (
         <ListTile
           title={<FormattedMessage defaultMessage="App paste bindings" />}
-          leading={<AppsOutlined />}
+          leading={<RiAppsLine className="size-5 text-muted-foreground" />}
           onClick={openAppKeybindingsDialog}
         />
       )}
       <ListTile
         title={<FormattedMessage defaultMessage="More settings" />}
-        leading={<MoreVertOutlined />}
+        leading={<RiMoreLine className="size-5 text-muted-foreground" />}
         onClick={openMoreSettingsDialog}
       />
     </Section>
@@ -268,92 +286,85 @@ export default function SettingsPage() {
       {hasAdditionalLanguages ? (
         <ListTile
           title={<FormattedMessage defaultMessage="Dictation language" />}
-          leading={<LanguageOutlined />}
+          leading={<RiGlobalLine className="size-5 text-muted-foreground" />}
           onClick={openDictationLanguageDialog}
           trailing={
             <Button
-              variant="outlined"
-              size="small"
-              endIcon={<Edit sx={{ fontSize: 16 }} />}
-              onClick={openDictationLanguageDialog}
-              sx={{ textTransform: "none", py: 0.5, px: 1.5, fontWeight: 400 }}
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                openDictationLanguageDialog();
+              }}
             >
               <FormattedMessage defaultMessage="Multiple languages" />
+              <RiEditLine className="ml-1.5 size-3.5" />
             </Button>
           }
         />
       ) : (
         <ListTile
           title={<FormattedMessage defaultMessage="Dictation language" />}
-          leading={<LanguageOutlined />}
-          disableRipple={true}
+          leading={<RiGlobalLine className="size-5 text-muted-foreground" />}
           trailing={
-            <Box
+            <div
               onClick={(event) => event.stopPropagation()}
-              sx={{
-                minWidth: 200,
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-              }}
+              className="flex min-w-[200px] items-center gap-2"
             >
               {dictationLanguageWarning && (
-                <Tooltip
-                  title={
-                    <Box>
-                      {dictationLanguageWarning}{" "}
-                      <Link
-                        component="button"
-                        color="inherit"
-                        sx={{ verticalAlign: "baseline" }}
-                        onClick={openPostProcessingDialog}
-                      >
-                        <FormattedMessage defaultMessage="Fix issue" />
-                      </Link>
-                    </Box>
-                  }
-                  slotProps={{
-                    popper: {
-                      modifiers: [
-                        { name: "offset", options: { offset: [0, -8] } },
-                      ],
-                    },
-                  }}
-                >
-                  <WarningAmberOutlined color="warning" fontSize="small" />
-                </Tooltip>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button onClick={openPostProcessingDialog}>
+                        <RiAlertLine className="size-4 text-yellow-500" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {dictationLanguageWarning}{" "}
+                        <button
+                          className="underline"
+                          onClick={openPostProcessingDialog}
+                        >
+                          <FormattedMessage defaultMessage="Fix issue" />
+                        </button>
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
-              <Tooltip
-                title={
-                  <FormattedMessage defaultMessage="Set up multiple languages with different hotkeys" />
-                }
-              >
-                <IconButton size="small" onClick={openDictationLanguageDialog}>
-                  <MoreVertOutlined fontSize="small" />
-                </IconButton>
-              </Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={openDictationLanguageDialog}
+                    >
+                      <RiMoreLine className="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <FormattedMessage defaultMessage="Set up multiple languages with different hotkeys" />
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <Select
                 value={dictationLanguage}
-                onChange={handleDictationLanguageChange}
-                size="small"
-                variant="outlined"
-                fullWidth
-                inputProps={{ "aria-label": "Dictation language" }}
-                MenuProps={{
-                  PaperProps: {
-                    style: {
-                      maxHeight: 300,
-                    },
-                  },
-                }}
+                onValueChange={handleDictationLanguageChange}
               >
-                {DICTATION_LANGUAGE_OPTIONS.map(([value, label]) => (
-                  <MenuItem key={value} value={value}>
-                    {label}
-                  </MenuItem>
-                ))}
+                <SelectTrigger className="w-full" size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {DICTATION_LANGUAGE_OPTIONS.map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
-            </Box>
+            </div>
           }
         />
       )}
@@ -371,26 +382,28 @@ export default function SettingsPage() {
       {allowChangeTranscription && (
         <ListTile
           title={<FormattedMessage defaultMessage="AI transcription" />}
-          leading={<GraphicEqOutlined />}
+          leading={<RiEqualizerLine className="size-5 text-muted-foreground" />}
           onClick={openTranscriptionDialog}
         />
       )}
       {allowChangePostProcessing && (
         <ListTile
           title={<FormattedMessage defaultMessage="AI post processing" />}
-          leading={<AutoFixHighOutlined />}
+          leading={<RiMagicLine className="size-5 text-muted-foreground" />}
           onClick={openPostProcessingDialog}
         />
       )}
       {allowChangeAgentMode && (
         <ListTile
           title={
-            <Stack direction="row" alignItems="center">
+            <span className="flex items-center gap-2">
               <FormattedMessage defaultMessage="Agent mode" />
-              <Chip label="Beta" size="small" color="primary" sx={{ ml: 1 }} />
-            </Stack>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                Beta
+              </Badge>
+            </span>
           }
-          leading={<AutoAwesomeOutlined />}
+          leading={<RiSparklingLine className="size-5 text-muted-foreground" />}
           onClick={openAgentModeDialog}
         />
       )}
@@ -407,35 +420,37 @@ export default function SettingsPage() {
       {hasEmailProvider && (
         <ListTile
           title={<FormattedMessage defaultMessage="Change password" />}
-          leading={<LockOutlined />}
+          leading={<RiLockLine className="size-5 text-muted-foreground" />}
           onClick={openChangePasswordDialog}
         />
       )}
       {isSubscribed && !isEnterprise && (
         <ListTile
           title={<FormattedMessage defaultMessage="Manage subscription" />}
-          leading={<PaymentOutlined />}
+          leading={
+            <RiMoneyDollarCircleLine className="size-5 text-muted-foreground" />
+          }
           onClick={handleManageSubscription}
           disabled={manageSubscriptionLoading}
-          trailing={<ArrowOutwardRounded />}
+          trailing={<RiExternalLinkLine className="size-4 text-muted-foreground" />}
         />
       )}
       <ListTile
         title={<FormattedMessage defaultMessage="Terms & conditions" />}
         onClick={() => openUrl("https://voquill.com/terms")}
-        trailing={<ArrowOutwardRounded />}
-        leading={<DescriptionOutlined />}
+        trailing={<RiExternalLinkLine className="size-4 text-muted-foreground" />}
+        leading={<RiFileTextLine className="size-5 text-muted-foreground" />}
       />
       <ListTile
         title={<FormattedMessage defaultMessage="Privacy policy" />}
         onClick={() => openUrl("https://voquill.com/privacy")}
-        trailing={<ArrowOutwardRounded />}
-        leading={<PrivacyTipOutlined />}
+        trailing={<RiExternalLinkLine className="size-4 text-muted-foreground" />}
+        leading={<RiShieldLine className="size-5 text-muted-foreground" />}
       />
       {isSignedIn && (
         <ListTile
           title={<FormattedMessage defaultMessage="Sign out" />}
-          leading={<LogoutOutlined />}
+          leading={<RiLogoutBoxLine className="size-5 text-muted-foreground" />}
           onClick={handleSignOut}
         />
       )}
@@ -452,15 +467,16 @@ export default function SettingsPage() {
       {!isSignedIn && (
         <ListTile
           title={<FormattedMessage defaultMessage="Clear local data" />}
-          leading={<DeleteForeverOutlined />}
+          leading={<RiDeleteBinLine className="size-5 text-muted-foreground" />}
           onClick={openClearLocalDataDialog}
         />
       )}
       {isSignedIn && (
         <ListTile
-          sx={{ mt: 1 }}
           title={<FormattedMessage defaultMessage="Delete account" />}
-          leading={<PersonRemoveOutlined />}
+          leading={
+            <RiUserUnfollowLine className="size-5 text-muted-foreground" />
+          }
           onClick={openDeleteAccountDialog}
         />
       )}
@@ -469,15 +485,15 @@ export default function SettingsPage() {
 
   return (
     <DashboardEntryLayout>
-      <Stack direction="column">
-        <Typography variant="h4" fontWeight={700} sx={{ marginBottom: 4 }}>
+      <div className="flex flex-col">
+        <h1 className="mb-6 text-3xl font-bold tracking-tight">
           <FormattedMessage defaultMessage="Settings" />
-        </Typography>
+        </h1>
         {general}
         {processing}
         {advanced}
         {!isEnterprise && dangerZone}
-      </Stack>
+      </div>
     </DashboardEntryLayout>
   );
 }

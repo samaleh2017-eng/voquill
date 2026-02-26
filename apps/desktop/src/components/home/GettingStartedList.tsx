@@ -1,16 +1,22 @@
 import {
-  CheckCircleRounded,
-  InfoOutlined,
-  RadioButtonUncheckedRounded,
-} from "@mui/icons-material";
-import { Box, LinearProgress, Stack, Tooltip, Typography } from "@mui/material";
+  RiCheckboxCircleFill,
+  RiCheckboxBlankCircleLine,
+  RiInformationLine,
+} from "@remixicon/react";
 import dayjs from "dayjs";
 import { useMemo } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useLocalStorage } from "../../hooks/local-storage.hooks";
 import { useAppStore } from "../../store";
 import { getMyUser } from "../../utils/user.utils";
-import { StorageImage } from "../common/StorageImage";
+import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { StorageImageInline } from "@/components/ui/storage-image";
 
 type ChecklistItem = {
   label: string;
@@ -18,49 +24,6 @@ type ChecklistItem = {
   done: boolean;
   extra?: React.ReactNode;
 };
-
-function ChecklistRow({ item }: { item: ChecklistItem }) {
-  return (
-    <Stack
-      direction="row"
-      alignItems="center"
-      spacing={1.5}
-      sx={{
-        py: 1.25,
-        px: 0.5,
-        borderRadius: 1,
-        "&:hover": { bgcolor: "var(--app-palette-level1)" },
-        transition: "background-color 0.15s",
-      }}
-    >
-      {item.done ? (
-        <CheckCircleRounded
-          sx={{ color: "var(--app-palette-blue)", fontSize: 22 }}
-        />
-      ) : (
-        <RadioButtonUncheckedRounded
-          sx={{ color: "text.disabled", fontSize: 22 }}
-        />
-      )}
-      <Typography
-        variant="body1"
-        sx={{
-          textDecoration: item.done ? "line-through" : "none",
-          color: item.done ? "text.secondary" : "text.primary",
-        }}
-      >
-        {item.label}
-      </Typography>
-      {item.extra}
-      <Box sx={{ flex: 1 }} />
-      <Tooltip title={item.info} arrow>
-        <InfoOutlined
-          sx={{ fontSize: 16, color: "text.disabled", cursor: "help" }}
-        />
-      </Tooltip>
-    </Stack>
-  );
-}
 
 function AppIconBoxes({ iconPaths }: { iconPaths: (string | null)[] }) {
   const slots = [
@@ -70,28 +33,47 @@ function AppIconBoxes({ iconPaths }: { iconPaths: (string | null)[] }) {
   ];
 
   return (
-    <Stack direction="row" spacing={0.75}>
+    <div className="flex flex-row gap-1.5">
       {slots.map((path, i) => (
-        <Box
+        <div
           key={i}
-          sx={{
-            overflow: "hidden",
-            borderRadius: 0.75,
-            minWidth: 36,
-            minHeight: 36,
-            maxWidth: 36,
-            maxHeight: 36,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            bgcolor: "level2",
-            border: path ? "1.5px solid var(--app-palette-blue)" : "none",
-          }}
+          className={`flex size-9 items-center justify-center overflow-hidden rounded-md bg-muted ${path ? "ring-1.5 ring-primary" : ""}`}
         >
-          {path && <StorageImage path={path} size={36} />}
-        </Box>
+          {path && <StorageImageInline path={path} size={36} />}
+        </div>
       ))}
-    </Stack>
+    </div>
+  );
+}
+
+function ChecklistRow({ item }: { item: ChecklistItem }) {
+  return (
+    <div className="flex items-center gap-3 rounded-md px-1 py-2.5 transition-colors hover:bg-accent/50">
+      {item.done ? (
+        <RiCheckboxCircleFill className="size-5 shrink-0 text-primary" />
+      ) : (
+        <RiCheckboxBlankCircleLine className="size-5 shrink-0 text-muted-foreground/40" />
+      )}
+      <span
+        className={`text-sm ${item.done ? "text-muted-foreground line-through" : "text-foreground"}`}
+      >
+        {item.label}
+      </span>
+      {item.extra}
+      <div className="flex-1" />
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="shrink-0">
+              <RiInformationLine className="size-4 cursor-help text-muted-foreground/40" />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs">
+            {item.info}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
   );
 }
 
@@ -172,55 +154,32 @@ export function GettingStartedList() {
   }
 
   return (
-    <Box>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{ mb: 1 }}
-      >
-        <Stack direction="row" alignItems="baseline" spacing={1}>
-          <Typography variant="h6" fontWeight={600}>
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-base font-semibold text-foreground">
             <FormattedMessage defaultMessage="Getting started" />
-          </Typography>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{
-              cursor: "pointer",
-              "&:hover": { textDecoration: "underline" },
-            }}
+          </h2>
+          <button
+            className="text-xs text-muted-foreground hover:underline"
             onClick={() => setDismissed(true)}
           >
             <FormattedMessage defaultMessage="Skip" />
-          </Typography>
-        </Stack>
-        <Typography variant="body2" color="text.secondary">
+          </button>
+        </div>
+        <span className="text-xs text-muted-foreground">
           <FormattedMessage
             defaultMessage="{completed} of {total}"
             values={{ completed: completedCount, total: checklist.length }}
           />
-        </Typography>
-      </Stack>
-      <LinearProgress
-        variant="determinate"
-        value={progress}
-        sx={{
-          height: 6,
-          borderRadius: 3,
-          bgcolor: "var(--app-palette-level2)",
-          mb: 1,
-          "& .MuiLinearProgress-bar": {
-            bgcolor: "var(--app-palette-blue)",
-            borderRadius: 3,
-          },
-        }}
-      />
-      <Stack spacing={0}>
+        </span>
+      </div>
+      <Progress value={progress} className="mb-2 h-1.5" />
+      <div className="flex flex-col">
         {checklist.map((item) => (
           <ChecklistRow key={item.label} item={item} />
         ))}
-      </Stack>
-    </Box>
+      </div>
+    </div>
   );
 }

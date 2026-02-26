@@ -1,8 +1,7 @@
-import { Collapse, Stack, Typography } from "@mui/material";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
 import { FormattedMessage } from "react-intl";
 import { useSearchParams } from "react-router-dom";
-import { TransitionGroup } from "react-transition-group";
 import { useOnExit } from "../../hooks/helper.hooks";
 import { useConsumeQueryParams } from "../../hooks/navigation.hooks";
 import { INITIAL_LOGIN_STATE, LoginMode } from "../../state/login.state";
@@ -64,8 +63,8 @@ export const LoginForm = ({
   }, [defaultMode]);
 
   return (
-    <Stack spacing={1.5}>
-      <Typography variant="body1" fontWeight="bold">
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold text-foreground">
         {mode === "signIn" && <FormattedMessage defaultMessage="Sign in" />}
         {mode === "signUp" && <FormattedMessage defaultMessage="Sign up" />}
         {mode === "resetPassword" && (
@@ -74,41 +73,63 @@ export const LoginForm = ({
         {mode === "passwordResetSent" && (
           <FormattedMessage defaultMessage="Email sent" />
         )}
-      </Typography>
+      </h2>
 
-      <TransitionGroup>
+      <AnimatePresence mode="wait">
         {mode === "signIn" && (
-          <Collapse key="signIn" timeout={400} unmountOnExit>
+          <motion.div
+            key="signIn"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
             <SignInForm hideOidcProviders={hideOidcProviders} />
-          </Collapse>
+          </motion.div>
         )}
         {mode === "signUp" && (
-          <Collapse key="signUp" timeout={400} unmountOnExit>
+          <motion.div
+            key="signUp"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
             <SignUpForm
               hideModeSwitch={hideModeSwitch}
               hideOidcProviders={hideOidcProviders}
             />
-          </Collapse>
+          </motion.div>
         )}
         {mode === "resetPassword" && (
-          <Collapse key="resetPassword" timeout={400} unmountOnExit>
+          <motion.div
+            key="resetPassword"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
             <ResetPasswordForm />
-          </Collapse>
+          </motion.div>
         )}
         {mode === "passwordResetSent" && (
-          <Collapse key="passwordResetSent" timeout={400} unmountOnExit>
+          <motion.div
+            key="passwordResetSent"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
             <ResetSentForm />
-          </Collapse>
+          </motion.div>
         )}
-      </TransitionGroup>
+      </AnimatePresence>
 
       <TermsNotice />
 
       {errorMessage && (
-        <Typography color="error" textAlign="center">
-          {errorMessage}
-        </Typography>
+        <p className="text-center text-sm text-destructive">{errorMessage}</p>
       )}
-    </Stack>
+    </div>
   );
 };

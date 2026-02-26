@@ -1,12 +1,4 @@
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-import {
-  Button,
-  Divider,
-  IconButton,
-  Link,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { RiEyeLine, RiEyeOffLine } from "@remixicon/react";
 import { useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { produceAppState, useAppStore } from "../../store";
@@ -19,6 +11,9 @@ import {
   getSignUpEmailValidation,
   getSignUpPasswordValidation,
 } from "../../utils/login.utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type SignUpFormProps = {
   hideModeSwitch?: boolean;
@@ -77,73 +72,105 @@ export const SignUpForm = ({
   };
 
   return (
-    <Stack spacing={2}>
+    <div className="space-y-4">
       {!hideOidcProviders && <OidcProviders />}
 
       {showEmailForm && (
         <>
           {!hideOidcProviders && (
-            <Divider>
-              <FormattedMessage defaultMessage="or" />
-            </Divider>
+            <div className="relative flex items-center py-1">
+              <div className="flex-1 border-t border-border" />
+              <span className="px-3 text-xs text-muted-foreground">
+                <FormattedMessage defaultMessage="or" />
+              </span>
+              <div className="flex-1 border-t border-border" />
+            </div>
           )}
 
-          <TextField
-            label={<FormattedMessage defaultMessage="Email" />}
-            type="email"
-            fullWidth
-            value={email}
-            onChange={handleChangeEmail}
-            error={!!emailValidation}
-            helperText={emailValidation}
-            size="small"
-          />
-          <TextField
-            label={<FormattedMessage defaultMessage="Password" />}
-            type={passwordVisible ? "text" : "password"}
-            fullWidth
-            value={password}
-            onChange={handleChangePassword}
-            error={!!passwordValidation}
-            helperText={passwordValidation}
-            size="small"
-            InputProps={{
-              endAdornment: (
-                <IconButton
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="signup-email">
+                <FormattedMessage defaultMessage="Email" />
+              </Label>
+              <Input
+                id="signup-email"
+                type="email"
+                value={email}
+                onChange={handleChangeEmail}
+                aria-invalid={!!emailValidation}
+              />
+              {emailValidation && (
+                <p className="text-xs text-destructive">{emailValidation}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="signup-password">
+                <FormattedMessage defaultMessage="Password" />
+              </Label>
+              <div className="relative">
+                <Input
+                  id="signup-password"
+                  type={passwordVisible ? "text" : "password"}
+                  value={password}
+                  onChange={handleChangePassword}
+                  aria-invalid={!!passwordValidation}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
                   onClick={() => setPasswordVisible((v) => !v)}
-                  tabIndex={-1}
-                  size="small"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  {!passwordVisible ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              ),
-            }}
-          />
-          <TextField
-            label={<FormattedMessage defaultMessage="Confirm password" />}
-            type={confirmPasswordVisible ? "text" : "password"}
-            fullWidth
-            value={confirmPassword}
-            onChange={handleChangeConfirmPassword}
-            error={!!confirmPasswordValidation}
-            helperText={confirmPasswordValidation}
-            size="small"
-            InputProps={{
-              endAdornment: (
-                <IconButton
+                  {passwordVisible ? (
+                    <RiEyeLine className="size-4" />
+                  ) : (
+                    <RiEyeOffLine className="size-4" />
+                  )}
+                </button>
+              </div>
+              {passwordValidation && (
+                <p className="text-xs text-destructive">
+                  {passwordValidation}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="signup-confirm-password">
+                <FormattedMessage defaultMessage="Confirm password" />
+              </Label>
+              <div className="relative">
+                <Input
+                  id="signup-confirm-password"
+                  type={confirmPasswordVisible ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={handleChangeConfirmPassword}
+                  aria-invalid={!!confirmPasswordValidation}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
                   onClick={() => setConfirmPasswordVisible((v) => !v)}
-                  tabIndex={-1}
-                  size="small"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  {!confirmPasswordVisible ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              ),
-            }}
-          />
+                  {confirmPasswordVisible ? (
+                    <RiEyeLine className="size-4" />
+                  ) : (
+                    <RiEyeOffLine className="size-4" />
+                  )}
+                </button>
+              </div>
+              {confirmPasswordValidation && (
+                <p className="text-xs text-destructive">
+                  {confirmPasswordValidation}
+                </p>
+              )}
+            </div>
+          </div>
 
           <Button
-            variant="contained"
-            fullWidth
+            className="w-full"
             disabled={!canSubmit}
             onClick={handleSubmit}
           >
@@ -153,14 +180,15 @@ export const SignUpForm = ({
       )}
 
       {!hideModeSwitch && (
-        <Link
-          component="button"
-          onClick={handleClickLogin}
-          sx={{ alignSelf: "center" }}
-        >
-          <FormattedMessage defaultMessage="Already have an account? Log in" />
-        </Link>
+        <div className="flex justify-center">
+          <button
+            onClick={handleClickLogin}
+            className="text-sm text-primary hover:underline"
+          >
+            <FormattedMessage defaultMessage="Already have an account? Log in" />
+          </button>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 };

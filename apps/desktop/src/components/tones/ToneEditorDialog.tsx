@@ -1,16 +1,4 @@
-import { DeleteForeverOutlined } from "@mui/icons-material";
-import SaveIcon from "@mui/icons-material/Save";
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { RiDeleteBinLine, RiSaveLine, RiLoader4Line } from "@remixicon/react";
 import { Tone } from "@repo/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FormattedMessage } from "react-intl";
@@ -23,6 +11,17 @@ import {
 import { useAppStore } from "../../store";
 import { createId } from "../../utils/id.utils";
 import { ConfirmDialog } from "../common/ConfirmDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const MAX_PROMPT_LEN = 8000;
 
@@ -186,89 +185,74 @@ export const ToneEditorDialog = () => {
 
   return (
     <>
-      <Dialog
-        open={toneEditor.open}
-        onClose={handleClose}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Typography variant="h6" sx={{ flex: 1 }}>
-              {title}
-            </Typography>
-          </Box>
-        </DialogTitle>
+      <Dialog open={toneEditor.open} onOpenChange={(open) => !open && handleClose()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
 
-        <DialogContent dividers>
-          <Stack
-            spacing={3}
-            sx={{ height: "100%", overflow: "auto", minHeight: 320, pt: 1 }}
-          >
-            <TextField
-              label={<FormattedMessage defaultMessage="Name" />}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              fullWidth
-              placeholder="Casual, Formal, Business..."
-              inputProps={{ maxLength: 120 }}
-            />
+          <div className="flex flex-col gap-6 min-h-[320px] py-2">
+            <div className="space-y-1.5">
+              <Label><FormattedMessage defaultMessage="Name" /></Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Casual, Formal, Business..."
+                maxLength={120}
+              />
+            </div>
 
-            <TextField
-              label={<FormattedMessage defaultMessage="Prompt" />}
-              value={promptTemplate}
-              onChange={(event) => setPromptTemplate(event.target.value)}
-              multiline
-              rows={7}
-              fullWidth
-              placeholder="Make it sound like a professional but friendly email. Use jargon and fun words."
-              inputProps={{ maxLength: MAX_PROMPT_LEN }}
-              helperText={
-                <Typography
-                  variant="caption"
-                  sx={{ display: "block", mt: 0.5 }}
-                >
-                  {promptTemplate.length}/{MAX_PROMPT_LEN}
-                </Typography>
-              }
-            />
-          </Stack>
-        </DialogContent>
+            <div className="space-y-1.5">
+              <Label><FormattedMessage defaultMessage="Prompt" /></Label>
+              <Textarea
+                value={promptTemplate}
+                onChange={(e) => setPromptTemplate(e.target.value)}
+                rows={7}
+                placeholder="Make it sound like a professional but friendly email. Use jargon and fun words."
+                maxLength={MAX_PROMPT_LEN}
+              />
+              <p className="text-xs text-muted-foreground">
+                {promptTemplate.length}/{MAX_PROMPT_LEN}
+              </p>
+            </div>
+          </div>
 
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          {isEditMode && (
-            <Button
-              variant="text"
-              onClick={handleOpenDeleteConfirm}
-              disabled={isDeleting}
-              color="warning"
-              sx={{ mr: "auto" }}
-              startIcon={<DeleteForeverOutlined />}
-            >
-              <FormattedMessage defaultMessage="Delete" />
-            </Button>
-          )}
-          <Button variant="text" onClick={handleCancel}>
-            <FormattedMessage defaultMessage="Cancel" />
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<SaveIcon />}
-            onClick={handleSave}
-            disabled={
-              isSaving ||
-              !name.trim() ||
-              !promptTemplate.trim() ||
-              (isEditMode && !hasChanges)
-            }
-          >
-            {isEditMode ? (
-              <FormattedMessage defaultMessage="Save changes" />
-            ) : (
-              <FormattedMessage defaultMessage="Create" />
+          <DialogFooter className="flex-row justify-between sm:justify-between">
+            {isEditMode && (
+              <Button
+                variant="ghost"
+                onClick={handleOpenDeleteConfirm}
+                disabled={isDeleting}
+                className="text-amber-600 hover:text-amber-700"
+              >
+                <RiDeleteBinLine className="mr-2 h-4 w-4" />
+                <FormattedMessage defaultMessage="Delete" />
+              </Button>
             )}
-          </Button>
-        </DialogActions>
+            <div className="flex gap-2 ml-auto">
+              <Button variant="ghost" onClick={handleCancel}>
+                <FormattedMessage defaultMessage="Cancel" />
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={
+                  isSaving ||
+                  !name.trim() ||
+                  !promptTemplate.trim() ||
+                  (isEditMode && !hasChanges)
+                }
+              >
+                {isSaving && <RiLoader4Line className="mr-2 h-4 w-4 animate-spin" />}
+                <RiSaveLine className="mr-2 h-4 w-4" />
+                {isEditMode ? (
+                  <FormattedMessage defaultMessage="Save changes" />
+                ) : (
+                  <FormattedMessage defaultMessage="Create" />
+                )}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
 
       <ConfirmDialog
@@ -280,7 +264,7 @@ export const ToneEditorDialog = () => {
         onCancel={handleCancelDelete}
         onConfirm={handleDeleteTone}
         confirmLabel={<FormattedMessage defaultMessage="Delete" />}
-        confirmButtonProps={{ color: "error", disabled: isDeleting }}
+        confirmButtonProps={{ variant: "destructive", disabled: isDeleting }}
       />
     </>
   );

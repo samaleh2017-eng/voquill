@@ -1,4 +1,7 @@
-import { Dialog } from "@mui/material";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 import { delayed, retry } from "@repo/utilities";
 import {
   EmbeddedCheckout,
@@ -55,7 +58,6 @@ export const PaymentDialog = () => {
       delay: 1000,
     });
 
-    // close after a short delay
     delayed(3000).then(handleClose);
   };
 
@@ -64,19 +66,21 @@ export const PaymentDialog = () => {
   });
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-      {priceId && (
-        <EmbeddedCheckoutProvider
-          key={priceId}
-          stripe={stripe}
-          options={{
-            fetchClientSecret,
-            onComplete: handleComplete,
-          }}
-        >
-          <EmbeddedCheckout />
-        </EmbeddedCheckoutProvider>
-      )}
+    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
+        {priceId && (
+          <EmbeddedCheckoutProvider
+            key={priceId}
+            stripe={stripe}
+            options={{
+              fetchClientSecret,
+              onComplete: handleComplete,
+            }}
+          >
+            <EmbeddedCheckout />
+          </EmbeddedCheckoutProvider>
+        )}
+      </DialogContent>
     </Dialog>
   );
 };

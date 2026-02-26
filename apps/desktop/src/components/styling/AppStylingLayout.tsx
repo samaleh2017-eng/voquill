@@ -1,11 +1,10 @@
-import { Stack, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { loadTones, setActiveTone } from "../../actions/tone.actions";
 import { useAsyncEffect } from "../../hooks/async.hooks";
 import { useAppStore } from "../../store";
 import { getGenerativePrefs } from "../../utils/user.utils";
-import { VirtualizedListPage } from "../common/VirtualizedListPage";
+import { VirtualizedListPage } from "../ui/virtualized-list-page";
 import { ToneSelect } from "../tones/ToneSelect";
 import { PostProcessingDisabledTooltip } from "./PostProcessingDisabledTooltip";
 import { AppStylingRow } from "./AppStylingRow";
@@ -57,26 +56,20 @@ export function AppStylingLayout() {
       computeItemKey={(id) => id}
       renderItem={(id) => <AppStylingRow key={id} id={id} />}
       emptyState={
-        <Stack
-          spacing={1}
-          alignItems="flex-start"
-          width={300}
-          alignSelf="center"
-          mx="auto"
-        >
-          <Typography variant="h6">
+        <div className="mx-auto flex w-[300px] flex-col items-start gap-2 self-center">
+          <h3 className="text-base font-semibold text-foreground">
             <FormattedMessage defaultMessage="How it works" />
-          </Typography>
-          <Typography variant="body2">
+          </h3>
+          <p className="text-sm text-muted-foreground">
             <FormattedMessage defaultMessage="1. Open up the app you want to style (like Slack or Chrome)." />
-          </Typography>
-          <Typography variant="body2">
+          </p>
+          <p className="text-sm text-muted-foreground">
             <FormattedMessage defaultMessage='2. Click on the Voquill icon in the menu bar, and click "Register this app".' />
-          </Typography>
-          <Typography variant="body2">
+          </p>
+          <p className="text-sm text-muted-foreground">
             <FormattedMessage defaultMessage="3. Go back to Voquill, and select a writing style for that app." />
-          </Typography>
-        </Stack>
+          </p>
+        </div>
       }
     />
   );

@@ -1,12 +1,9 @@
-import { ArrowForward, Check, Email, TouchApp } from "@mui/icons-material";
 import {
-  Box,
-  Button,
-  keyframes,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+  RiArrowRightLine,
+  RiCheckLine,
+  RiMailLine,
+  RiCursorLine,
+} from "@remixicon/react";
 import { motion } from "framer-motion";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -29,34 +26,13 @@ import { CHAT_TONE_ID, EMAIL_TONE_ID } from "../../utils/tone.utils";
 import { getMyUser } from "../../utils/user.utils";
 import { DictationInstruction } from "../common/DictationInstruction";
 import { HotkeyBadge } from "../common/HotkeyBadge";
+import { Button } from "@/components/ui/button";
 import { BouncyTooltip } from "./BouncyTooltip";
 import {
   BackButton,
   DualPaneLayout,
   OnboardingFormLayout,
 } from "./OnboardingCommon";
-
-const pulseDiscord = keyframes`
-  0%, 100% {
-    border-color: rgba(88, 101, 242, 0.4);
-    box-shadow: 0 0 0 0 rgba(88, 101, 242, 0.4);
-  }
-  50% {
-    border-color: rgba(88, 101, 242, 1);
-    box-shadow: 0 0 0 4px rgba(88, 101, 242, 0.3);
-  }
-`;
-
-const pulseEmail = keyframes`
-  0%, 100% {
-    border-color: rgba(26, 115, 232, 0.4);
-    box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.4);
-  }
-  50% {
-    border-color: rgba(26, 115, 232, 1);
-    box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.3);
-  }
-`;
 
 const PAGE_COUNT = 2;
 
@@ -192,10 +168,8 @@ ${userName}`;
     }
 
     if (stepIndex === 0) {
-      // Discord step
       setChatTone(CHAT_TONE_ID);
     } else if (stepIndex === 1) {
-      // Email step
       setChatTone(EMAIL_TONE_ID);
     }
   }, [stepIndex, userExists]);
@@ -204,50 +178,53 @@ ${userName}`;
     <OnboardingFormLayout
       back={<BackButton />}
       actions={
-        <Stack direction="row" spacing={2}>
+        <div className="flex gap-2">
           <Button
-            variant="text"
+            variant="ghost"
             onClick={() => void handleSkip()}
             disabled={submitting}
           >
             <FormattedMessage defaultMessage="Skip" />
           </Button>
           <Button
-            variant="contained"
             onClick={() => void handleContinue()}
             disabled={!canContinue || submitting}
-            endIcon={isLastStep ? <Check /> : <ArrowForward />}
           >
             {isLastStep ? (
               <FormattedMessage defaultMessage="Finish" />
             ) : (
               <FormattedMessage defaultMessage="Continue" />
             )}
+            {isLastStep ? (
+              <RiCheckLine className="size-4" />
+            ) : (
+              <RiArrowRightLine className="size-4" />
+            )}
           </Button>
-        </Stack>
+        </div>
       }
     >
       {stepIndex === 0 && (
-        <Stack spacing={2} pb={8}>
-          <Typography variant="h4" fontWeight={600}>
+        <div className="space-y-4 pb-8">
+          <h2 className="text-2xl font-semibold">
             <FormattedMessage defaultMessage="Try out dictation" />
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
+          </h2>
+          <p className="text-base text-muted-foreground">
             <FormattedMessage defaultMessage="Press and hold your hotkey, then start talking. When you release the key, your speech will be converted to text." />
-          </Typography>
+          </p>
           <DictationInstruction />
-        </Stack>
+        </div>
       )}
       {stepIndex === 1 && (
-        <Stack spacing={2} pb={8}>
-          <Typography variant="h4" fontWeight={600}>
+        <div className="space-y-4 pb-8">
+          <h2 className="text-2xl font-semibold">
             <FormattedMessage defaultMessage="Now try an email" />
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
+          </h2>
+          <p className="text-base text-muted-foreground">
             <FormattedMessage defaultMessage="Dictate a short email. Voquill works great for longer-form content like messages, notes, and documents." />
-          </Typography>
+          </p>
           <DictationInstruction />
-        </Stack>
+        </div>
       )}
     </OnboardingFormLayout>
   );
@@ -258,55 +235,33 @@ ${userName}`;
         visible={!isFieldFocused && !hasStartedDictating}
         delay={0.7}
       >
-        <TouchApp fontSize="small" />
-        <Typography variant="body2" fontWeight={500}>
+        <RiCursorLine className="size-4" />
+        <span className="text-sm font-medium">
           <FormattedMessage defaultMessage="Click on the text field" />
-        </Typography>
+        </span>
       </BouncyTooltip>
       <BouncyTooltip
         visible={isFieldFocused && !hasStartedDictating}
         delay={0.7}
       >
-        <Typography variant="body2" fontWeight={500}>
+        <span className="text-sm font-medium">
           <FormattedMessage defaultMessage="Now press and hold" />
-        </Typography>
+        </span>
         <HotkeyBadge
           keys={primaryHotkey}
-          sx={{
-            bgcolor: "rgba(255,255,255,0.2)",
-            borderColor: "rgba(255,255,255,0.3)",
-            color: "primary.contrastText",
-          }}
+          className="border-white/30 bg-white/20 text-primary-foreground"
         />
-        <Typography variant="body2" fontWeight={500}>
+        <span className="text-sm font-medium">
           <FormattedMessage defaultMessage="to dictate" />
-        </Typography>
+        </span>
       </BouncyTooltip>
     </>
   );
 
   const discordContent = (
-    <Box sx={{ position: "relative", pb: 6 }}>
-      <Stack
-        spacing={0}
-        sx={{
-          bgcolor: "#313338",
-          borderRadius: 1.33,
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-          overflow: "hidden",
-          position: "relative",
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            px: 2,
-            py: 1.5,
-            borderBottom: "1px solid #1e1f22",
-          }}
-        >
+    <div className="relative pb-6">
+      <div className="overflow-hidden rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.3)]" style={{ backgroundColor: "#313338" }}>
+        <div className="flex items-center gap-2 border-b px-4 py-3" style={{ borderColor: "#1e1f22" }}>
           <img
             src={discordIcon}
             alt="Discord"
@@ -314,242 +269,135 @@ ${userName}`;
             height={20}
             style={{ filter: "brightness(0) invert(1)" }}
           />
-          <Typography
-            variant="body2"
-            fontWeight={600}
-            sx={{ color: "#f2f3f5" }}
-          >
+          <span className="text-sm font-semibold" style={{ color: "#f2f3f5" }}>
             Discord
-          </Typography>
-        </Box>
-        <Box sx={{ p: 2 }}>
-          <Box sx={{ display: "flex", gap: 1.5, mb: 2 }}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                bgcolor: "#5865F2",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
+          </span>
+        </div>
+        <div className="p-4">
+          <div className="mb-4 flex gap-3">
+            <div
+              className="flex size-10 shrink-0 items-center justify-center rounded-full"
+              style={{ backgroundColor: "#5865F2" }}
             >
-              <Typography sx={{ color: "#fff", fontWeight: 600 }}>J</Typography>
-            </Box>
-            <Box>
-              <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                <Typography
-                  variant="body2"
-                  fontWeight={600}
-                  sx={{ color: "#f2f3f5" }}
-                >
+              <span className="font-semibold text-white">J</span>
+            </div>
+            <div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm font-semibold" style={{ color: "#f2f3f5" }}>
                   Jordan
-                </Typography>
-                <Typography variant="caption" sx={{ color: "#949ba4" }}>
+                </span>
+                <span className="text-xs" style={{ color: "#949ba4" }}>
                   Today at 10:32 AM
-                </Typography>
-              </Box>
-              <Typography variant="body2" sx={{ color: "#dbdee1", mt: 0.5 }}>
+                </span>
+              </div>
+              <p className="mt-1 text-sm" style={{ color: "#dbdee1" }}>
                 What&apos;s your favorite breakfast?
-              </Typography>
-            </Box>
-          </Box>
-          <TextField
-            multiline
-            minRows={2}
-            fullWidth
+              </p>
+            </div>
+          </div>
+          <textarea
+            rows={2}
             placeholder={step1Placeholder}
             value={dictationValue}
             onChange={handleDictationChange}
             disabled={submitting}
             onFocus={() => setIsFieldFocused(true)}
             onBlur={() => setIsFieldFocused(false)}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                bgcolor: "#383a40",
-                borderRadius: 1,
-                "& fieldset": isFieldFocused
-                  ? { borderColor: "#1e1f22" }
-                  : {
-                      borderWidth: 2,
-                      animation: `${pulseDiscord} 1.5s ease-in-out infinite`,
-                    },
-                "&:hover fieldset": {
-                  borderColor: isFieldFocused ? "#1e1f22" : undefined,
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#5865F2",
-                },
-              },
-              "& .MuiInputBase-input": {
-                color: "#dbdee1",
-                "&::placeholder": {
-                  color: "#949ba4",
-                  opacity: 1,
-                },
-              },
+            className="w-full resize-none rounded-md border-2 px-3 py-2 text-sm outline-none transition-colors placeholder:text-[#949ba4] placeholder:opacity-100"
+            style={{
+              backgroundColor: "#383a40",
+              color: "#dbdee1",
+              borderColor: isFieldFocused ? "#5865F2" : "rgba(88, 101, 242, 0.4)",
+              animation: !isFieldFocused
+                ? "pulse-discord 1.5s ease-in-out infinite"
+                : undefined,
             }}
           />
-        </Box>
-      </Stack>
+        </div>
+      </div>
       {bouncyTooltips}
-    </Box>
+    </div>
   );
 
   const emailContent = (
-    <Box sx={{ position: "relative", pb: 6 }}>
-      <Stack
-        spacing={0}
-        sx={{
-          bgcolor: "#ffffff",
-          borderRadius: 1.33,
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.15)",
-          overflow: "hidden",
-          position: "relative",
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            px: 2,
-            py: 1.5,
-            borderBottom: "1px solid #e0e0e0",
-            bgcolor: "#f5f5f5",
-          }}
-        >
-          <Email sx={{ fontSize: 20, color: "#d93025" }} />
-          <Typography
-            variant="body2"
-            fontWeight={600}
-            sx={{ color: "#202124" }}
-          >
+    <div className="relative pb-6">
+      <div className="overflow-hidden rounded-lg bg-white shadow-[0_8px_32px_rgba(0,0,0,0.15)]">
+        <div className="flex items-center gap-2 border-b border-gray-200 bg-gray-100 px-4 py-3">
+          <RiMailLine className="size-5" style={{ color: "#d93025" }} />
+          <span className="text-sm font-semibold" style={{ color: "#202124" }}>
             Email
-          </Typography>
-        </Box>
-        <Box sx={{ p: 2 }}>
-          <Box sx={{ mb: 2 }}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                mb: 1,
-                pb: 1,
-                borderBottom: "1px solid #e0e0e0",
-              }}
-            >
-              <Typography variant="caption" sx={{ color: "#5f6368" }}>
-                To:
-              </Typography>
-              <Typography variant="body2" sx={{ color: "#202124" }}>
+          </span>
+        </div>
+        <div className="p-4">
+          <div className="mb-4">
+            <div className="flex items-center gap-1 border-b border-gray-200 pb-2 mb-2">
+              <span className="text-xs" style={{ color: "#5f6368" }}>To:</span>
+              <span className="text-sm" style={{ color: "#202124" }}>
                 sarah@company.com
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
-                pb: 1,
-                borderBottom: "1px solid #e0e0e0",
-              }}
-            >
-              <Typography variant="caption" sx={{ color: "#5f6368" }}>
-                Subject:
-              </Typography>
-              <Typography variant="body2" sx={{ color: "#202124" }}>
+              </span>
+            </div>
+            <div className="flex items-center gap-1 border-b border-gray-200 pb-2">
+              <span className="text-xs" style={{ color: "#5f6368" }}>Subject:</span>
+              <span className="text-sm" style={{ color: "#202124" }}>
                 Great chatting yesterday! 🎉
-              </Typography>
-            </Box>
-          </Box>
-          <Box sx={{ position: "relative" }}>
-            <TextField
-              multiline
-              minRows={8}
-              fullWidth
+              </span>
+            </div>
+          </div>
+          <div className="relative">
+            <textarea
+              rows={8}
               autoFocus={true}
               value={dictationValue}
               onChange={handleDictationChange}
               disabled={submitting}
               onFocus={() => setIsFieldFocused(true)}
               onBlur={() => setIsFieldFocused(false)}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  bgcolor: "#ffffff",
-                  borderRadius: 1,
-                  "& fieldset": isFieldFocused
-                    ? { borderColor: "#e0e0e0" }
-                    : {
-                        borderWidth: 2,
-                        animation: `${pulseEmail} 1.5s ease-in-out infinite`,
-                      },
-                  "&:hover fieldset": {
-                    borderColor: isFieldFocused ? "#e0e0e0" : undefined,
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#1a73e8",
-                  },
-                },
-                "& .MuiInputBase-input": {
-                  color: "#202124",
-                },
+              className="w-full resize-none rounded-md border-2 bg-white px-3 py-2 text-sm outline-none transition-colors"
+              style={{
+                color: "#202124",
+                borderColor: isFieldFocused ? "#1a73e8" : "rgba(26, 115, 232, 0.4)",
+                animation: !isFieldFocused
+                  ? "pulse-email 1.5s ease-in-out infinite"
+                  : undefined,
               }}
             />
             {dictationValue.length === 0 && (
-              <Typography
-                variant="body1"
-                sx={{
-                  position: "absolute",
-                  top: 16.5,
-                  left: 14,
-                  right: 14,
-                  color: "#5f6368",
-                  pointerEvents: "none",
-                  whiteSpace: "pre-wrap",
-                }}
+              <p
+                className="pointer-events-none absolute left-3.5 right-3.5 top-[9px] whitespace-pre-wrap text-sm"
+                style={{ color: "#5f6368" }}
               >
                 {step2Placeholder}
-              </Typography>
+              </p>
             )}
-          </Box>
-        </Box>
-      </Stack>
+          </div>
+        </div>
+      </div>
       {bouncyTooltips}
-    </Box>
+    </div>
   );
 
   const stepper = (
-    <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2 }}>
+    <div className="mt-3 flex justify-center gap-2">
       {[0, 1].map((index) => (
-        <Box
+        <button
           key={index}
           onClick={() => {
             setStepIndex(index);
             setDictationValue("");
             setHasStartedDictating(false);
           }}
-          sx={{
-            width: 8,
-            height: 8,
-            borderRadius: "50%",
-            bgcolor: stepIndex === index ? "primary.main" : "action.disabled",
-            transition: "background-color 0.2s ease",
-            cursor: "pointer",
-            "&:hover": {
-              bgcolor: stepIndex === index ? "primary.main" : "action.hover",
-            },
-          }}
+          className={`size-2 rounded-full transition-colors ${
+            stepIndex === index
+              ? "bg-primary"
+              : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+          }`}
         />
       ))}
-    </Stack>
+    </div>
   );
 
   const rightContent = (
-    <Stack sx={{ width: "100%", maxWidth: 400, alignItems: "stretch" }}>
+    <div className="flex w-full max-w-[400px] flex-col items-stretch">
       {!initializing && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -560,7 +408,7 @@ ${userName}`;
           {stepper}
         </motion.div>
       )}
-    </Stack>
+    </div>
   );
 
   return (
@@ -568,7 +416,7 @@ ${userName}`;
       flex={[2, 3]}
       left={form}
       right={rightContent}
-      rightSx={{ bgcolor: "transparent" }}
+      rightClassName="bg-transparent"
     />
   );
 };

@@ -1,5 +1,3 @@
-import { Stack, Typography } from "@mui/material";
-
 export type StatProps = {
   label: string;
   value: number;
@@ -7,18 +5,11 @@ export type StatProps = {
 
 export const Stat = ({ label, value }: StatProps) => {
   return (
-    <Stack
-      direction="column"
-      spacing={1}
-      sx={{ textAlign: "center" }}
-      alignItems="center"
-    >
-      <Typography variant="h3" fontWeight={700}>
+    <div className="flex flex-col items-center gap-2 text-center">
+      <span className="text-3xl font-bold tracking-tight text-foreground">
         {value.toLocaleString()}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" fontSize={20}>
-        {label}
-      </Typography>
-    </Stack>
+      </span>
+      <span className="text-base text-muted-foreground">{label}</span>
+    </div>
   );
 };

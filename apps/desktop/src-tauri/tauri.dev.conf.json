@@ -5,7 +5,7 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/josiahsrc/voquill/releases/download/desktop-dev/latest.json"
+        "https://github.com/samaleh2017-eng/voquill/releases/download/desktop-dev/latest.json"
       ]
     }
   }

@@ -1,39 +1,25 @@
-import { Box } from "@mui/material";
-import type { SxProps, Theme } from "@mui/material/styles";
+import { cn } from "@/lib/utils";
 import { getPrettyKeyName } from "../../utils/keyboard.utils";
 
 type HotkeyBadgeProps = {
   keys: string[];
   onClick?: () => void;
-  sx?: SxProps<Theme>;
+  className?: string;
 };
 
-export const HotkeyBadge = ({ keys, onClick, sx }: HotkeyBadgeProps) => {
+export const HotkeyBadge = ({ keys, onClick, className }: HotkeyBadgeProps) => {
   const label = keys.map(getPrettyKeyName).join(" + ");
 
   return (
-    <Box
+    <span
       onClick={onClick}
-      sx={{
-        display: "inline-flex",
-        alignItems: "center",
-        border: "1px solid",
-        borderColor: "divider",
-        borderRadius: 0.5,
-        px: 1,
-        py: 0.25,
-        fontWeight: 600,
-        bgcolor: (theme) => theme.vars?.palette.level1,
-        ...(onClick && {
-          cursor: "pointer",
-          "&:hover": {
-            bgcolor: "action.hover",
-          },
-        }),
-        ...sx,
-      }}
+      className={cn(
+        "inline-flex items-center border border-border rounded px-2 py-0.5 font-semibold text-sm bg-muted",
+        onClick && "cursor-pointer hover:bg-accent",
+        className,
+      )}
     >
       {label}
-    </Box>
+    </span>
   );
 };

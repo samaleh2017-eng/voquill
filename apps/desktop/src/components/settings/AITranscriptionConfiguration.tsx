@@ -1,14 +1,3 @@
-import {
-  Alert,
-  Box,
-  Button,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-  Typography,
-} from "@mui/material";
 import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useMemo, useState } from "react";
 import { FormattedMessage } from "react-intl";
@@ -33,6 +22,17 @@ import {
 import { maybeArrayElements } from "./AIPostProcessingConfiguration";
 import { ApiKeyList } from "./ApiKeyList";
 import { VoquillCloudSetting } from "./VoquillCloudSetting";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RiAlertLine, RiInformationLine } from "@remixicon/react";
 
 type ModelOption = {
   value: string;
@@ -42,31 +42,11 @@ type ModelOption = {
 
 const MODEL_OPTIONS: ModelOption[] = [
   { value: "tiny", label: "Tiny (77 MB)", helper: "Fastest, lowest accuracy" },
-  {
-    value: "base",
-    label: "Base (148 MB)",
-    helper: "Great balance of speed and accuracy",
-  },
-  {
-    value: "small",
-    label: "Small (488 MB)",
-    helper: "Recommended with GPU acceleration",
-  },
-  {
-    value: "medium",
-    label: "Medium (1.53 GB)",
-    helper: "High accuracy, slower on CPU",
-  },
-  {
-    value: "large-turbo",
-    label: "Large Turbo (1.6 GB)",
-    helper: "Fast large model, great accuracy",
-  },
-  {
-    value: "large",
-    label: "Large (3.1 GB)",
-    helper: "Highest accuracy, requires GPU",
-  },
+  { value: "base", label: "Base (148 MB)", helper: "Great balance of speed and accuracy" },
+  { value: "small", label: "Small (488 MB)", helper: "Recommended with GPU acceleration" },
+  { value: "medium", label: "Medium (1.53 GB)", helper: "High accuracy, slower on CPU" },
+  { value: "large-turbo", label: "Large Turbo (1.6 GB)", helper: "Fast large model, great accuracy" },
+  { value: "large", label: "Large (3.1 GB)", helper: "Highest accuracy, requires GPU" },
 ];
 
 export type AITranscriptionConfigurationProps = {
@@ -78,35 +58,25 @@ export const AITranscriptionConfiguration = ({
 }: AITranscriptionConfigurationProps) => {
   const transcription = useAppStore((state) => state.settings.aiTranscription);
   const allowChange = useAppStore(getAllowsChangeTranscription);
-  const [gpuEnumerationError, setGpuEnumerationError] = useState<string | null>(
-    null,
-  );
+  const [gpuEnumerationError, setGpuEnumerationError] = useState<string | null>(null);
   const [isEnablingGpu, setIsEnablingGpu] = useState(false);
 
-  // Only load GPUs if already enabled (persisted state)
   const { gpus, loading: gpusLoading } = useSupportedDiscreteGpus(
     transcription.gpuEnumerationEnabled,
   );
 
-  // Single click handler - does everything in one place
   const handleEnableHardwareAcceleration = useCallback(async () => {
     setGpuEnumerationError(null);
     setIsEnablingGpu(true);
 
     try {
-      // Fetch GPUs directly here, don't rely on hook state
       const gpuList = await invoke<GpuInfo[]>("list_gpus");
       const supported = gpuList.filter(
-        (info) =>
-          info.backend === "Vulkan" && info.deviceType === "DiscreteGpu",
+        (info) => info.backend === "Vulkan" && info.deviceType === "DiscreteGpu",
       );
 
-      console.log("[gpu] Detected supported GPUs:", supported);
-
       if (supported.length > 0) {
-        // Success - enable GPU enumeration (this will trigger hook to load GPUs for dropdown)
         await setGpuEnumerationEnabled(true);
-        console.log("GPUs enabled for transcription processing.");
       } else {
         setGpuEnumerationError(
           "No compatible GPUs found. Make sure you have a discrete GPU with Vulkan support.",
@@ -152,19 +122,14 @@ export const AITranscriptionConfiguration = ({
   }
 
   return (
-    <Stack spacing={3} alignItems="flex-start" sx={{ width: "100%" }}>
+    <div className="flex w-full flex-col items-start gap-4">
       <SegmentedControl<TranscriptionMode>
         value={transcription.mode}
         onChange={handleModeChange}
         options={[
           ...maybeArrayElements<SegmentedControlOption<TranscriptionMode>>(
             !hideCloudOption,
-            [
-              {
-                value: "cloud",
-                label: "Voquill",
-              },
-            ],
+            [{ value: "cloud", label: "Voquill" }],
           ),
           { value: "api", label: "API" },
           { value: "local", label: "Local" },
@@ -173,33 +138,19 @@ export const AITranscriptionConfiguration = ({
       />
 
       {transcription.mode === "local" && (
-        <Stack spacing={3} sx={{ width: "100%" }}>
+        <div className="flex w-full flex-col gap-4">
           {!transcription.gpuEnumerationEnabled && isGPUBuild() && (
-            <Alert
-              severity="info"
-              sx={{
-                width: "100%",
-                "& .MuiAlert-message": { width: "100%" },
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  gap: 2,
-                  width: "100%",
-                }}
-              >
-                <Typography variant="body2" sx={{ pt: 0.25 }}>
+            <Alert>
+              <RiInformationLine className="size-4" />
+              <AlertDescription className="flex items-center justify-between gap-2">
+                <span className="text-sm">
                   <FormattedMessage defaultMessage="Have an NVIDIA GPU?" />
-                </Typography>
+                </span>
                 <Button
-                  variant="outlined"
-                  size="small"
+                  variant="outline"
+                  size="sm"
                   disabled={isEnablingGpu}
                   onClick={handleEnableHardwareAcceleration}
-                  sx={{ fontSize: "0.75rem", py: 0.5, flexShrink: 0 }}
                 >
                   {isEnablingGpu ? (
                     <FormattedMessage defaultMessage="Detecting..." />
@@ -207,64 +158,67 @@ export const AITranscriptionConfiguration = ({
                     <FormattedMessage defaultMessage="Enable hardware acceleration" />
                   )}
                 </Button>
-              </Box>
+              </AlertDescription>
             </Alert>
           )}
 
           {gpuEnumerationError && (
-            <Alert severity="warning">{gpuEnumerationError}</Alert>
+            <Alert variant="destructive">
+              <RiAlertLine className="size-4" />
+              <AlertDescription>{gpuEnumerationError}</AlertDescription>
+            </Alert>
           )}
 
           {transcription.gpuEnumerationEnabled && (
-            <FormControl fullWidth size="small">
-              <InputLabel id="processing-device-label">
+            <div className="space-y-1.5">
+              <Label>
                 <FormattedMessage defaultMessage="Processing device" />
-              </InputLabel>
+              </Label>
               <Select
-                labelId="processing-device-label"
-                label={<FormattedMessage defaultMessage="Processing device" />}
                 value={transcription.device}
-                onChange={(event) => handleDeviceChange(event.target.value)}
+                onValueChange={handleDeviceChange}
                 disabled={gpusLoading}
               >
-                {deviceOptions.map(({ value, label }) => (
-                  <MenuItem key={value} value={value}>
-                    {label}
-                  </MenuItem>
-                ))}
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {deviceOptions.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
-            </FormControl>
+            </div>
           )}
 
-          <FormControl fullWidth size="small">
-            <InputLabel id="model-size-label">
+          <div className="space-y-1.5">
+            <Label>
               <FormattedMessage defaultMessage="Model size" />
-            </InputLabel>
+            </Label>
             <Select
-              labelId="model-size-label"
-              label={<FormattedMessage defaultMessage="Model size" />}
               value={transcription.modelSize}
-              onChange={(event) => handleModelSizeChange(event.target.value)}
+              onValueChange={handleModelSizeChange}
             >
-              {MODEL_OPTIONS.map(({ value, label, helper }) => (
-                <MenuItem key={value} value={value}>
-                  <Box>
-                    <Typography variant="body2" fontWeight={600}>
-                      {label}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      display="block"
-                    >
-                      {helper}
-                    </Typography>
-                  </Box>
-                </MenuItem>
-              ))}
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MODEL_OPTIONS.map(({ value, label, helper }) => (
+                  <SelectItem key={value} value={value}>
+                    <div>
+                      <span className="font-semibold">{label}</span>
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {helper}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
-          </FormControl>
-        </Stack>
+          </div>
+        </div>
       )}
 
       {transcription.mode === "api" && (
@@ -276,6 +230,6 @@ export const AITranscriptionConfiguration = ({
       )}
 
       {transcription.mode === "cloud" && <VoquillCloudSetting />}
-    </Stack>
+    </div>
   );
 };

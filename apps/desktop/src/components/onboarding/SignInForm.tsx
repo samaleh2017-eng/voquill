@@ -1,13 +1,4 @@
-import { ArrowForward, Email } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogContent,
-  Link,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { RiArrowRightLine, RiMailLine } from "@remixicon/react";
 import { useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { signOut } from "../../actions/login.actions";
@@ -23,6 +14,11 @@ import { ConfirmDialog } from "../common/ConfirmDialog";
 import { LoginForm } from "../login/LoginForm";
 import { OidcProviders } from "../login/OidcProviders";
 import { TermsNotice } from "../login/TermsNotice";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 import {
   BackButton,
   DualPaneLayout,
@@ -91,47 +87,41 @@ export const SignInForm = () => {
   };
 
   const rightContent = (
-    <Box
-      component="img"
+    <img
       src="https://illustrations.popsy.co/amber/student-going-to-school.svg"
       alt="Illustration"
-      sx={{ maxWidth: 400, maxHeight: 400 }}
+      className="max-h-[400px] max-w-[400px]"
     />
   );
 
   const signedInContent = (
     <OnboardingFormLayout
       actions={
-        <Button
-          variant="contained"
-          endIcon={<ArrowForward />}
-          onClick={handleContinue}
-        >
+        <Button onClick={handleContinue}>
           <FormattedMessage defaultMessage="Continue" />
+          <RiArrowRightLine className="size-4" />
         </Button>
       }
     >
-      <Stack spacing={2}>
-        <Typography variant="h4" fontWeight={600} pb={1}>
+      <div className="space-y-4">
+        <h2 className="pb-1 text-2xl font-semibold">
           <FormattedMessage defaultMessage="Welcome back" />
-        </Typography>
+        </h2>
 
-        <Typography variant="body1" color="text.secondary">
+        <p className="text-base text-muted-foreground">
           <FormattedMessage
             defaultMessage="You are signed in as {email}"
             values={{ email: auth?.email }}
           />
-        </Typography>
+        </p>
 
-        <Link
-          component="button"
-          variant="body2"
-          onClick={handleSignOut}
-          sx={{ alignSelf: "flex-start" }}
+        <button
+          onClick={() => void handleSignOut()}
+          className="text-sm text-primary hover:underline"
         >
           <FormattedMessage defaultMessage="Sign out" />
-        </Link>
-      </Stack>
+        </button>
+      </div>
     </OnboardingFormLayout>
   );
 
@@ -142,19 +132,19 @@ export const SignInForm = () => {
         !isEnterprise && (
           <Button
             onClick={handleClickLocalSetup}
-            variant="text"
-            endIcon={<ArrowForward />}
-            sx={{ color: "text.disabled", fontWeight: 400 }}
+            variant="ghost"
+            className="text-muted-foreground font-normal"
           >
             <FormattedMessage defaultMessage="Local set up" />
+            <RiArrowRightLine className="size-4" />
           </Button>
         )
       }
     >
-      <Stack spacing={2}>
-        <Typography variant="h4" fontWeight={600} pb={1}>
+      <div className="space-y-4">
+        <h2 className="pb-1 text-2xl font-semibold">
           <FormattedMessage defaultMessage="Create your account" />
-        </Typography>
+        </h2>
 
         <OidcProviders
           variant="contained"
@@ -166,26 +156,21 @@ export const SignInForm = () => {
 
         {showEmailButton && (
           <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<Email />}
+            className="w-full"
+            variant="outline"
             onClick={handleOpenEmailDialog}
             disabled={loginStatus === "loading"}
           >
+            <RiMailLine className="size-4" />
             <FormattedMessage defaultMessage="Sign up with email" />
           </Button>
         )}
 
         <TermsNotice align="left" />
-      </Stack>
+      </div>
 
-      <Dialog
-        open={emailDialogOpen}
-        onClose={handleCloseEmailDialog}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogContent>
+      <Dialog open={emailDialogOpen} onOpenChange={(open) => !open && handleCloseEmailDialog()}>
+        <DialogContent className="max-w-sm">
           <LoginForm hideModeSwitch hideOidcProviders defaultMode="signUp" />
         </DialogContent>
       </Dialog>

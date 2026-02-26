@@ -1,13 +1,4 @@
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import {
-  Box,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Typography,
-} from "@mui/material";
+import { RiErrorWarningLine, RiLoader4Line } from "@remixicon/react";
 import { useCallback, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import {
@@ -15,6 +6,14 @@ import {
   OpenAICompatibleRepo,
 } from "../../repos/ollama.repo";
 import { OLLAMA_DEFAULT_URL } from "../../utils/ollama.utils";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type OllamaModelPickerProps = {
   baseUrl: string | null;
@@ -68,7 +67,6 @@ export const OllamaModelPicker = ({
     void fetchModels();
   }, [fetchModels]);
 
-  // Poll for availability every 3 seconds while we're showing this picker
   useEffect(() => {
     const interval = setInterval(() => {
       void fetchModels();
@@ -79,53 +77,45 @@ export const OllamaModelPicker = ({
 
   if (isLoading && isAvailable === null) {
     return (
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}>
-        <CircularProgress size={16} />
-        <Typography variant="body2" color="text.secondary">
+      <div className="flex items-center gap-2 py-2">
+        <RiLoader4Line className="h-4 w-4 animate-spin text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">
           <FormattedMessage defaultMessage="Checking Ollama connection..." />
-        </Typography>
-      </Box>
+        </p>
+      </div>
     );
   }
 
   if (isAvailable === false) {
     return (
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}>
-        <ErrorOutlineIcon color="error" fontSize="small" />
-        <Typography variant="body2" color="error">
+      <div className="flex items-center gap-2 py-2">
+        <RiErrorWarningLine className="h-4 w-4 text-destructive" />
+        <p className="text-sm text-destructive">
           <FormattedMessage defaultMessage="Unable to connect to Ollama at the specified URL." />
-        </Typography>
-      </Box>
+        </p>
+      </div>
     );
   }
 
   return (
-    <FormControl fullWidth size="small">
-      <InputLabel id="ollama-model-label" shrink>
-        <FormattedMessage defaultMessage="Model" />
-      </InputLabel>
+    <div className="space-y-1.5">
+      <Label><FormattedMessage defaultMessage="Model" /></Label>
       <Select
-        labelId="ollama-model-label"
-        label={<FormattedMessage defaultMessage="Model" />}
         value={selectedModel ?? ""}
-        onChange={(event) =>
-          onModelSelect(event.target.value ? String(event.target.value) : null)
-        }
-        displayEmpty
-        notched
+        onValueChange={(val) => onModelSelect(val || null)}
         disabled={disabled || !isAvailable}
       >
-        <MenuItem value="">
-          <em>
-            <FormattedMessage defaultMessage="Select a model" />
-          </em>
-        </MenuItem>
-        {models.map((model) => (
-          <MenuItem key={model} value={model}>
-            {model}
-          </MenuItem>
-        ))}
+        <SelectTrigger>
+          <SelectValue placeholder="Select a model" />
+        </SelectTrigger>
+        <SelectContent>
+          {models.map((model) => (
+            <SelectItem key={model} value={model}>
+              {model}
+            </SelectItem>
+          ))}
+        </SelectContent>
       </Select>
-    </FormControl>
+    </div>
   );
 };

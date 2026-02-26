@@ -1,24 +1,10 @@
-import AddIcon from "@mui/icons-material/Add";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import CloseIcon from "@mui/icons-material/Close";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
-  Box,
-  Checkbox,
-  Collapse,
-  FormControl,
-  FormControlLabel,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Radio,
-  RadioGroup,
-  Select,
-  Stack,
-  Typography,
-} from "@mui/material";
+  RiAddLine,
+  RiArrowUpLine,
+  RiArrowDownLine,
+  RiCloseLine,
+  RiArrowDownSLine,
+} from "@remixicon/react";
 import { OpenRouterProviderRouting as ProviderRoutingType } from "@repo/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FormattedMessage } from "react-intl";
@@ -28,6 +14,17 @@ import {
   updateOpenRouterProviderRouting,
 } from "../../actions/openrouter.actions";
 import { useAppStore } from "../../store";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type OpenRouterProviderRoutingProps = {
   apiKeyId: string;
@@ -41,20 +38,17 @@ export const OpenRouterProviderRouting = ({
   const [expanded, setExpanded] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Get providers from state
   const providers = useAppStore((state) => state.settings.openRouterProviders);
   const providersStatus = useAppStore(
     (state) => state.settings.openRouterProvidersStatus,
   );
 
-  // Load providers when expanded
   useEffect(() => {
     if (expanded && providersStatus === "idle") {
       void loadOpenRouterProviders();
     }
   }, [expanded, providersStatus]);
 
-  // Get current config
   const config = getOpenRouterConfigForKey(apiKeyId);
   const routing = config?.providerRouting ?? {};
 
@@ -62,12 +56,10 @@ export const OpenRouterProviderRouting = ({
   const allowFallbacks = routing.allow_fallbacks ?? true;
   const dataCollection = routing.data_collection ?? "allow";
 
-  // Available providers not yet in the order list
   const availableToAdd = useMemo(() => {
     return providers.filter((p) => !providerOrder.includes(p.slug));
   }, [providers, providerOrder]);
 
-  // Helper to get provider name by slug
   const getProviderName = useCallback(
     (slug: string) => {
       const provider = providers.find((p) => p.slug === slug);
@@ -76,7 +68,6 @@ export const OpenRouterProviderRouting = ({
     [providers],
   );
 
-  // Summary for collapsed state
   const summary = useMemo(() => {
     if (providerOrder.length === 0) {
       return null;
@@ -119,7 +110,7 @@ export const OpenRouterProviderRouting = ({
 
   const handleRemoveProvider = useCallback(
     (index: number) => {
-      const newOrder = providerOrder.filter((_, i) => i !== index);
+      const newOrder = providerOrder.filter((_: string, i: number) => i !== index);
       void saveRouting({
         ...routing,
         order: newOrder.length > 0 ? newOrder : undefined,
@@ -148,231 +139,180 @@ export const OpenRouterProviderRouting = ({
   );
 
   const handleFallbacksChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (checked: boolean) => {
       void saveRouting({
         ...routing,
-        allow_fallbacks: event.target.checked,
+        allow_fallbacks: checked,
       });
     },
     [routing, saveRouting],
   );
 
   const handleDataCollectionChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (value: string) => {
       void saveRouting({
         ...routing,
-        data_collection: event.target.value as "allow" | "deny",
+        data_collection: value as "allow" | "deny",
       });
     },
     [routing, saveRouting],
   );
 
   return (
-    <Box sx={{ mt: 1.5 }}>
-      {/* Collapsed header */}
-      <Box
+    <div className="mt-3">
+      <div
         onClick={handleToggleExpand}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          cursor: disabled ? "default" : "pointer",
-          opacity: disabled ? 0.5 : 1,
-          py: 0.5,
-          "&:hover": {
-            "& .expand-icon": {
-              color: disabled ? "action.disabled" : "text.primary",
-            },
-          },
-        }}
+        className={`flex items-center gap-2 cursor-pointer py-1 group ${
+          disabled ? "opacity-50 cursor-default" : ""
+        }`}
       >
-        <ExpandMoreIcon
-          className="expand-icon"
-          fontSize="small"
-          color="action"
-          sx={{
-            transition: "transform 0.2s ease",
-            transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-          }}
+        <RiArrowDownSLine
+          className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+            expanded ? "rotate-180" : ""
+          }`}
         />
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ fontWeight: 500 }}
-        >
+        <span className="text-sm text-muted-foreground font-medium">
           <FormattedMessage defaultMessage="Advanced Routing" />
-        </Typography>
+        </span>
         {summary && !expanded && (
-          <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+          <span className="text-xs text-muted-foreground ml-2">
             ({summary})
-          </Typography>
+          </span>
         )}
-      </Box>
+      </div>
 
-      {/* Expanded content */}
-      <Collapse in={expanded}>
-        <Paper
-          variant="outlined"
-          sx={{
-            mt: 1,
-            p: 2,
-            opacity: saving ? 0.7 : 1,
-            pointerEvents: saving ? "none" : "auto",
-          }}
+      {expanded && (
+        <div
+          className={`mt-2 rounded-lg border border-border p-4 ${
+            saving ? "opacity-70 pointer-events-none" : ""
+          }`}
         >
-          <Stack spacing={2.5}>
-            {/* Provider Priority */}
-            <Box>
-              <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+          <div className="flex flex-col gap-5">
+            <div>
+              <p className="text-sm font-semibold mb-1">
                 <FormattedMessage defaultMessage="Provider Priority" />
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mb: 1.5, display: "block" }}
-              >
+              </p>
+              <p className="text-xs text-muted-foreground mb-3">
                 <FormattedMessage defaultMessage="Set preferred providers in order of priority" />
-              </Typography>
+              </p>
 
               {providerOrder.length > 0 && (
-                <Stack spacing={0.5} sx={{ mb: 1.5 }}>
-                  {providerOrder.map((provider, index) => (
-                    <Paper
+                <div className="flex flex-col gap-1 mb-3">
+                  {providerOrder.map((provider: string, index: number) => (
+                    <div
                       key={provider}
-                      variant="outlined"
-                      sx={{
-                        px: 1.5,
-                        py: 0.75,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
+                      className="rounded-md border border-border px-3 py-1.5 flex items-center gap-2"
                     >
-                      <Stack direction="row" spacing={0.25}>
-                        <IconButton
-                          size="small"
+                      <div className="flex gap-0.5">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
                           disabled={index === 0}
                           onClick={() => handleMoveProvider(index, "up")}
-                          sx={{ p: 0.25 }}
                         >
-                          <ArrowUpwardIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
+                          <RiArrowUpLine className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
                           disabled={index === providerOrder.length - 1}
                           onClick={() => handleMoveProvider(index, "down")}
-                          sx={{ p: 0.25 }}
                         >
-                          <ArrowDownwardIcon fontSize="small" />
-                        </IconButton>
-                      </Stack>
-                      <Typography variant="body2" sx={{ flex: 1 }}>
+                          <RiArrowDownLine className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <span className="text-sm flex-1">
                         {getProviderName(provider)}
-                      </Typography>
-                      <IconButton
-                        size="small"
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
                         onClick={() => handleRemoveProvider(index)}
-                        sx={{ p: 0.25 }}
                       >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    </Paper>
+                        <RiCloseLine className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   ))}
-                </Stack>
+                </div>
               )}
 
               {availableToAdd.length > 0 && (
-                <FormControl size="small" sx={{ minWidth: 200 }}>
-                  <InputLabel id="add-provider-label">
-                    <FormattedMessage defaultMessage="Add provider" />
-                  </InputLabel>
-                  <Select
-                    labelId="add-provider-label"
-                    value=""
-                    label={<FormattedMessage defaultMessage="Add provider" />}
-                    onChange={(e) => handleAddProvider(e.target.value)}
-                    startAdornment={
-                      <AddIcon fontSize="small" sx={{ mr: 0.5 }} />
-                    }
-                  >
+                <Select
+                  value=""
+                  onValueChange={handleAddProvider}
+                >
+                  <SelectTrigger className="w-48">
+                    <div className="flex items-center gap-1">
+                      <RiAddLine className="h-3.5 w-3.5" />
+                      <SelectValue placeholder="Add provider" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
                     {availableToAdd.map((provider) => (
-                      <MenuItem key={provider.slug} value={provider.slug}>
+                      <SelectItem key={provider.slug} value={provider.slug}>
                         {provider.name}
-                      </MenuItem>
+                      </SelectItem>
                     ))}
-                  </Select>
-                </FormControl>
+                  </SelectContent>
+                </Select>
               )}
-            </Box>
+            </div>
 
-            {/* Allow Fallbacks */}
-            <Box>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={allowFallbacks}
-                    onChange={handleFallbacksChange}
-                    size="small"
-                  />
-                }
-                label={
-                  <Box>
-                    <Typography variant="body2">
-                      <FormattedMessage defaultMessage="Allow fallbacks" />
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      <FormattedMessage defaultMessage="Use other providers if preferred ones are unavailable" />
-                    </Typography>
-                  </Box>
-                }
-                sx={{ alignItems: "flex-start", ml: 0 }}
+            <div className="flex items-start gap-3">
+              <Switch
+                checked={allowFallbacks}
+                onCheckedChange={handleFallbacksChange}
+                className="mt-0.5"
               />
-            </Box>
+              <div>
+                <p className="text-sm">
+                  <FormattedMessage defaultMessage="Allow fallbacks" />
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  <FormattedMessage defaultMessage="Use other providers if preferred ones are unavailable" />
+                </p>
+              </div>
+            </div>
 
-            {/* Data Collection */}
-            <Box>
-              <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+            <div>
+              <p className="text-sm font-semibold mb-2">
                 <FormattedMessage defaultMessage="Data Collection" />
-              </Typography>
+              </p>
               <RadioGroup
                 value={dataCollection}
-                onChange={handleDataCollectionChange}
+                onValueChange={handleDataCollectionChange}
+                className="gap-3"
               >
-                <FormControlLabel
-                  value="allow"
-                  control={<Radio size="small" />}
-                  label={
-                    <Box>
-                      <Typography variant="body2">
-                        <FormattedMessage defaultMessage="Allow" />
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        <FormattedMessage defaultMessage="Help improve OpenRouter" />
-                      </Typography>
-                    </Box>
-                  }
-                  sx={{ alignItems: "flex-start", ml: 0 }}
-                />
-                <FormControlLabel
-                  value="deny"
-                  control={<Radio size="small" />}
-                  label={
-                    <Box>
-                      <Typography variant="body2">
-                        <FormattedMessage defaultMessage="Deny" />
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        <FormattedMessage defaultMessage="More private, no data collection" />
-                      </Typography>
-                    </Box>
-                  }
-                  sx={{ alignItems: "flex-start", ml: 0 }}
-                />
+                <div className="flex items-start gap-2">
+                  <RadioGroupItem value="allow" id="dc-allow" className="mt-0.5" />
+                  <Label htmlFor="dc-allow" className="font-normal cursor-pointer">
+                    <p className="text-sm">
+                      <FormattedMessage defaultMessage="Allow" />
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      <FormattedMessage defaultMessage="Help improve OpenRouter" />
+                    </p>
+                  </Label>
+                </div>
+                <div className="flex items-start gap-2">
+                  <RadioGroupItem value="deny" id="dc-deny" className="mt-0.5" />
+                  <Label htmlFor="dc-deny" className="font-normal cursor-pointer">
+                    <p className="text-sm">
+                      <FormattedMessage defaultMessage="Deny" />
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      <FormattedMessage defaultMessage="More private, no data collection" />
+                    </p>
+                  </Label>
+                </div>
               </RadioGroup>
-            </Box>
-          </Stack>
-        </Paper>
-      </Collapse>
-    </Box>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };

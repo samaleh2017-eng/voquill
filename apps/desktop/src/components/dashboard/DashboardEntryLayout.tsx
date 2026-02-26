@@ -1,32 +1,34 @@
-import { Container, Stack, type ContainerProps } from "@mui/material";
+import { cn } from "@/lib/utils";
+
+const MAX_WIDTH_MAP: Record<string, string> = {
+  xs: "max-w-xs",
+  sm: "max-w-xl",
+  md: "max-w-3xl",
+  lg: "max-w-5xl",
+  xl: "max-w-7xl",
+};
 
 export type DashboardEntryLayoutProps = {
   children: React.ReactNode;
-  maxWidth?: ContainerProps["maxWidth"];
+  maxWidth?: string;
 };
+
 export const DashboardEntryLayout = ({
   children,
   maxWidth = "sm",
 }: DashboardEntryLayoutProps) => {
+  const maxWidthClass = MAX_WIDTH_MAP[maxWidth] ?? MAX_WIDTH_MAP.sm;
+
   return (
-    <Stack
-      sx={{
-        flexGrow: 1,
-        overflowY: "auto",
-        pr: 2,
-      }}
-    >
-      <Container
-        maxWidth={maxWidth}
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          pt: 1,
-          pb: 8,
-        }}
+    <div className="flex-grow overflow-y-auto">
+      <div
+        className={cn(
+          "mx-auto flex w-full flex-col px-6 pt-6 pb-16",
+          maxWidthClass,
+        )}
       >
         {children}
-      </Container>
-    </Stack>
+      </div>
+    </div>
   );
 };

@@ -1,19 +1,22 @@
-import { Edit, PublicOutlined } from "@mui/icons-material";
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { RiPencilLine, RiGlobalLine } from "@remixicon/react";
 import { getRec } from "@repo/utilities";
 import { FormattedMessage } from "react-intl";
 import { openToneEditorDialog } from "../../actions/tone.actions";
 import { produceAppState, useAppStore } from "../../store";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const closeStylingDialog = () => {
   produceAppState((draft) => {
@@ -38,48 +41,62 @@ export const StylingDialog = () => {
   };
 
   return (
-    <Dialog open={isOpen} onClose={closeStylingDialog} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-        >
-          {tone?.name}
-          <Stack direction="row" spacing={0.5} alignItems="center">
-            {isGlobal && (
-              <Tooltip
-                disableInteractive
-                title={
-                  <FormattedMessage defaultMessage="This style is managed by your organization." />
-                }
-              >
-                <PublicOutlined fontSize="small" color="disabled" />
-              </Tooltip>
-            )}
-            {!isGlobal && !isSystem && (
-              <Tooltip
-                disableInteractive
-                title={<FormattedMessage defaultMessage="Edit style" />}
-              >
-                <IconButton size="small" onClick={handleEdit}>
-                  <Edit fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Stack>
-        </Stack>
-      </DialogTitle>
-      <DialogContent>
-        <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) closeStylingDialog();
+      }}
+    >
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle>{tone?.name}</DialogTitle>
+            <div className="flex items-center gap-1">
+              {isGlobal && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <RiGlobalLine className="size-4 text-muted-foreground" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <FormattedMessage defaultMessage="This style is managed by your organization." />
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {!isGlobal && !isSystem && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={handleEdit}
+                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      >
+                        <RiPencilLine className="size-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <FormattedMessage defaultMessage="Edit style" />
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
+          </div>
+        </DialogHeader>
+
+        <p className="whitespace-pre-wrap text-sm text-foreground">
           {tone?.promptTemplate}
-        </Typography>
+        </p>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={closeStylingDialog}>
+            <FormattedMessage defaultMessage="Close" />
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button variant="text" onClick={closeStylingDialog}>
-          <FormattedMessage defaultMessage="Close" />
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };

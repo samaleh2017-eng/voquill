@@ -1,9 +1,13 @@
-import { Box, Link } from "@mui/material";
 import type { ReactElement } from "react";
 import { useCallback } from "react";
 import { FormattedMessage } from "react-intl";
 import { produceAppState } from "../../store";
-import { ConditionalTooltip } from "../common/ConditionalTooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type PostProcessingDisabledTooltipProps = {
   disabled: boolean;
@@ -20,24 +24,28 @@ export const PostProcessingDisabledTooltip = ({
     });
   }, []);
 
+  if (!disabled) {
+    return <>{children}</>;
+  }
+
   return (
-    <ConditionalTooltip
-      enabled={disabled}
-      title={
-        <Box>
-          <FormattedMessage defaultMessage="Post-processing must be enabled to use writing styles." />{" "}
-          <Link
-            component="button"
-            color="inherit"
-            sx={{ verticalAlign: "baseline" }}
-            onClick={openPostProcessingSettings}
-          >
-            <FormattedMessage defaultMessage="Fix issue" />
-          </Link>
-        </Box>
-      }
-    >
-      <span>{children}</span>
-    </ConditionalTooltip>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span>{children}</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <span>
+            <FormattedMessage defaultMessage="Post-processing must be enabled to use writing styles." />{" "}
+            <button
+              className="underline underline-offset-2"
+              onClick={openPostProcessingSettings}
+            >
+              <FormattedMessage defaultMessage="Fix issue" />
+            </button>
+          </span>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };

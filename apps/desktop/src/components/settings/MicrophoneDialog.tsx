@@ -1,14 +1,4 @@
-import { LoadingButton } from "@mui/lab";
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Stack,
-} from "@mui/material";
+import { RiLoader4Line } from "@remixicon/react";
 import { Nullable } from "@repo/types";
 import { useCallback, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
@@ -18,6 +8,16 @@ import { produceAppState, useAppStore } from "../../store";
 import { SettingSection } from "../common/SettingSection";
 import { MicrophoneSelector } from "../microphone/MicrophoneSelector";
 import { MicrophoneTester } from "../microphone/MicrophoneTester";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 
 export const MicrophoneDialog = () => {
   const open = useAppStore((state) => state.settings.microphoneDialogOpen);
@@ -30,9 +30,7 @@ export const MicrophoneDialog = () => {
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
+    if (!open) return;
     setSelected(savedPreference);
     setHasChanges(false);
     setSaveError(null);
@@ -50,9 +48,7 @@ export const MicrophoneDialog = () => {
   );
 
   const handleSave = useCallback(async () => {
-    if (!hasChanges || saving) {
-      return;
-    }
+    if (!hasChanges || saving) return;
 
     setSaving(true);
     setSaveError(null);
@@ -76,36 +72,43 @@ export const MicrophoneDialog = () => {
   }, []);
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-      <DialogTitle>
-        <FormattedMessage defaultMessage="Microphone settings" />
-      </DialogTitle>
-      <DialogContent dividers>
-        <Stack spacing={3} sx={{ paddingTop: 0.5 }}>
-          <Stack spacing={1.5}>
+    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            <FormattedMessage defaultMessage="Microphone settings" />
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-5">
+          <div className="space-y-3">
             <SettingSection
               title={<FormattedMessage defaultMessage="Preferred microphone" />}
               description={
                 <FormattedMessage defaultMessage="Choose which microphone Voquill should use when recording. Automatic picks the best available device each time." />
               }
-              sx={{ pb: 0.5 }}
             />
             <MicrophoneSelector
               value={selected ?? null}
               onChange={handleSelectionChange}
               disabled={saving}
             />
-            {saveError && <Alert severity="error">{saveError}</Alert>}
-            {saveSuccess && (
-              <Alert severity="success">
-                <FormattedMessage defaultMessage="Preference saved." />
+            {saveError && (
+              <Alert variant="destructive">
+                <AlertDescription>{saveError}</AlertDescription>
               </Alert>
             )}
-          </Stack>
+            {saveSuccess && (
+              <Alert>
+                <AlertDescription>
+                  <FormattedMessage defaultMessage="Preference saved." />
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
 
-          <Divider />
+          <Separator />
 
-          <Stack spacing={1.5}>
+          <div className="space-y-3">
             <SettingSection
               title={<FormattedMessage defaultMessage="Test your microphone" />}
               description={
@@ -116,22 +119,21 @@ export const MicrophoneDialog = () => {
               preferredMicrophone={selected ?? null}
               disabled={saving}
             />
-          </Stack>
-        </Stack>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            <FormattedMessage defaultMessage="Close" />
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={!hasChanges || saving}
+          >
+            {saving && <RiLoader4Line className="mr-2 size-4 animate-spin" />}
+            <FormattedMessage defaultMessage="Save changes" />
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>
-          <FormattedMessage defaultMessage="Close" />
-        </Button>
-        <LoadingButton
-          onClick={handleSave}
-          loading={saving}
-          disabled={!hasChanges || saving}
-          variant="contained"
-        >
-          <FormattedMessage defaultMessage="Save changes" />
-        </LoadingButton>
-      </DialogActions>
     </Dialog>
   );
 };

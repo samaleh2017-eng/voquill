@@ -1,11 +1,9 @@
-import { Box, LinearProgress, Typography } from "@mui/material";
-import { alpha, useTheme } from "@mui/material/styles";
 import { FormattedMessage } from "react-intl";
 import { useAppStore } from "../../store";
 import { AudioWaveform } from "../common/AudioWaveform";
+import { Progress } from "../ui/progress";
 
 export const RecordingStatusWidget = () => {
-  const theme = useTheme();
   const phase = useAppStore((state) => state.overlayPhase);
   const levels = useAppStore((state) => state.audioLevels);
   const isIdle = phase === "idle";
@@ -13,64 +11,41 @@ export const RecordingStatusWidget = () => {
   const isProcessing = phase === "loading";
 
   return (
-    <Box
-      sx={{
-        position: "relative",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: `${theme.spacing(0.75)} ${theme.spacing(2)}`,
-        borderRadius: theme.spacing(2.25),
-        backgroundColor: alpha(theme.palette.common.black, 0.92),
+    <div
+      className="pointer-events-none relative flex items-center justify-center overflow-hidden"
+      style={{
+        padding: "6px 16px",
+        borderRadius: "18px",
+        backgroundColor: "rgba(0, 0, 0, 0.92)",
         backdropFilter: "blur(14px)",
-        boxShadow: `0 10px 35px ${alpha(theme.palette.common.black, 0.36)}`,
-        minWidth: theme.spacing(16),
-        height: theme.spacing(4),
-        pointerEvents: "none",
-        overflow: "hidden",
+        boxShadow: "0 10px 35px rgba(0, 0, 0, 0.36)",
+        minWidth: "128px",
+        height: "32px",
       }}
     >
-      <Box
-        sx={{
-          position: "relative",
-          width: theme.spacing(16),
-          height: theme.spacing(3),
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Typography
-          sx={{
-            position: "absolute",
-            color: alpha(theme.palette.common.white, 0.4),
-            fontSize: "11px",
-            fontWeight: 500,
-            letterSpacing: "0.02em",
-            whiteSpace: "nowrap",
+      <div className="relative flex h-6 w-32 items-center justify-center">
+        <span
+          className="absolute whitespace-nowrap text-[11px] font-medium tracking-wide"
+          style={{
+            color: "rgba(255, 255, 255, 0.4)",
             opacity: isIdle ? 1 : 0,
             transition: "opacity 150ms ease-out",
           }}
         >
           <FormattedMessage defaultMessage="Click to dictate" />
-        </Typography>
-        <Box
-          sx={{
-            position: "absolute",
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+        </span>
+        <div
+          className="absolute flex h-full w-full items-center justify-center"
+          style={{
             opacity: isProcessing ? 1 : 0,
             transition: "opacity 150ms ease-out",
           }}
         >
-          <LinearProgress sx={{ width: "100%", height: "2px" }} />
-        </Box>
-        <Box
-          sx={{
-            position: "absolute",
+          <Progress className="h-0.5 w-full" />
+        </div>
+        <div
+          className="absolute"
+          style={{
             opacity: isListening ? 1 : 0,
             transition: "opacity 150ms ease-out",
           }}
@@ -79,29 +54,22 @@ export const RecordingStatusWidget = () => {
             levels={levels}
             active={isListening}
             processing={isProcessing}
-            strokeColor={theme.palette.common.white}
+            strokeColor="#ffffff"
             width={120}
             height={36}
             baselineOffset={3}
           />
-        </Box>
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            pointerEvents: "none",
+        </div>
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
             opacity: isIdle ? 0 : 1,
             transition: "opacity 150ms ease-out",
-            background: `linear-gradient(90deg, ${alpha(
-              theme.palette.common.black,
-              0.9,
-            )} 0%, transparent 18%, transparent 85%, ${alpha(
-              theme.palette.common.black,
-              0.9,
-            )} 100%)`,
+            background:
+              "linear-gradient(90deg, rgba(0,0,0,0.9) 0%, transparent 18%, transparent 85%, rgba(0,0,0,0.9) 100%)",
           }}
         />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };

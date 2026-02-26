@@ -1,15 +1,3 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-} from "@mui/material";
 import type { Tone } from "@repo/types";
 import { getRec } from "@repo/utilities";
 import { useCallback, useEffect, useState } from "react";
@@ -27,6 +15,15 @@ import {
 } from "../../utils/language.utils";
 import { getSortedToneIds } from "../../utils/tone.utils";
 import { getMyDictationLanguage } from "../../utils/user.utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 const languageOptions = ORDERED_DICTATION_LANGUAGES.map((code) => ({
   code,
@@ -100,63 +97,66 @@ export const RetranscribeDialog = () => {
   return (
     <Dialog
       open={open}
-      onClose={closeRetranscribeDialog}
-      maxWidth="xs"
-      fullWidth
+      onOpenChange={(isOpen) => {
+        if (!isOpen) closeRetranscribeDialog();
+      }}
     >
-      <DialogTitle>
-        <FormattedMessage defaultMessage="Retranscribe" />
-      </DialogTitle>
-      <DialogContent>
-        <Stack spacing={2.5} sx={{ mt: 1 }}>
-          <FormControl fullWidth size="small">
-            <InputLabel>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>
+            <FormattedMessage defaultMessage="Retranscribe" />
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-4 py-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="retranscribe-style">
               <FormattedMessage defaultMessage="Style" />
-            </InputLabel>
-            <Select
-              label={intl.formatMessage({ defaultMessage: "Style" })}
+            </Label>
+            <select
+              id="retranscribe-style"
               value={selectedToneId ?? ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                setSelectedToneId(value || null);
-              }}
+              onChange={(e) => setSelectedToneId(e.target.value || null)}
+              className="flex h-9 w-full appearance-none rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               {tones.map((tone) => (
-                <MenuItem key={tone.id} value={tone.id}>
+                <option key={tone.id} value={tone.id}>
                   {tone.name}
-                </MenuItem>
+                </option>
               ))}
-            </Select>
-          </FormControl>
-          <FormControl fullWidth size="small">
-            <InputLabel>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="retranscribe-language">
               <FormattedMessage defaultMessage="Language" />
-            </InputLabel>
-            <Select
-              label={intl.formatMessage({ defaultMessage: "Language" })}
+            </Label>
+            <select
+              id="retranscribe-language"
               value={selectedLanguage}
               onChange={(e) =>
                 setSelectedLanguage(e.target.value as DictationLanguageCode)
               }
-              MenuProps={{ PaperProps: { sx: { maxHeight: 300 } } }}
+              className="flex h-9 w-full appearance-none rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               {languageOptions.map(({ code, label }) => (
-                <MenuItem key={code} value={code}>
+                <option key={code} value={code}>
                   {label}
-                </MenuItem>
+                </option>
               ))}
-            </Select>
-          </FormControl>
-        </Stack>
+            </select>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={closeRetranscribeDialog}>
+            <FormattedMessage defaultMessage="Cancel" />
+          </Button>
+          <Button onClick={handleSubmit}>
+            <FormattedMessage defaultMessage="Transcribe" />
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={closeRetranscribeDialog}>
-          <FormattedMessage defaultMessage="Cancel" />
-        </Button>
-        <Button variant="contained" onClick={handleSubmit}>
-          <FormattedMessage defaultMessage="Transcribe" />
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };

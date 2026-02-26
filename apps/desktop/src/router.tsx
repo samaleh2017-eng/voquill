@@ -1,10 +1,8 @@
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import SettingsPage from "./components/settings/SettingsPage.tsx";
-import { PageLayout } from "./components/common/PageLayout.tsx";
 import HomePage from "./components/home/HomePage.tsx";
 import OnboardingPage from "./components/onboarding/OnboardingPage.tsx";
 import ErrorBoundary from "./components/root/ErrorBoundary.tsx";
-import { AppHeader } from "./components/root/Header.tsx";
 import Root from "./components/root/Root.tsx";
 import { Guard } from "./components/routing/Guard.tsx";
 import { Redirect } from "./components/routing/Redirectors.tsx";
@@ -15,12 +13,21 @@ import StylingPage from "./components/styling/StylingPage.tsx";
 import AppsPage from "./components/apps/AppsPage.tsx";
 import WelcomePage from "./components/welcome/WelcomePage.tsx";
 import LoginPage from "./components/login/LoginPage.tsx";
+import { AppLayout } from "./components/layout/AppLayout";
 
-const AppWrapper = () => {
+const AuthWrapper = () => {
   return (
-    <PageLayout header={<AppHeader />}>
+    <div className="flex h-full w-full flex-col bg-background">
       <Outlet />
-    </PageLayout>
+    </div>
+  );
+};
+
+const DashboardWrapper = () => {
+  return (
+    <AppLayout>
+      <Outlet />
+    </AppLayout>
   );
 };
 
@@ -50,7 +57,7 @@ const router = createBrowserRouter([
       {
         element: (
           <Guard node="welcome">
-            <AppWrapper />
+            <AuthWrapper />
           </Guard>
         ),
         children: [
@@ -63,7 +70,7 @@ const router = createBrowserRouter([
       {
         element: (
           <Guard node="onboarding">
-            <AppWrapper />
+            <AuthWrapper />
           </Guard>
         ),
         children: [
@@ -76,7 +83,7 @@ const router = createBrowserRouter([
       {
         element: (
           <Guard node="dashboard">
-            <AppWrapper />
+            <DashboardWrapper />
           </Guard>
         ),
         children: [

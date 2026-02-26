@@ -1,13 +1,4 @@
-import {
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { RiLoader4Line } from "@remixicon/react";
 import { FormattedMessage } from "react-intl";
 import { produceAppState, useAppStore } from "../../store";
 import { getEffectiveStylingMode } from "../../utils/feature.utils";
@@ -18,6 +9,15 @@ import {
   SWITCH_WRITING_STYLE_HOTKEY,
 } from "../../utils/keyboard.utils";
 import { HotkeySetting } from "./HotkeySetting";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export const ShortcutsDialog = () => {
   const { open, hotkeysStatus, isManualStyling } = useAppStore((state) => ({
@@ -35,19 +35,14 @@ export const ShortcutsDialog = () => {
   const renderContent = () => {
     if (hotkeysStatus === "loading") {
       return (
-        <Stack
-          direction="row"
-          justifyContent="center"
-          alignItems="center"
-          sx={{ py: 4 }}
-        >
-          <CircularProgress size={24} />
-        </Stack>
+        <div className="flex items-center justify-center py-6">
+          <RiLoader4Line className="size-5 animate-spin text-muted-foreground" />
+        </div>
       );
     }
 
     return (
-      <Stack spacing={3}>
+      <div className="space-y-5">
         <HotkeySetting
           title={<FormattedMessage defaultMessage="Start/stop dictating" />}
           description={
@@ -78,28 +73,28 @@ export const ShortcutsDialog = () => {
             actionName={SWITCH_WRITING_STYLE_HOTKEY}
           />
         )}
-      </Stack>
+      </div>
     );
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-      <DialogTitle>
-        <Stack spacing={1}>
-          <Typography variant="h6">
+    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>
             <FormattedMessage defaultMessage="Keyboard shortcuts" />
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
+          </DialogTitle>
+          <DialogDescription>
             <FormattedMessage defaultMessage="Customize your keyboard shortcuts. Keyboard shortcuts can be triggered from within any app." />
-          </Typography>
-        </Stack>
-      </DialogTitle>
-      <DialogContent dividers>{renderContent()}</DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>
-          <FormattedMessage defaultMessage="Close" />
-        </Button>
-      </DialogActions>
+          </DialogDescription>
+        </DialogHeader>
+        {renderContent()}
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            <FormattedMessage defaultMessage="Close" />
+          </Button>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 };

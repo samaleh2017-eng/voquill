@@ -1,25 +1,26 @@
-import { Add, Edit, Public } from "@mui/icons-material";
-import {
-  FormControl,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  Tooltip,
-  type SxProps,
-  type Theme,
-} from "@mui/material";
+import { RiAddLine, RiEditLine, RiGlobalLine } from "@remixicon/react";
 import type { Tone } from "@repo/types";
 import { getRec } from "@repo/utilities";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { setLocalStorageValue } from "../../actions/local-storage.actions";
 import { openToneEditorDialog } from "../../actions/tone.actions";
 import { useAppStore } from "../../store";
 import { getSortedToneIds } from "../../utils/tone.utils";
 import { getMyUserPreferences } from "../../utils/user.utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 const ADD_TONE_MENU_VALUE = "__add_tone_option__";
 
@@ -28,7 +29,8 @@ type ToneSelectProps = {
   onToneChange: (toneId: string | null) => void;
   addToneTargetId?: string | null;
   disabled?: boolean;
-  formControlSx?: SxProps<Theme>;
+  className?: string;
+  formControlSx?: Record<string, unknown>;
   selectSize?: "small" | "medium";
   label?: string;
   trueDefault?: boolean;
@@ -39,8 +41,9 @@ export const ToneSelect = ({
   onToneChange,
   addToneTargetId = null,
   disabled = false,
+  className,
   formControlSx,
-  selectSize = "small",
+  selectSize: _selectSize = "small",
   label,
   trueDefault,
 }: ToneSelectProps) => {
@@ -57,99 +60,100 @@ export const ToneSelect = ({
     [sortedToneIds, toneById],
   );
 
-  const [menuOpen, setMenuOpen] = useState(false);
+  const resolvedValue = getRec(toneById, value)?.id ?? "default";
 
-  const handleToneChange = useCallback(
-    (event: SelectChangeEvent<string>) => {
-      if (event.target.value === ADD_TONE_MENU_VALUE) {
-        setMenuOpen(false);
+  const handleValueChange = useCallback(
+    (val: string) => {
+      if (val === ADD_TONE_MENU_VALUE) {
         openToneEditorDialog({ mode: "create", targetId: addToneTargetId });
         return;
       }
 
-      const toneId = event.target.value === "" ? null : event.target.value;
+      const toneId = val === "default" ? null : val;
       setLocalStorageValue("voquill:checklist-writing-style", true);
       onToneChange(toneId);
     },
     [addToneTargetId, onToneChange],
   );
 
-  const handleSelectOpen = useCallback(() => setMenuOpen(true), []);
-  const handleSelectClose = useCallback(() => setMenuOpen(false), []);
+  const displayValue = useMemo(() => {
+    if (resolvedValue === "default") {
+      return defaultTone && !trueDefault
+        ? intl.formatMessage(
+            { defaultMessage: "Default ({toneName})" },
+            { toneName: defaultTone.name },
+          )
+        : intl.formatMessage({ defaultMessage: "Default" });
+    }
+    return toneById[resolvedValue]?.name ?? resolvedValue;
+  }, [resolvedValue, defaultTone, trueDefault, toneById, intl]);
 
-  const resolvedValue = getRec(toneById, value)?.id ?? "default";
+  const style = formControlSx
+    ? Object.fromEntries(
+        Object.entries(formControlSx as Record<string, unknown>).filter(
+          ([, v]) => typeof v === "number" || typeof v === "string",
+        ),
+      )
+    : undefined;
 
   return (
-    <FormControl size={selectSize} sx={formControlSx}>
-      {label && <InputLabel shrink>{label}</InputLabel>}
+    <div className={className} style={style}>
+      {label && <Label className="mb-1.5">{label}</Label>}
       <Select
-        open={menuOpen}
-        onOpen={handleSelectOpen}
-        onClose={handleSelectClose}
         value={resolvedValue}
-        displayEmpty
-        onChange={handleToneChange}
-        size={selectSize}
+        onValueChange={handleValueChange}
         disabled={disabled}
-        label={label}
-        renderValue={(selected) => {
-          if (!selected) {
-            return defaultTone && !trueDefault ? (
+      >
+        <SelectTrigger>
+          <SelectValue>{displayValue}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ADD_TONE_MENU_VALUE}>
+            <div className="flex items-center gap-2">
+              <RiAddLine className="h-4 w-4" />
+              <FormattedMessage defaultMessage="New style" />
+            </div>
+          </SelectItem>
+          <SelectItem value="default">
+            {defaultTone && !trueDefault ? (
               <FormattedMessage
                 defaultMessage="Default ({toneName})"
                 values={{ toneName: defaultTone.name }}
               />
             ) : (
               <FormattedMessage defaultMessage="Default" />
-            );
-          }
-
-          return toneById[selected]?.name ?? selected;
-        }}
-      >
-        <MenuItem value={ADD_TONE_MENU_VALUE}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Add fontSize="small" />
-            <div>
-              <FormattedMessage defaultMessage="New style" />
-            </div>
-          </Stack>
-        </MenuItem>
-        {tones.map((tone) => (
-          <MenuItem key={tone.id} value={tone.id}>
-            <Stack
-              direction="row"
-              alignItems="center"
-              justifyContent="space-between"
-              width="100%"
-            >
-              <div>{tone.name}</div>
-              {tone.isGlobal ? (
-                <Tooltip
-                  title={intl.formatMessage({
-                    defaultMessage:
-                      "This is a global style and cannot be edited",
-                  })}
-                >
-                  <Public fontSize="small" sx={{ color: "text.secondary" }} />
-                </Tooltip>
-              ) : !tone.isSystem ? (
-                <IconButton
-                  size="small"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    event.preventDefault();
-                    setMenuOpen(false);
-                    openToneEditorDialog({ mode: "edit", toneId: tone.id });
-                  }}
-                >
-                  <Edit fontSize="small" />
-                </IconButton>
-              ) : null}
-            </Stack>
-          </MenuItem>
-        ))}
+            )}
+          </SelectItem>
+          {tones.map((tone) => (
+            <SelectItem key={tone.id} value={tone.id}>
+              <div className="flex items-center justify-between w-full gap-2">
+                <span>{tone.name}</span>
+                {tone.isGlobal ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <RiGlobalLine className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <FormattedMessage defaultMessage="This is a global style and cannot be edited" />
+                    </TooltipContent>
+                  </Tooltip>
+                ) : !tone.isSystem ? (
+                  <button
+                    className="p-0.5 rounded hover:bg-accent shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      openToneEditorDialog({ mode: "edit", toneId: tone.id });
+                    }}
+                  >
+                    <RiEditLine className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
       </Select>
-    </FormControl>
+    </div>
   );
 };

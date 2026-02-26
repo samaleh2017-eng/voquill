@@ -1,34 +1,5 @@
-import { Box, keyframes } from "@mui/material";
 import { ReactNode, useEffect, useRef } from "react";
-
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-`;
-
-const bounce = keyframes`
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-`;
-
-const fadeOutDown = keyframes`
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-`;
+import { cn } from "@/lib/utils";
 
 type BouncyTooltipProps = {
   visible: boolean;
@@ -51,68 +22,37 @@ export const BouncyTooltip = ({
     }
   }, [visible]);
 
-  const getAnimation = () => {
-    if (visible) {
-      return `${fadeIn} 0.2s ease-out ${delay}s both, ${bounce} 1s ease-in-out ${delay}s infinite`;
-    }
-    if (hasBeenVisible.current) {
-      return `${fadeOutDown} 0.2s ease-in forwards`;
-    }
-    return "none";
-  };
+  const justifyClass =
+    align === "left"
+      ? "justify-start"
+      : align === "right"
+        ? "justify-end"
+        : "justify-center";
+
+  const isHidden = !visible && !hasBeenVisible.current;
 
   return (
-    <Box
-      sx={{
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        display: "flex",
-        justifyContent:
-          align === "left"
-            ? "flex-start"
-            : align === "right"
-              ? "flex-end"
-              : "center",
-        opacity: !visible && !hasBeenVisible.current ? 0 : undefined,
-        animation: getAnimation(),
-        pointerEvents: visible ? "auto" : "none",
+    <div
+      className={cn(
+        "pointer-events-none absolute inset-x-0 bottom-0 flex",
+        justifyClass,
+        visible && "pointer-events-auto",
+        isHidden && "opacity-0",
+      )}
+      style={{
+        animation: visible
+          ? `bouncy-fade-in 0.2s ease-out ${delay}s both, bouncy-bounce 1s ease-in-out ${delay}s infinite`
+          : hasBeenVisible.current
+            ? "bouncy-fade-out 0.2s ease-in forwards"
+            : "none",
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          filter: "drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2))",
-        }}
-      >
-        <Box
-          sx={{
-            width: 0,
-            height: 0,
-            borderLeft: "8px solid transparent",
-            borderRight: "8px solid transparent",
-            borderBottom: "8px solid",
-            borderBottomColor: "primary.main",
-          }}
-        />
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            bgcolor: "primary.main",
-            color: "primary.contrastText",
-            px: 2,
-            py: 1,
-            borderRadius: 1,
-          }}
-        >
+      <div className="flex flex-col items-center drop-shadow-lg">
+        <div className="h-0 w-0 border-x-8 border-b-8 border-x-transparent border-b-primary" />
+        <div className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-primary-foreground">
           {children}
-        </Box>
-      </Box>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
