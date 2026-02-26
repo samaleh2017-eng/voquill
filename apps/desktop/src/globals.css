@@ -85,9 +85,40 @@
 }
 
 @layer base {
+  :root {
+    --shadow-soft: 0 8px 24px rgba(31, 31, 31, 0.06);
+    --shadow-card: 0 4px 12px rgba(31, 31, 31, 0.05);
+  }
+
+  .dark {
+    --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.3);
+    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+
   * {
     @apply border-border outline-ring/50;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
   }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--color-border);
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-muted-foreground);
+  }
+
   body {
     @apply bg-background text-foreground;
   }

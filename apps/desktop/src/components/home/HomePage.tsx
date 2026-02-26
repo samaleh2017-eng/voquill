@@ -14,13 +14,6 @@ import {
   getHotkeyCombosForAction,
 } from "../../utils/keyboard.utils";
 import { HotkeyBadgeInline } from "@/components/ui/hotkey-badge";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { DashboardEntryLayout } from "../dashboard/DashboardEntryLayout";
 import { TranscriptionRow } from "../transcriptions/TranscriptRow";
@@ -73,27 +66,18 @@ function DictationInstruction() {
   );
 }
 
-function StatCard({
-  value,
-  label,
+function StatBadge({
   icon,
+  label,
 }: {
-  value: string;
+  icon: React.ReactNode;
   label: string;
-  icon?: React.ReactNode;
 }) {
   return (
-    <Card className="flex-1">
-      <CardContent className="px-4 py-3">
-        <div className="mb-0.5 flex items-center gap-2">
-          {icon}
-          <span className="text-2xl font-bold tracking-tight text-foreground">
-            {value}
-          </span>
-        </div>
-        <span className="text-xs text-muted-foreground">{label}</span>
-      </CardContent>
-    </Card>
+    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-background border border-border rounded-full text-sm cursor-default hover:shadow-sm transition-shadow">
+      {icon}
+      <span className="text-foreground font-medium">{label}</span>
+    </div>
   );
 }
 
@@ -105,7 +89,6 @@ export default function HomePage() {
 
   const dictationSpeed = useAppStore(getDictationSpeed);
   const wordsThisMonth = user?.wordsThisMonth ?? 0;
-  const wordsTotal = user?.wordsTotal ?? 0;
   const navigate = useNavigate();
 
   const recentIds = useAppStore(
@@ -117,75 +100,51 @@ export default function HomePage() {
     <DashboardEntryLayout>
       <HomeSideEffects />
       <div className="flex flex-col gap-8">
-        <div>
-          <h1 className="mb-1 text-2xl font-bold tracking-tight text-foreground">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-semibold text-foreground">
             <FormattedMessage
               defaultMessage="Welcome back, {name}"
               values={{ name: userName }}
             />
           </h1>
-          <DictationInstruction />
+          <div className="flex items-center gap-3">
+            <StatBadge
+              icon={<RiFireFill className="size-4 text-orange-500" />}
+              label={`${streak} ${intl.formatMessage({ defaultMessage: "days" })}`}
+            />
+            <StatBadge
+              icon={<span>✍️</span>}
+              label={`${wordsThisMonth.toLocaleString()} ${intl.formatMessage({ defaultMessage: "words" })}`}
+            />
+            {dictationSpeed != null && (
+              <StatBadge
+                icon={<span>⚡</span>}
+                label={`${dictationSpeed.wpm} WPM`}
+              />
+            )}
+          </div>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <div className="grid grid-cols-3 gap-3">
-            <StatCard
-              value={streak.toString()}
-              label={intl.formatMessage({ defaultMessage: "Day streak" })}
-              icon={<RiFireFill className="size-5 text-orange-500" />}
-            />
-            <StatCard
-              value={wordsThisMonth.toLocaleString()}
-              label={intl.formatMessage({ defaultMessage: "Words this month" })}
-            />
-            <StatCard
-              value={wordsTotal.toLocaleString()}
-              label={intl.formatMessage({ defaultMessage: "Words total" })}
-            />
+        <div className="bg-background rounded-xl border border-border shadow-[var(--shadow-card)] p-5 mb-8 flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium text-foreground mb-1">
+              <FormattedMessage defaultMessage="Voice dictation in any app" />
+            </div>
+            <DictationInstruction />
           </div>
-
-          {dictationSpeed != null && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Card className="cursor-default">
-                    <CardContent className="px-4 py-3">
-                      <div className="flex items-baseline gap-3">
-                        <span className="text-2xl font-bold tracking-tight text-foreground">
-                          <FormattedMessage
-                            defaultMessage="{wpm} WPM"
-                            values={{ wpm: dictationSpeed.wpm }}
-                          />
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          <FormattedMessage
-                            defaultMessage="{multiplier}x faster than typing"
-                            values={{
-                              multiplier: (dictationSpeed.wpm / 40).toFixed(1),
-                            }}
-                          />
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <FormattedMessage
-                    defaultMessage="Average words per minute across your last {count, plural, one {# dictation} other {# dictations}}. Compared against a median typing speed of 40 WPM."
-                    values={{ count: dictationSpeed.sampleCount }}
-                  />
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+          <Button variant="outline" size="sm" onClick={() => navigate("/dashboard/transcriptions")}>
+            <FormattedMessage defaultMessage="View history" />
+          </Button>
         </div>
 
         <GettingStartedList />
 
         <div>
-          <h2 className="mb-2 text-base font-semibold text-foreground">
-            <FormattedMessage defaultMessage="Recent transcriptions" />
-          </h2>
+          <div className="mb-4">
+            <div className="text-xs font-semibold tracking-[1.5px] text-muted-foreground uppercase mb-3">
+              <FormattedMessage defaultMessage="Recent Activity" />
+            </div>
+          </div>
           {topIds.length > 0 ? (
             <>
               {topIds.map((id) => (

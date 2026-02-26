@@ -15,15 +15,15 @@ export type DashboardEntryLayoutProps = {
 
 export const DashboardEntryLayout = ({
   children,
-  maxWidth = "sm",
+  maxWidth = "md",
 }: DashboardEntryLayoutProps) => {
-  const maxWidthClass = MAX_WIDTH_MAP[maxWidth] ?? MAX_WIDTH_MAP.sm;
+  const maxWidthClass = MAX_WIDTH_MAP[maxWidth] ?? MAX_WIDTH_MAP.md;
 
   return (
     <div className="flex-grow overflow-y-auto">
       <div
         className={cn(
-          "mx-auto flex w-full flex-col px-6 pt-6 pb-16",
+          "mx-auto flex w-full flex-col px-8 pt-8 pb-16",
           maxWidthClass,
         )}
       >

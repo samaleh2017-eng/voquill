@@ -121,7 +121,7 @@ export const ListTile = forwardRef<HTMLDivElement, ListTileProps>(
           tabIndex={disabled ? -1 : 0}
           onClick={handleClick}
           className={cn(
-            "flex w-full cursor-pointer items-center rounded-lg px-3 py-2.5 text-left transition-colors",
+            "flex w-full cursor-pointer items-center rounded-none px-5 py-4 text-left transition-colors",
             selected
               ? "bg-accent text-accent-foreground"
               : "hover:bg-accent/50",
