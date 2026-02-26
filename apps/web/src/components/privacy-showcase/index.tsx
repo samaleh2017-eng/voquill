@@ -16,7 +16,7 @@ export default function PrivacyShowcase() {
           <FormattedMessage defaultMessage="Process everything locally on your device, bring your own API key, or connect to our cloud. Don't believe us? See for yourself. Voquill is fully open-source." />
         </p>
         <a
-          href="https://github.com/josiahsrc/voquill"
+          href="https://github.com/samaleh2017-eng/voquill"
           target="_blank"
           rel="noopener noreferrer"
           className={styles.inlineLink}

@@ -25,7 +25,7 @@ export function HeroSection() {
         <div className={styles.heroActions}>
           <DownloadButton trackingId="download-hero" />
           <a
-            href="https://github.com/josiahsrc/voquill"
+            href="https://github.com/samaleh2017-eng/voquill"
             target="_blank"
             rel="noopener noreferrer"
             className={pageStyles.secondaryButton}
