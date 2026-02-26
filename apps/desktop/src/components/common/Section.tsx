@@ -54,7 +54,7 @@ export const Section = ({
         {description && (
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         )}
-        <div className="mt-3">{children}</div>
+        <div className="mt-3 rounded-xl bg-muted overflow-hidden divide-y divide-border">{children}</div>
       </div>
     </div>
   );

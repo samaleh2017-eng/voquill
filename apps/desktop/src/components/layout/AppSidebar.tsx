@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo, LogoWithText } from "./Logo";
 import DiscordIcon from "../../assets/discord.svg?react";
+import { getIsPro } from "../../utils/member.utils";
 
 const DISCORD_INVITE_URL = "https://discord.gg/5jXkDvdVdt";
 const SUPPORT_EMAIL = "mailto:support@voquill.com";
@@ -51,6 +52,7 @@ export function AppSidebar({ onChoose }: AppSidebarProps) {
   const intl = useIntl();
   const { toggleSidebar, open } = useSidebar();
   const isEnterprise = useAppStore((state) => state.isEnterprise);
+  const isPro = useAppStore(getIsPro);
   const updateReady = useAppStore(
     (state) => state.updater.status === "ready",
   );
@@ -88,9 +90,16 @@ export function AppSidebar({ onChoose }: AppSidebarProps) {
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader className="flex items-center justify-center px-3 py-4">
-        {open ? <LogoWithText /> : <Logo />}
+        <div className="flex items-center gap-2">
+          {open ? <LogoWithText /> : <Logo />}
+          {open && isPro && (
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-gradient-to-r from-primary to-primary/70 text-primary-foreground">
+              PRO
+            </span>
+          )}
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
